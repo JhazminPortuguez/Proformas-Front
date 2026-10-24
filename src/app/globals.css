@@ -1,26 +1,82 @@
 @import "tailwindcss";
+@import "@heroui/styles";
 
+/*
+ * Tokens de marca.
+ * HeroUI declara sus variables dentro de @layer base; estas reglas sin capa
+ * ganan la cascada y son el único lugar donde se ajusta la identidad visual.
+ * Ningún componente debe usar colores crudos: siempre bg-surface, text-muted,
+ * border-border, danger, etc.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.375rem;
+
+  /* Petróleo profundo: 5.5:1 sobre blanco y texto claro encima. */
+  --accent: oklch(0.45 0.09 200);
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-hover: oklch(0.4 0.085 200);
+
+  /* Texto secundario y enlaces con contraste AA en superficies claras. */
+  --muted: oklch(0.5 0.014 286);
+  --link: oklch(0.45 0.09 200);
+  --focus: oklch(0.45 0.09 200);
+  --accent-soft-foreground: oklch(0.35 0.07 200);
+
+  /* Campos: borde visible también cuando no hay sombra. */
+  --field-background: var(--white);
+  --field-border: oklch(0.62 0.006 286);
+  --field-border-width: 1px;
+
+  /* Rojo más oscuro que el de HeroUI para que el texto blanco cumpla AA. */
+  --danger: oklch(0.52 0.19 25.5);
+}
+
+.dark {
+  --accent: oklch(0.48 0.09 200);
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-hover: oklch(0.53 0.1 200);
+
+  --muted: oklch(0.78 0.012 286);
+  --link: oklch(0.8 0.06 200);
+  --focus: oklch(0.8 0.06 200);
+  --accent-soft-foreground: oklch(0.88 0.04 200);
+
+  --field-background: oklch(0.24 0.006 286);
+  --field-border: oklch(0.55 0.006 286);
+  --field-border-width: 1px;
+
+  --danger: oklch(0.7 0.18 25.5);
+  --danger-foreground: oklch(0.17 0.02 25.5);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Los montos y conteos se leen mejor con cifras tabulares. */
+@utility numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

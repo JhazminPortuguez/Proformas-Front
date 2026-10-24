@@ -1,37 +1,39 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const laravel = process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000';
+const SESSION_COOKIE = process.env.SESSION_COOKIE_NAME ?? "laravel-session";
 
-// Valida la sesión contra la API (fuente de verdad). Solo mirar si la
-// cookie existe no basta: tras el logout queda una cookie de sesión vacía
-// que causaría un bucle /login <-> /.
-async function isAuthenticated(request: NextRequest): Promise<boolean> {
-  const cookie = request.headers.get('cookie');
-  if (!cookie || !cookie.includes('laravel-session=')) return false;
-  try {
-    const res = await fetch(`${laravel}/api/user`, {
-      headers: { cookie, Accept: 'application/json' },
-    });
-    return res.ok;
-  } catch {
-    return false;
+const PUBLIC_PATHS = new Set(["/login", "/registro"]);
+
+/**
+ * Este proxy NO valida la sesión: solo mira si existe la cookie para evitar
+ * pintar el shell del backoffice y redirigir después. La verificación real
+ * (sesión + rol) vive en los layouts server-side, que es la única fuente de
+ * verdad. Así no hay doble fetch contra Laravel.
+ */
+export function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const hasSessionCookie = request.cookies.has(SESSION_COOKIE);
+
+  if (!hasSessionCookie && !PUBLIC_PATHS.has(pathname)) {
+    const loginUrl = new URL("/login", request.url);
+
+    if (pathname !== "/") {
+      loginUrl.searchParams.set("next", `${pathname}${search}`);
+    }
+
+    return NextResponse.redirect(loginUrl);
   }
-}
 
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const authenticated = await isAuthenticated(request);
+  if (hasSessionCookie && pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
-  if (!authenticated && pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-  if (authenticated && pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|sanctum|_next|favicon.ico|.*\\..*).*)'],
+  matcher: [
+    "/((?!api|sanctum|_next|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|woff2?)$).*)",
+  ],
 };
