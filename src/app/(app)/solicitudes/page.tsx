@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/ui/coming-soon";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Solicitudes",
 };
 
+/**
+ * Las solicitudes viven como pestaña dentro del flujo comercial de proformas.
+ * Se conserva la ruta antigua para no romper enlaces guardados.
+ */
 export default function SolicitudesPage() {
-  return (
-    <ComingSoon
-      title="Solicitudes"
-      description="Pedidos de clientes que todavía no se convirtieron en proforma."
-      bullets={[
-        "Bandeja de entrada con prioridad y responsable",
-        "Conversión directa a proforma",
-        "Historial de respuestas al cliente",
-      ]}
-    />
-  );
+  redirect("/proformas?tab=solicitudes");
 }

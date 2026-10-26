@@ -79,6 +79,20 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
+/** Placeholder para páginas que todavía no tienen datos que cargar. */
+export function ContentPageSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-48 rounded" />
+        <Skeleton className="h-4 w-72 max-w-full rounded" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-xl" />
+      <span className="sr-only">Cargando la página…</span>
+    </div>
+  );
+}
+
 export function ListPageSkeleton() {
   return (
     <div className="space-y-6" aria-busy="true">

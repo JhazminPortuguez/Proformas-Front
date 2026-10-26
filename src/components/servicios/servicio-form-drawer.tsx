@@ -8,9 +8,12 @@ import {
   TextAreaControl,
   TextFieldControl,
 } from "@/components/ui/fields";
+import { useAnnouncer } from "@/components/ui/announcer";
 import { servicios as serviciosApi } from "@/lib/api/client";
-import { errorMessage, isApiError } from "@/lib/api/types";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { isApiError } from "@/lib/api/types";
 import type { ErroresValidacion, Servicio } from "@/lib/api/types";
+import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError, parseDecimal } from "@/lib/utils";
 
 interface FormState {
@@ -33,6 +36,29 @@ const EMPTY: FormState = {
   visible_catalogo: true,
 };
 
+function toFormState(servicio: Servicio | null): FormState {
+  if (!servicio) return EMPTY;
+
+  return {
+    nombre: servicio.nombre,
+    descripcion: servicio.descripcion ?? "",
+    precio_base: String(servicio.precio_base),
+    duracion_estimada_min:
+      servicio.duracion_estimada_min !== null
+        ? String(servicio.duracion_estimada_min)
+        : "",
+    categoria: servicio.categoria ?? "",
+    activo: servicio.activo,
+    visible_catalogo: servicio.visible_catalogo,
+  };
+}
+
+function isDirty(initial: FormState, current: FormState): boolean {
+  return (Object.keys(initial) as (keyof FormState)[]).some(
+    (key) => initial[key] !== current[key],
+  );
+}
+
 interface ServicioFormDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -46,26 +72,19 @@ export function ServicioFormDrawer({
   servicio,
   onSaved,
 }: ServicioFormDrawerProps) {
-  const [form, setForm] = useState<FormState>(() =>
-    servicio
-      ? {
-          nombre: servicio.nombre,
-          descripcion: servicio.descripcion ?? "",
-          precio_base: String(servicio.precio_base),
-          duracion_estimada_min:
-            servicio.duracion_estimada_min !== null
-              ? String(servicio.duracion_estimada_min)
-              : "",
-          categoria: servicio.categoria ?? "",
-          activo: servicio.activo,
-          visible_catalogo: servicio.visible_catalogo,
-        }
-      : EMPTY,
-  );
-  const [errors, setErrors] = useState<ErroresValidacion>({});
-  const [error, setError] = useState<string | null>(null);
+  const [initial] = useState<FormState>(() => toFormState(servicio));
+  const [form, setForm] = useState<FormState>(initial);
   const [pending, setPending] = useState(false);
   const router = useRouter();
+  const { announce } = useAnnouncer();
+  const {
+    formRef,
+    fieldErrors,
+    fieldErrorCount,
+    message,
+    applyFieldErrors,
+    reset,
+  } = useFormErrors();
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -99,15 +118,13 @@ export function ServicioFormDrawer({
     }
 
     if (Object.keys(localErrors).length > 0) {
-      setErrors(localErrors);
-      setError("Revisa los datos ingresados.");
+      applyFieldErrors(localErrors, "Revisa los datos ingresados.");
 
       return;
     }
 
     setPending(true);
-    setErrors({});
-    setError(null);
+    reset();
 
     const payload = {
       nombre: form.nombre.trim(),
@@ -126,6 +143,7 @@ export function ServicioFormDrawer({
         await serviciosApi.create(payload);
       }
 
+      announce(servicio ? "Servicio actualizado." : "Servicio creado.");
       onSaved();
     } catch (caught) {
       if (isApiError(caught) && (caught.status === 401 || caught.status === 419)) {
@@ -135,12 +153,15 @@ export function ServicioFormDrawer({
         return;
       }
 
-      if (isApiError(caught)) {
-        setError(caught.message);
-        setErrors(caught.errors ?? {});
-      } else {
-        setError(errorMessage(caught));
-      }
+      const fallback = servicio
+        ? "No pudimos actualizar el servicio."
+        : "No pudimos crear el servicio.";
+      const error = apiErrorMessage(caught, fallback);
+
+      applyFieldErrors(
+        isApiError(caught) ? (caught.errors ?? {}) : {},
+        error,
+      );
     } finally {
       setPending(false);
     }
@@ -158,7 +179,11 @@ export function ServicioFormDrawer({
       }
       onSubmit={onSubmit}
       isPending={pending}
-      error={error}
+      error={message}
+      fieldErrorCount={fieldErrorCount}
+      isDirty={isDirty(initial, form)}
+      formRef={formRef}
+      size="lg"
       footer={
         <DrawerActions
           isPending={pending}
@@ -172,9 +197,8 @@ export function ServicioFormDrawer({
         label="Nombre del servicio"
         value={form.nombre}
         onChange={(value) => update("nombre", value)}
-        error={firstError(errors, "nombre")}
+        error={firstError(fieldErrors, "nombre")}
         isRequired
-        autoFocus
       />
 
       <TextAreaControl
@@ -182,7 +206,7 @@ export function ServicioFormDrawer({
         label="Descripción"
         value={form.descripcion}
         onChange={(value) => update("descripcion", value)}
-        error={firstError(errors, "descripcion")}
+        error={firstError(fieldErrors, "descripcion")}
         rows={3}
         description="Se muestra en el catálogo del cliente."
       />
@@ -197,7 +221,7 @@ export function ServicioFormDrawer({
           step={0.01}
           value={form.precio_base}
           onChange={(value) => update("precio_base", value)}
-          error={firstError(errors, "precio_base")}
+          error={firstError(fieldErrors, "precio_base")}
           isRequired
         />
 
@@ -210,7 +234,7 @@ export function ServicioFormDrawer({
           step={1}
           value={form.duracion_estimada_min}
           onChange={(value) => update("duracion_estimada_min", value)}
-          error={firstError(errors, "duracion_estimada_min")}
+          error={firstError(fieldErrors, "duracion_estimada_min")}
         />
       </div>
 
@@ -219,7 +243,7 @@ export function ServicioFormDrawer({
         label="Categoría"
         value={form.categoria}
         onChange={(value) => update("categoria", value)}
-        error={firstError(errors, "categoria")}
+        error={firstError(fieldErrors, "categoria")}
         description="Ej.: Mantenimiento, Instalación, Consultoría."
       />
 
@@ -240,10 +264,6 @@ export function ServicioFormDrawer({
           description="Controla si aparece en el portal del cliente."
         />
       </div>
-
-      <p role="status" aria-live="polite" className="sr-only">
-        {pending ? "Guardando servicio…" : ""}
-      </p>
     </FormDrawer>
   );
 }

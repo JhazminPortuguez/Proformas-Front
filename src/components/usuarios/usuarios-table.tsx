@@ -15,8 +15,10 @@ import {
 } from "@heroui/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAnnouncer } from "@/components/ui/announcer";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { usuarios as usuariosApi } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Rol, User } from "@/lib/api/types";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
@@ -48,6 +50,7 @@ export function UsuariosTable({
   currentUserId,
 }: UsuariosTableProps) {
   const router = useRouter();
+  const { announce } = useAnnouncer();
   const [isPending, startTransition] = useTransition();
   const [searchInput, setSearchInput] = useSyncedDraft(query.search);
   const [optimisticUsers, applyOptimistic] = useOptimistic(
@@ -86,6 +89,7 @@ export function UsuariosTable({
 
       try {
         await usuariosApi.update(id, patch);
+        announce("Usuario actualizado.");
         router.refresh();
       } catch (error) {
         if (handleUnauthorized(error)) return;
@@ -94,9 +98,7 @@ export function UsuariosTable({
           setRowError("Solo un administrador puede modificar usuarios.");
         } else {
           setRowError(
-            isApiError(error)
-              ? error.message
-              : "No pudimos actualizar el usuario.",
+            apiErrorMessage(error, "No pudimos actualizar el usuario."),
           );
         }
       } finally {
@@ -113,6 +115,7 @@ export function UsuariosTable({
 
     try {
       await usuariosApi.remove(toDelete.id);
+      announce("Usuario eliminado.");
       setToDelete(null);
       refresh();
     } catch (error) {
@@ -126,9 +129,7 @@ export function UsuariosTable({
         );
       } else {
         setDeleteError(
-          isApiError(error)
-            ? error.message
-            : "No pudimos eliminar el usuario.",
+          apiErrorMessage(error, "No pudimos eliminar el usuario."),
         );
       }
     } finally {
@@ -178,7 +179,7 @@ export function UsuariosTable({
               }}
               className="w-36"
             >
-              <Select.Trigger>
+              <Select.Trigger aria-label={`Rol de ${usuario.name}`}>
                 <Select.Value />
                 <Select.Indicator />
               </Select.Trigger>
@@ -256,7 +257,7 @@ export function UsuariosTable({
                   ? "No puedes eliminar tu propia cuenta"
                   : `Eliminar ${usuario.name}`
               }
-              className="text-danger"
+              className="size-9 text-danger"
               isDisabled={isSelf}
               onPress={() => {
                 setDeleteError(null);
@@ -285,13 +286,19 @@ export function UsuariosTable({
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
         >
           <TextField
+            aria-label="Buscar usuarios"
             name="search"
             value={searchInput}
             onChange={setSearchInput}
             className="w-full sm:w-72"
           >
             <Label className="sr-only">Buscar usuarios</Label>
-            <Input type="search" fullWidth placeholder="Buscar por nombre o email…" />
+            <Input
+              aria-label="Buscar usuarios"
+              type="search"
+              fullWidth
+              placeholder="Buscar por nombre o email…"
+            />
           </TextField>
 
           <Button type="submit" variant="secondary" size="md">

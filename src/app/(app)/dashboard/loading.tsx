@@ -1,9 +1,5 @@
-import { ListPageSkeleton } from "@/components/ui/feedback";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 
 export default function Loading() {
-  return (
-    <div className="space-y-4" aria-busy="true">
-      <ListPageSkeleton />
-    </div>
-  );
+  return <DashboardSkeleton />;
 }

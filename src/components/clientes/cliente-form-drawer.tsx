@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert } from "@heroui/react";
 import { DrawerActions, FormDrawer } from "@/components/ui/form-drawer";
-import { SelectControl, TextAreaControl, TextFieldControl } from "@/components/ui/fields";
+import { TextAreaControl, TextFieldControl, SelectControl } from "@/components/ui/fields";
+import { useAnnouncer } from "@/components/ui/announcer";
 import { clientes } from "@/lib/api/client";
-import { errorMessage, isApiError } from "@/lib/api/types";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { isApiError } from "@/lib/api/types";
 import type {
   Cliente,
   ClienteEstado,
   ErroresValidacion,
 } from "@/lib/api/types";
+import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 
 interface FormState {
@@ -38,6 +40,25 @@ const ESTADOS: { value: ClienteEstado; label: string }[] = [
   { value: "inactivo", label: "Inactivo" },
 ];
 
+function toFormState(cliente: Cliente | null): FormState {
+  if (!cliente) return EMPTY;
+
+  return {
+    nombre_razon: cliente.nombre_razon,
+    nit_ci: cliente.nit_ci ?? "",
+    telefono: cliente.telefono ?? "",
+    email: cliente.email ?? "",
+    direccion: cliente.direccion ?? "",
+    estado: cliente.estado,
+  };
+}
+
+function isDirty(initial: FormState, current: FormState): boolean {
+  return (Object.keys(initial) as (keyof FormState)[]).some(
+    (key) => initial[key] !== current[key],
+  );
+}
+
 interface ClienteFormDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -51,22 +72,19 @@ export function ClienteFormDrawer({
   cliente,
   onSaved,
 }: ClienteFormDrawerProps) {
-  const [form, setForm] = useState<FormState>(() =>
-    cliente
-      ? {
-          nombre_razon: cliente.nombre_razon,
-          nit_ci: cliente.nit_ci ?? "",
-          telefono: cliente.telefono ?? "",
-          email: cliente.email ?? "",
-          direccion: cliente.direccion ?? "",
-          estado: cliente.estado,
-        }
-      : EMPTY,
-  );
-  const [errors, setErrors] = useState<ErroresValidacion>({});
-  const [error, setError] = useState<string | null>(null);
+  const [initial] = useState<FormState>(() => toFormState(cliente));
+  const [form, setForm] = useState<FormState>(initial);
   const [pending, setPending] = useState(false);
   const router = useRouter();
+  const { announce } = useAnnouncer();
+  const {
+    formRef,
+    fieldErrors,
+    fieldErrorCount,
+    message,
+    applyFieldErrors,
+    reset,
+  } = useFormErrors();
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -75,18 +93,18 @@ export function ClienteFormDrawer({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.nombre_razon.trim()) {
-      setErrors({
-        nombre_razon: ["El nombre o razón social es obligatorio."],
-      });
-      setError("Revisa los datos ingresados.");
+    const localErrors: ErroresValidacion = form.nombre_razon.trim()
+      ? {}
+      : { nombre_razon: ["El nombre o razón social es obligatorio."] };
+
+    if (Object.keys(localErrors).length > 0) {
+      applyFieldErrors(localErrors, "Revisa los datos ingresados.");
 
       return;
     }
 
     setPending(true);
-    setErrors({});
-    setError(null);
+    reset();
 
     const payload = {
       nombre_razon: form.nombre_razon.trim(),
@@ -104,6 +122,7 @@ export function ClienteFormDrawer({
         await clientes.create(payload);
       }
 
+      announce(cliente ? "Cliente actualizado." : "Cliente creado.");
       onSaved();
     } catch (caught) {
       if (isApiError(caught) && (caught.status === 401 || caught.status === 419)) {
@@ -113,12 +132,15 @@ export function ClienteFormDrawer({
         return;
       }
 
-      if (isApiError(caught)) {
-        setError(caught.message);
-        setErrors(caught.errors ?? {});
-      } else {
-        setError(errorMessage(caught));
-      }
+      const fallback = cliente
+        ? "No pudimos actualizar el cliente."
+        : "No pudimos crear el cliente.";
+      const error = apiErrorMessage(caught, fallback);
+
+      applyFieldErrors(
+        isApiError(caught) ? (caught.errors ?? {}) : {},
+        error,
+      );
     } finally {
       setPending(false);
     }
@@ -136,7 +158,11 @@ export function ClienteFormDrawer({
       }
       onSubmit={onSubmit}
       isPending={pending}
-      error={error}
+      error={message}
+      fieldErrorCount={fieldErrorCount}
+      isDirty={isDirty(initial, form)}
+      formRef={formRef}
+      size="md"
       footer={
         <DrawerActions
           isPending={pending}
@@ -150,9 +176,8 @@ export function ClienteFormDrawer({
         label="Nombre o razón social"
         value={form.nombre_razon}
         onChange={(value) => update("nombre_razon", value)}
-        error={firstError(errors, "nombre_razon")}
+        error={firstError(fieldErrors, "nombre_razon")}
         isRequired
-        autoFocus
         autoComplete="organization"
       />
 
@@ -162,7 +187,7 @@ export function ClienteFormDrawer({
           label="NIT / CI"
           value={form.nit_ci}
           onChange={(value) => update("nit_ci", value)}
-          error={firstError(errors, "nit_ci")}
+          error={firstError(fieldErrors, "nit_ci")}
         />
 
         <TextFieldControl
@@ -173,7 +198,7 @@ export function ClienteFormDrawer({
           autoComplete="tel"
           value={form.telefono}
           onChange={(value) => update("telefono", value)}
-          error={firstError(errors, "telefono")}
+          error={firstError(fieldErrors, "telefono")}
         />
       </div>
 
@@ -185,7 +210,7 @@ export function ClienteFormDrawer({
         autoComplete="email"
         value={form.email}
         onChange={(value) => update("email", value)}
-        error={firstError(errors, "email")}
+        error={firstError(fieldErrors, "email")}
       />
 
       <TextAreaControl
@@ -193,7 +218,7 @@ export function ClienteFormDrawer({
         label="Dirección"
         value={form.direccion}
         onChange={(value) => update("direccion", value)}
-        error={firstError(errors, "direccion")}
+        error={firstError(fieldErrors, "direccion")}
         rows={2}
       />
 
@@ -203,23 +228,11 @@ export function ClienteFormDrawer({
         value={form.estado}
         onChange={(value) => update("estado", value)}
         options={ESTADOS}
-        error={firstError(errors, "estado")}
+        error={firstError(fieldErrors, "estado")}
         isRequired
         description="Prospecto: aún no compra. Activo: cliente vigente."
       />
 
-      {errors.cliente ? (
-        <Alert status="warning" role="alert">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{errors.cliente.join(" ")}</Alert.Description>
-          </Alert.Content>
-        </Alert>
-      ) : null}
-
-      <p role="status" aria-live="polite" className="sr-only">
-        {pending ? "Guardando cliente…" : ""}
-      </p>
     </FormDrawer>
   );
 }

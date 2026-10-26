@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Search, Trash2, UserRound } from "lucide-react";
+import { History, Pencil, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { Button, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAnnouncer } from "@/components/ui/announcer";
 import { ClienteEstadoChip } from "@/components/ui/status-chip";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { clientes as clientesApi } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, ClienteEstado, PaginationMeta } from "@/lib/api/types";
 import { buildQuery, formatNumber } from "@/lib/utils";
@@ -41,6 +44,7 @@ export function ClientesTable({
   canDelete,
 }: ClientesTableProps) {
   const router = useRouter();
+  const { announce } = useAnnouncer();
   const [isPending, startTransition] = useTransition();
   const [searchInput, setSearchInput] = useSyncedDraft(query.search);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -96,6 +100,7 @@ export function ClientesTable({
 
     try {
       await clientesApi.remove(toDelete.id);
+      announce("Cliente eliminado.");
       setToDelete(null);
       refresh();
     } catch (error) {
@@ -109,9 +114,7 @@ export function ClientesTable({
         );
       } else {
         setDeleteError(
-          isApiError(error)
-            ? error.message
-            : "No pudimos eliminar el cliente.",
+          apiErrorMessage(error, "No pudimos eliminar el cliente."),
         );
       }
     } finally {
@@ -120,6 +123,9 @@ export function ClientesTable({
   }
 
   const filtersActive = Boolean(query.search || query.estado);
+  const showOrdenesCount = clientes.some(
+    (cliente) => typeof cliente.ordenes_count === "number",
+  );
 
   const columns: DataTableColumn<Cliente>[] = [
     {
@@ -128,9 +134,12 @@ export function ClientesTable({
       isRowHeader: true,
       cell: (cliente) => (
         <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">
+          <Link
+            href={`/clientes/${cliente.id}`}
+            className="block truncate font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
             {cliente.nombre_razon}
-          </p>
+          </Link>
           {cliente.direccion ? (
             <p className="truncate text-xs text-muted">{cliente.direccion}</p>
           ) : null}
@@ -178,17 +187,42 @@ export function ClientesTable({
         </span>
       ),
     },
+    ...(showOrdenesCount
+      ? [
+          {
+            id: "ordenes",
+            header: "Órdenes",
+            className: "hidden sm:table-cell text-end",
+            cell: (cliente: Cliente) => (
+              <span className="numeric text-sm text-muted">
+                {typeof cliente.ordenes_count === "number"
+                  ? formatNumber(cliente.ordenes_count)
+                  : "—"}
+              </span>
+            ),
+          } satisfies DataTableColumn<Cliente>,
+        ]
+      : []),
     {
       id: "acciones",
       header: "Acciones",
       className: "text-end",
       cell: (cliente) => (
         <div className="flex items-center justify-end gap-1">
+          <Link
+            href={`/clientes/${cliente.id}`}
+            className="grid size-9 place-items-center rounded-lg text-muted transition-colors duration-200 hover:bg-surface-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            aria-label={`Ver historial de ${cliente.nombre_razon}`}
+          >
+            <History aria-hidden className="size-4" />
+          </Link>
+
           <Button
             variant="ghost"
             size="sm"
             isIconOnly
             aria-label={`Editar ${cliente.nombre_razon}`}
+            className="size-9"
             onPress={() => openEdit(cliente)}
           >
             <Pencil aria-hidden className="size-4" />
@@ -200,7 +234,7 @@ export function ClientesTable({
               size="sm"
               isIconOnly
               aria-label={`Eliminar ${cliente.nombre_razon}`}
-              className="text-danger"
+              className="size-9 text-danger"
               onPress={() => {
                 setDeleteError(null);
                 setToDelete(cliente);
@@ -226,6 +260,7 @@ export function ClientesTable({
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
         >
           <TextField
+            aria-label="Buscar clientes"
             name="search"
             value={searchInput}
             onChange={setSearchInput}
@@ -233,6 +268,7 @@ export function ClientesTable({
           >
             <Label className="sr-only">Buscar clientes</Label>
             <Input
+              aria-label="Buscar clientes"
               type="search"
               fullWidth
               placeholder="Buscar por nombre, NIT o email…"
@@ -256,7 +292,7 @@ export function ClientesTable({
             }}
             className="w-full sm:w-48"
           >
-            <Select.Trigger>
+            <Select.Trigger aria-label="Filtrar por estado">
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>

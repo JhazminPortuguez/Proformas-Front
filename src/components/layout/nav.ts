@@ -2,7 +2,6 @@ import {
   BarChart3,
   ClipboardList,
   FileText,
-  Inbox,
   LayoutDashboard,
   Package,
   Settings,
@@ -43,22 +42,21 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operación",
     items: [
-      { label: "Órdenes", href: "/ordenes", icon: ClipboardList, ready: false },
-      { label: "Solicitudes", href: "/solicitudes", icon: Inbox, ready: false },
+      { label: "Órdenes", href: "/ordenes", icon: ClipboardList, ready: true },
     ],
   },
   {
     label: "Comercial",
     items: [
       { label: "Clientes", href: "/clientes", icon: Users, ready: true },
-      { label: "Proformas", href: "/proformas", icon: FileText, ready: false },
+      { label: "Proformas", href: "/proformas", icon: FileText, ready: true },
       { label: "Servicios", href: "/servicios", icon: Wrench, ready: true },
     ],
   },
   {
     label: "Inventario",
     items: [
-      { label: "Inventario", href: "/inventario", icon: Package, ready: false },
+      { label: "Inventario", href: "/inventario", icon: Package, ready: true },
     ],
   },
   {
@@ -68,7 +66,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Cuentas por cobrar",
         href: "/cobros",
         icon: Wallet,
-        ready: false,
+        ready: true,
       },
     ],
   },

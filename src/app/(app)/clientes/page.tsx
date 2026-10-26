@@ -5,8 +5,10 @@ import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { ClientesTable } from "@/components/clientes/clientes-table";
 import { getClientes, requireUser } from "@/lib/api/server";
-import { errorMessage, isApiError } from "@/lib/api/types";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { isApiError } from "@/lib/api/types";
 import type { Cliente, ClienteEstado, Paginated } from "@/lib/api/types";
+import { can } from "@/lib/permissions";
 
 export const metadata: Metadata = {
   title: "Clientes",
@@ -47,7 +49,7 @@ export default async function ClientesPage({
       <>
         <PageHeader title="Clientes" />
         <ErrorState
-          message={errorMessage(error)}
+          message={apiErrorMessage(error)}
           action={<RetryButton />}
         />
       </>
@@ -65,7 +67,7 @@ export default async function ClientesPage({
         clientes={result.data}
         meta={result.meta}
         query={{ search, estado, page }}
-        canDelete={user.rol === "admin"}
+        canDelete={can(user, "clientes.eliminar")}
       />
     </>
   );

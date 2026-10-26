@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { Alert, Button } from "@heroui/react";
 import { AuthCard } from "@/components/auth/auth-card";
 import { TextFieldControl } from "@/components/ui/fields";
+import { useAnnouncer } from "@/components/ui/announcer";
+import { FormErrorSummary } from "@/components/ui/form-errors";
 import { auth } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
-import type { ErroresValidacion } from "@/lib/api/types";
 
 export function RegistroForm() {
   const router = useRouter();
@@ -19,29 +22,35 @@ export function RegistroForm() {
   const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
-  const [errors, setErrors] = useState<ErroresValidacion>({});
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const { announce } = useAnnouncer();
+  const {
+    formRef,
+    fieldErrors,
+    fieldErrorCount,
+    message,
+    applyFieldErrors,
+    reset,
+  } = useFormErrors();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
 
-    const localErrors: ErroresValidacion = {};
+    const localErrors: Record<string, string[]> = {};
 
     if (password.length > 0 && password !== confirmacion) {
       localErrors.password_confirmation = ["Las contraseñas no coinciden."];
     }
 
     if (Object.keys(localErrors).length > 0) {
-      setErrors(localErrors);
-      setError("Revisa los datos ingresados.");
+      applyFieldErrors(localErrors, "Revisa los datos ingresados.");
 
       return;
     }
 
-    setErrors({});
+    reset();
     setPending(true);
+    announce("Creando tu cuenta…");
 
     try {
       const user = await auth.register({
@@ -52,23 +61,27 @@ export function RegistroForm() {
         ...(telefono.trim() ? { telefono: telefono.trim() } : {}),
       });
 
+      announce("Cuenta creada. Bienvenido a tu portal.");
       router.replace(homePathFor(user.rol));
       router.refresh();
     } catch (caught) {
-      if (isApiError(caught)) {
-        const serverErrors = { ...(caught.errors ?? {}) };
-        const passwordErrors = serverErrors.password;
+      const serverErrors = isApiError(caught)
+        ? { ...(caught.errors ?? {}) }
+        : {};
+      const passwordErrors = serverErrors.password;
 
-        if (passwordErrors?.some((message) => /confirm/i.test(message))) {
-          serverErrors.password_confirmation = passwordErrors;
-          delete serverErrors.password;
-        }
-
-        setError(caught.message);
-        setErrors(serverErrors);
-      } else {
-        setError("No pudimos crear la cuenta. Intenta nuevamente.");
+      if (passwordErrors?.some((fieldMessage) => /confirm/i.test(fieldMessage))) {
+        serverErrors.password_confirmation = passwordErrors;
+        delete serverErrors.password;
       }
+
+      applyFieldErrors(
+        serverErrors,
+        apiErrorMessage(
+          caught,
+          "No pudimos crear la cuenta. Revisa tus datos e intenta nuevamente.",
+        ),
+      );
     } finally {
       setPending(false);
     }
@@ -91,17 +104,20 @@ export function RegistroForm() {
       }
     >
       <form
+        ref={formRef}
         onSubmit={onSubmit}
         noValidate
         aria-busy={pending}
         className="flex flex-col gap-4"
       >
-        {error ? (
+        {fieldErrorCount > 0 ? (
+          <FormErrorSummary count={fieldErrorCount} message={message} />
+        ) : message ? (
           <Alert status="danger" role="alert">
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>No pudimos crear la cuenta</Alert.Title>
-              <Alert.Description>{error}</Alert.Description>
+              <Alert.Description>{message}</Alert.Description>
             </Alert.Content>
           </Alert>
         ) : null}
@@ -112,9 +128,8 @@ export function RegistroForm() {
           autoComplete="name"
           value={nombre}
           onChange={setNombre}
-          error={firstError(errors, "name")}
+          error={firstError(fieldErrors, "name")}
           isRequired
-          autoFocus
         />
 
         <TextFieldControl
@@ -125,7 +140,7 @@ export function RegistroForm() {
           inputMode="email"
           value={email}
           onChange={setEmail}
-          error={firstError(errors, "email")}
+          error={firstError(fieldErrors, "email")}
           isRequired
         />
 
@@ -137,7 +152,7 @@ export function RegistroForm() {
           inputMode="tel"
           value={telefono}
           onChange={setTelefono}
-          error={firstError(errors, "telefono")}
+          error={firstError(fieldErrors, "telefono")}
           description="Opcional. Nos sirve para contactarte."
         />
 
@@ -148,7 +163,7 @@ export function RegistroForm() {
           autoComplete="new-password"
           value={password}
           onChange={setPassword}
-          error={firstError(errors, "password")}
+          error={firstError(fieldErrors, "password")}
           description="Mínimo 8 caracteres."
           isRequired
         />
@@ -160,7 +175,7 @@ export function RegistroForm() {
           autoComplete="new-password"
           value={confirmacion}
           onChange={setConfirmacion}
-          error={firstError(errors, "password_confirmation")}
+          error={firstError(fieldErrors, "password_confirmation")}
           isRequired
         />
 
@@ -174,9 +189,6 @@ export function RegistroForm() {
           {pending ? "Creando cuenta…" : "Crear cuenta"}
         </Button>
 
-        <p role="status" aria-live="polite" className="sr-only">
-          {pending ? "Creando tu cuenta…" : ""}
-        </p>
       </form>
     </AuthCard>
   );

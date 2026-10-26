@@ -20,10 +20,17 @@ const dateFormatter = new Intl.DateTimeFormat("es-BO", {
   timeZone: "America/La_Paz",
 });
 
-const shortDateFormatter = new Intl.DateTimeFormat("es-BO", {
+/**
+ * Las fechas date-only (`YYYY-MM-DD`) no representan un instante: si se pasan
+ * a `new Date()` se interpretan como medianoche UTC y en America/La_Paz
+ * (UTC-4) retroceden un día. Este formateador las trata como fecha calendario.
+ */
+const dateOnlyFormatter = new Intl.DateTimeFormat("es-BO", {
   dateStyle: "medium",
-  timeZone: "America/La_Paz",
+  timeZone: "UTC",
 });
+
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
 
 export function formatMoney(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
@@ -47,14 +54,44 @@ export function formatDateTime(value: string | null | undefined): string {
   return dateFormatter.format(date);
 }
 
-export function formatDate(value: string | null | undefined): string {
+/**
+ * Formatea una fecha date-only (`YYYY-MM-DD`) sin desplazarla de día.
+ *
+ * No usa `new Date("YYYY-MM-DD")`: ese constructor interpreta la cadena como
+ * medianoche UTC y, al mostrarla en America/La_Paz, resta un día. Acá se
+ * construye la fecha en UTC y se formatea explícitamente en UTC.
+ */
+export function formatDateOnly(value: string | null | undefined): string {
   if (!value) return "—";
 
-  const date = new Date(value);
+  const trimmed = value.trim();
+  const match = DATE_ONLY_PATTERN.exec(trimmed);
 
-  if (Number.isNaN(date.getTime())) return value;
+  if (!match) return trimmed;
 
-  return shortDateFormatter.format(date);
+  const [, year, month, day] = match;
+  const date = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)),
+  );
+
+  // Rechaza fechas inexistentes (por ejemplo 2026-02-30) sin reescribirlas.
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    return trimmed;
+  }
+
+  return dateOnlyFormatter.format(date);
+}
+
+/**
+ * @deprecated Para fechas date-only usar `formatDateOnly`; para timestamps,
+ * `formatDateTime`. Se mantiene como alias para no romper imports antiguos.
+ */
+export function formatDate(value: string | null | undefined): string {
+  return formatDateOnly(value);
 }
 
 type QueryValue = string | number | boolean | null | undefined;

@@ -3,14 +3,33 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  apiErrorFromResponse,
+  NETWORK_ERROR_MESSAGE,
+  type ApiErrorBody,
+} from "./errors";
 import { ApiError } from "./types";
 import type {
   Cliente,
   ClienteEstado,
+  ClienteResumen,
+  CxCResumen,
+  CuentaPorCobrar,
   DashboardData,
+  EstadoCobro,
+  EstadoOrden,
+  EstadoProforma,
+  HistorialServicio,
+  InventarioResumen,
+  MovimientoInventario,
+  Orden,
   Paginated,
+  Producto,
+  Proforma,
   Rol,
   Servicio,
+  Solicitud,
+  TipoMovimientoInventario,
   User,
 } from "./types";
 import { buildQuery } from "@/lib/utils";
@@ -22,21 +41,6 @@ const API_URL = (process.env.LARAVEL_API_URL ?? "http://127.0.0.1:8000").replace
 
 const API_PREFIX = "/api/v1";
 const REQUEST_TIMEOUT_MS = 8_000;
-
-const STATUS_MESSAGES: Record<number, string> = {
-  401: "Tu sesión expiró.",
-  403: "No tienes permisos para ver esta información.",
-  404: "No encontramos la información solicitada.",
-  419: "Tu sesión expiró.",
-  422: "Revisa los datos enviados.",
-  429: "Demasiadas solicitudes. Intenta en unos segundos.",
-  500: "La API tuvo un problema. Intenta nuevamente.",
-};
-
-interface ErrorBody {
-  message?: string;
-  errors?: Record<string, string[]>;
-}
 
 /**
  * Lectura server-side contra Laravel reenviando la cookie de sesión.
@@ -65,10 +69,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch {
-    throw new ApiError(
-      "No pudimos conectar con el servidor. Intenta nuevamente.",
-      0,
-    );
+    throw new ApiError(NETWORK_ERROR_MESSAGE, 0);
   }
 
   if (response.status === 204) {
@@ -76,15 +77,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 
   const body = (await response.json().catch(() => null)) as
-    | (T & ErrorBody)
+    | (T & ApiErrorBody)
     | null;
 
   if (!response.ok) {
-    throw new ApiError(
-      body?.message ?? STATUS_MESSAGES[response.status] ?? "Error inesperado.",
-      response.status,
-      body?.errors,
-    );
+    throw apiErrorFromResponse(response.status, body);
   }
 
   return body as T;
@@ -174,6 +171,44 @@ export function getClientes({
   return request<Paginated<Cliente>>(`/clientes${query}`);
 }
 
+/**
+ * Ficha del cliente. El detalle puede venir plano o dentro de `data`; se tolera
+ * la segunda forma por consistencia con el resto de recursos.
+ */
+export async function getCliente(id: number): Promise<Cliente> {
+  const body = await request<Cliente | { data: Cliente }>(`/clientes/${id}`);
+
+  if (body && typeof body === "object" && "data" in body) {
+    return body.data;
+  }
+
+  return body as Cliente;
+}
+
+/** Agregados de la ficha: proformas, órdenes, cobros y servicios. */
+export function getClienteResumen(id: number): Promise<ClienteResumen> {
+  return request<ClienteResumen>(`/clientes/${id}/resumen`);
+}
+
+export interface ListarHistorialServiciosParams {
+  clienteId: number;
+  page?: number;
+  perPage?: number;
+}
+
+/** Servicios ejecutados para el cliente, paginados por línea de orden. */
+export function getHistorialServicios({
+  clienteId,
+  page = 1,
+  perPage = 15,
+}: ListarHistorialServiciosParams): Promise<Paginated<HistorialServicio>> {
+  const query = buildQuery({ page, per_page: perPage });
+
+  return request<Paginated<HistorialServicio>>(
+    `/clientes/${clienteId}/servicios${query}`,
+  );
+}
+
 export interface ListarServiciosParams {
   search?: string;
   activo?: boolean | "";
@@ -201,18 +236,298 @@ export function getServicios({
   return request<Paginated<Servicio>>(`/servicios${query}`);
 }
 
+export interface ListarProformasParams {
+  search?: string;
+  estado?: EstadoProforma | "";
+  clienteId?: number | "";
+  desde?: string;
+  hasta?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export function getProformas({
+  search,
+  estado,
+  clienteId,
+  desde,
+  hasta,
+  page = 1,
+  perPage = 10,
+}: ListarProformasParams = {}): Promise<Paginated<Proforma>> {
+  const query = buildQuery({
+    search,
+    estado,
+    cliente_id: clienteId,
+    desde,
+    hasta,
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<Proforma>>(`/proformas${query}`);
+}
+
+/**
+ * El detalle puede venir como recurso plano o envuelto en `data`; el contrato
+ * actual es plano, pero tolerar ambas formas evita romper la pantalla si el
+ * backend estandariza recursos más adelante.
+ */
+export async function getProforma(id: number): Promise<Proforma> {
+  const body = await request<Proforma | { data: Proforma }>(`/proformas/${id}`);
+
+  if (body && typeof body === "object" && "data" in body) {
+    return body.data;
+  }
+
+  return body as Proforma;
+}
+
+export interface ListarProductosParams {
+  search?: string;
+  activo?: boolean | "";
+  page?: number;
+  perPage?: number;
+}
+
+export function getProductos({
+  search,
+  activo,
+  page = 1,
+  perPage = 10,
+}: ListarProductosParams = {}): Promise<Paginated<Producto>> {
+  const query = buildQuery({
+    search,
+    activo: typeof activo === "boolean" ? (activo ? 1 : 0) : "",
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<Producto>>(`/productos${query}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inventario                                                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface ListarInventarioParams {
+  search?: string;
+  bajoStock?: boolean | "";
+  activo?: boolean | "";
+  page?: number;
+  perPage?: number;
+}
+
+export function getInventario({
+  search,
+  bajoStock,
+  activo,
+  page = 1,
+  perPage = 10,
+}: ListarInventarioParams = {}): Promise<Paginated<Producto>> {
+  const query = buildQuery({
+    search,
+    bajo_stock: typeof bajoStock === "boolean" ? (bajoStock ? 1 : 0) : "",
+    activo: typeof activo === "boolean" ? (activo ? 1 : 0) : "",
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<Producto>>(`/inventario${query}`);
+}
+
+export function getInventarioResumen(): Promise<InventarioResumen> {
+  return request<InventarioResumen>("/inventario/resumen");
+}
+
+export interface ListarMovimientosInventarioParams {
+  search?: string;
+  productoId?: number | "";
+  tipo?: TipoMovimientoInventario | "";
+  ordenId?: number | "";
+  desde?: string;
+  hasta?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export function getMovimientosInventario({
+  search,
+  productoId,
+  tipo,
+  ordenId,
+  desde,
+  hasta,
+  page = 1,
+  perPage = 15,
+}: ListarMovimientosInventarioParams = {}): Promise<
+  Paginated<MovimientoInventario>
+> {
+  const query = buildQuery({
+    search,
+    producto_id: productoId,
+    tipo,
+    orden_id: ordenId,
+    desde,
+    hasta,
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<MovimientoInventario>>(
+    `/inventario/movimientos${query}`,
+  );
+}
+
+export interface ListarSolicitudesParams {
+  search?: string;
+  estado?: string;
+  clienteId?: number | "";
+  page?: number;
+  perPage?: number;
+}
+
+export function getSolicitudes({
+  search,
+  estado,
+  clienteId,
+  page = 1,
+  perPage = 10,
+}: ListarSolicitudesParams = {}): Promise<Paginated<Solicitud>> {
+  const query = buildQuery({
+    search,
+    estado,
+    cliente_id: clienteId,
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<Solicitud>>(`/solicitudes${query}`);
+}
+
 export interface ListarUsuariosParams {
   search?: string;
+  rol?: Rol | "";
+  activo?: boolean | "";
   page?: number;
   perPage?: number;
 }
 
 export function getUsuarios({
   search,
+  rol,
+  activo,
   page = 1,
   perPage = 10,
 }: ListarUsuariosParams = {}): Promise<Paginated<User>> {
-  const query = buildQuery({ search, page, per_page: perPage });
+  const query = buildQuery({
+    search,
+    rol,
+    activo: typeof activo === "boolean" ? (activo ? 1 : 0) : "",
+    page,
+    per_page: perPage,
+  });
 
   return request<Paginated<User>>(`/users${query}`);
+}
+
+export interface ListarOrdenesParams {
+  search?: string;
+  estado?: EstadoOrden | "";
+  operarioId?: number | "";
+  clienteId?: number | "";
+  page?: number;
+  perPage?: number;
+}
+
+export function getOrdenes({
+  search,
+  estado,
+  operarioId,
+  clienteId,
+  page = 1,
+  perPage = 15,
+}: ListarOrdenesParams = {}): Promise<Paginated<Orden>> {
+  const query = buildQuery({
+    search,
+    estado,
+    operario_id: operarioId,
+    cliente_id: clienteId,
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<Orden>>(`/ordenes${query}`);
+}
+
+/**
+ * El detalle puede venir como recurso plano o envuelto en `data` (mismo criterio
+ * tolerante que `getProforma`).
+ */
+export async function getOrden(id: number): Promise<Orden> {
+  const body = await request<Orden | { data: Orden }>(`/ordenes/${id}`);
+
+  if (body && typeof body === "object" && "data" in body) {
+    return body.data;
+  }
+
+  return body as Orden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cuentas por cobrar                                                         */
+/* -------------------------------------------------------------------------- */
+
+export interface ListarCuentasPorCobrarParams {
+  search?: string;
+  estado?: EstadoCobro | "";
+  /** `true` agrega `vencida=1`; el backend resuelve el vencimiento. */
+  vencida?: boolean;
+  clienteId?: number | "";
+  /** Rango de vencimiento (fechas date-only). */
+  desde?: string;
+  hasta?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export function getCuentasPorCobrar({
+  search,
+  estado,
+  vencida,
+  clienteId,
+  desde,
+  hasta,
+  page = 1,
+  perPage = 15,
+}: ListarCuentasPorCobrarParams = {}): Promise<Paginated<CuentaPorCobrar>> {
+  const query = buildQuery({
+    search,
+    estado_cobro: estado,
+    vencida: vencida ? 1 : "",
+    cliente_id: clienteId,
+    desde,
+    hasta,
+    page,
+    per_page: perPage,
+  });
+
+  return request<Paginated<CuentaPorCobrar>>(`/cuentas-por-cobrar${query}`);
+}
+
+export function getCxCResumen(): Promise<CxCResumen> {
+  return request<CxCResumen>("/cuentas-por-cobrar/resumen");
+}
+
+/** Mismo criterio tolerante de detalle que `getOrden` y `getProforma`. */
+export async function getCuentaPorCobrar(id: number): Promise<CuentaPorCobrar> {
+  const body = await request<CuentaPorCobrar | { data: CuentaPorCobrar }>(
+    `/cuentas-por-cobrar/${id}`,
+  );
+
+  if (body && typeof body === "object" && "data" in body) {
+    return body.data;
+  }
+
+  return body as CuentaPorCobrar;
 }

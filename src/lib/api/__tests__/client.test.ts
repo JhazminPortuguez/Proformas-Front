@@ -48,7 +48,7 @@ describe("api client", () => {
     await expect(auth.me()).rejects.toMatchObject({
       name: "ApiError",
       status: 401,
-      message: "No autenticado.",
+      message: "Tu sesión expiró. Vuelve a ingresar.",
     });
   });
 
@@ -109,7 +109,8 @@ describe("api client", () => {
     await expect(auth.me()).rejects.toMatchObject({
       name: "ApiError",
       status: 0,
-      message: "No pudimos conectar con el servidor.",
+      message:
+        "No pudimos conectar con el servidor. Revisa tu conexión e intenta nuevamente.",
     });
   });
 });

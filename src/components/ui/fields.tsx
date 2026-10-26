@@ -22,10 +22,24 @@ interface BaseFieldProps {
   isDisabled?: boolean;
 }
 
+/**
+ * FieldError queda enlazado al input vía aria-describedby; el wrapper con
+ * role="alert" anuncia el cambio apenas aparece el error.
+ */
+function FieldErrorMessage({ error }: { error?: string }) {
+  if (!error) return null;
+
+  return (
+    <span role="alert">
+      <FieldError className="text-xs">{error}</FieldError>
+    </span>
+  );
+}
+
 interface TextFieldControlProps extends BaseFieldProps {
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "email" | "tel" | "password" | "number" | "url";
+  type?: "text" | "email" | "tel" | "password" | "number" | "url" | "date";
   autoComplete?: string;
   placeholder?: string;
   inputMode?: "text" | "email" | "tel" | "numeric" | "decimal";
@@ -53,10 +67,11 @@ export function TextFieldControl({
 }: TextFieldControlProps) {
   return (
     <TextField
+      aria-label={label}
       name={name}
+      data-field={name}
       value={value}
       onChange={onChange}
-      type={type}
       autoComplete={autoComplete}
       isRequired={isRequired}
       isDisabled={isDisabled}
@@ -75,7 +90,9 @@ export function TextFieldControl({
       </Label>
 
       <Input
+        aria-label={label}
         fullWidth
+        type={type}
         placeholder={placeholder}
         inputMode={inputMode}
         min={min}
@@ -84,7 +101,7 @@ export function TextFieldControl({
       />
 
       {description && !error ? <Description>{description}</Description> : null}
-      <FieldError className="text-xs">{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </TextField>
   );
 }
@@ -110,7 +127,9 @@ export function TextAreaControl({
 }: TextAreaControlProps) {
   return (
     <TextField
+      aria-label={label}
       name={name}
+      data-field={name}
       value={value}
       onChange={onChange}
       isRequired={isRequired}
@@ -129,10 +148,10 @@ export function TextAreaControl({
         ) : null}
       </Label>
 
-      <TextArea fullWidth rows={rows} placeholder={placeholder} />
+      <TextArea aria-label={label} fullWidth rows={rows} placeholder={placeholder} />
 
       {description && !error ? <Description>{description}</Description> : null}
-      <FieldError className="text-xs">{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </TextField>
   );
 }
@@ -161,7 +180,9 @@ export function SelectControl<T extends string>({
 }: SelectControlProps<T>) {
   return (
     <Select
+      aria-label={label}
       name={name}
+      data-field={name}
       selectedKey={value}
       onSelectionChange={(key) => {
         if (key !== null) onChange(String(key) as T);
@@ -182,7 +203,7 @@ export function SelectControl<T extends string>({
         ) : null}
       </Label>
 
-      <Select.Trigger>
+      <Select.Trigger aria-label={label}>
         <Select.Value />
         <Select.Indicator />
       </Select.Trigger>
@@ -203,7 +224,7 @@ export function SelectControl<T extends string>({
       </Select.Popover>
 
       {description && !error ? <Description>{description}</Description> : null}
-      <FieldError className="text-xs">{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </Select>
   );
 }
@@ -228,6 +249,7 @@ export function SwitchControl({
   return (
     <Switch
       name={name}
+      data-field={name}
       isSelected={isSelected}
       onChange={onChange}
       isDisabled={isDisabled}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AnnouncerProvider } from "@/components/ui/announcer";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
@@ -58,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         className="min-h-dvh bg-background font-sans text-foreground antialiased"
         suppressHydrationWarning
       >
-        {children}
+        <AnnouncerProvider>{children}</AnnouncerProvider>
       </body>
     </html>
   );

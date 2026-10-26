@@ -5,6 +5,10 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   actions?: ReactNode;
+  /** Contenido sobre el título (volver, breadcrumb corto, etc.). */
+  back?: ReactNode;
+  /** Permite que títulos largos (números de documento) usen varias líneas. */
+  wrap?: boolean;
   className?: string;
 }
 
@@ -12,6 +16,8 @@ export function PageHeader({
   title,
   description,
   actions,
+  back,
+  wrap = false,
   className,
 }: PageHeaderProps) {
   return (
@@ -21,10 +27,18 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="min-w-0">
-        <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
+      <div className="min-w-0 flex-1">
+        {back ? <div className="mb-2">{back}</div> : null}
+
+        <h1
+          className={cn(
+            "text-2xl font-semibold tracking-tight text-foreground",
+            wrap ? "text-balance break-words" : "truncate",
+          )}
+        >
           {title}
         </h1>
+
         {description ? (
           <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p>
         ) : null}

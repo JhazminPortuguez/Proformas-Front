@@ -5,7 +5,8 @@ import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { UsuariosTable } from "@/components/usuarios/usuarios-table";
 import { getUsuarios, requireUser } from "@/lib/api/server";
-import { errorMessage, isApiError } from "@/lib/api/types";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { isApiError } from "@/lib/api/types";
 import type { Paginated, User } from "@/lib/api/types";
 
 export const metadata: Metadata = {
@@ -41,7 +42,7 @@ export default async function UsuariosPage({
       <>
         <PageHeader title="Usuarios" />
         <ErrorState
-          message={errorMessage(error)}
+          message={apiErrorMessage(error)}
           action={<RetryButton />}
         />
       </>

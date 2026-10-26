@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
 import { Chip } from "@heroui/react";
 import type { ClienteEstado, Rol } from "@/lib/api/types";
+import {
+  ordenEstadoMeta,
+  proformaEstadoMeta,
+  solicitudEstadoMeta,
+  type EstadoTone,
+} from "@/lib/estados";
 import { ROLE_LABELS } from "@/lib/roles";
 
-type Tone = "neutral" | "accent" | "success" | "warning" | "danger";
+type Tone = EstadoTone;
 
 const TONE_COLOR: Record<
   Tone,
@@ -60,6 +66,24 @@ export function CatalogoChip({ visible }: { visible: boolean }) {
       {visible ? "En catálogo" : "Oculto"}
     </StatusChip>
   );
+}
+
+export function ProformaEstadoChip({ estado }: { estado: string }) {
+  const meta = proformaEstadoMeta(estado);
+
+  return <StatusChip tone={meta.tone}>{meta.label}</StatusChip>;
+}
+
+export function OrdenEstadoChip({ estado }: { estado: string }) {
+  const meta = ordenEstadoMeta(estado);
+
+  return <StatusChip tone={meta.tone}>{meta.label}</StatusChip>;
+}
+
+export function SolicitudEstadoChip({ estado }: { estado: string }) {
+  const meta = solicitudEstadoMeta(estado);
+
+  return <StatusChip tone={meta.tone}>{meta.label}</StatusChip>;
 }
 
 export function RolChip({ rol }: { rol: Rol }) {

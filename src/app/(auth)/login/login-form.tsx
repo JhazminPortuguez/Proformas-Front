@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { Alert, Button } from "@heroui/react";
 import { AuthCard } from "@/components/auth/auth-card";
 import { TextFieldControl } from "@/components/ui/fields";
+import { useAnnouncer } from "@/components/ui/announcer";
+import { FormErrorSummary } from "@/components/ui/form-errors";
 import { auth } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 import { homePathFor } from "@/lib/roles";
-import type { ErroresValidacion } from "@/lib/api/types";
 import { isApiError } from "@/lib/api/types";
 
 function safeNextPath(next: string | null): string | null {
@@ -30,30 +33,39 @@ export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<ErroresValidacion>({});
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const { announce } = useAnnouncer();
+  const {
+    formRef,
+    fieldErrors,
+    fieldErrorCount,
+    message,
+    applyFieldErrors,
+    reset,
+  } = useFormErrors();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setErrors({});
+    reset();
     setPending(true);
+    announce("Verificando credenciales…");
 
     try {
       const user = await auth.login(email, password);
       const next = new URLSearchParams(window.location.search).get("next");
       const safeNext = safeNextPath(next) ?? homePathFor(user.rol);
 
+      announce("Sesión iniciada.");
       router.replace(safeNext);
       router.refresh();
     } catch (caught) {
-      if (isApiError(caught)) {
-        setError(caught.message);
-        setErrors(caught.errors ?? {});
-      } else {
-        setError("No pudimos iniciar sesión. Intenta nuevamente.");
-      }
+      applyFieldErrors(
+        isApiError(caught) ? (caught.errors ?? {}) : {},
+        apiErrorMessage(
+          caught,
+          "No pudimos iniciar sesión. Revisa tus datos e intenta nuevamente.",
+        ),
+      );
     } finally {
       setPending(false);
     }
@@ -76,17 +88,20 @@ export function LoginForm() {
       }
     >
       <form
+        ref={formRef}
         onSubmit={onSubmit}
         noValidate
         aria-busy={pending}
         className="flex flex-col gap-4"
       >
-        {error ? (
+        {fieldErrorCount > 0 ? (
+          <FormErrorSummary count={fieldErrorCount} message={message} />
+        ) : message ? (
           <Alert status="danger" role="alert">
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>No pudimos ingresar</Alert.Title>
-              <Alert.Description>{error}</Alert.Description>
+              <Alert.Description>{message}</Alert.Description>
             </Alert.Content>
           </Alert>
         ) : null}
@@ -99,9 +114,8 @@ export function LoginForm() {
           inputMode="email"
           value={email}
           onChange={setEmail}
-          error={firstError(errors, "email")}
+          error={firstError(fieldErrors, "email")}
           isRequired
-          autoFocus
         />
 
         <TextFieldControl
@@ -111,7 +125,7 @@ export function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={setPassword}
-          error={firstError(errors, "password")}
+          error={firstError(fieldErrors, "password")}
           isRequired
         />
 
@@ -125,9 +139,6 @@ export function LoginForm() {
           {pending ? "Ingresando…" : "Ingresar"}
         </Button>
 
-        <p role="status" aria-live="polite" className="sr-only">
-          {pending ? "Verificando credenciales…" : ""}
-        </p>
       </form>
     </AuthCard>
   );

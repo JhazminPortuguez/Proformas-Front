@@ -5,8 +5,10 @@ import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { ServiciosTable } from "@/components/servicios/servicios-table";
 import { getServicios, requireUser } from "@/lib/api/server";
-import { errorMessage, isApiError } from "@/lib/api/types";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { isApiError } from "@/lib/api/types";
 import type { Paginated, Servicio } from "@/lib/api/types";
+import { can } from "@/lib/permissions";
 
 export const metadata: Metadata = {
   title: "Servicios",
@@ -55,7 +57,7 @@ export default async function ServiciosPage({
       <>
         <PageHeader title="Servicios" />
         <ErrorState
-          message={errorMessage(error)}
+          message={apiErrorMessage(error)}
           action={<RetryButton />}
         />
       </>
@@ -73,8 +75,8 @@ export default async function ServiciosPage({
         servicios={result.data}
         meta={result.meta}
         query={{ search, activo, visible, page }}
-        canDelete={user.rol === "admin"}
-        canManage={user.rol === "admin"}
+        canDelete={can(user, "servicios.eliminar")}
+        canManage={can(user, "servicios.gestionar")}
       />
     </>
   );

@@ -76,6 +76,9 @@ export function AppShell({ user, children }: AppShellProps) {
       </div>
 
       <Drawer isOpen={mobileOpen} onOpenChange={setMobileOpen}>
+        <Drawer.Trigger className="hidden" aria-hidden="true">
+          Abrir navegación
+        </Drawer.Trigger>
         <Drawer.Backdrop>
           <Drawer.Content placement="left">
             <Drawer.Dialog aria-label="Navegación principal">

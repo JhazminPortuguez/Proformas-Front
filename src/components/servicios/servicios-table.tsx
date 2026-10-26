@@ -6,9 +6,11 @@ import { Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { Button, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAnnouncer } from "@/components/ui/announcer";
 import { ActivoChip, CatalogoChip } from "@/components/ui/status-chip";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { servicios as serviciosApi } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Servicio } from "@/lib/api/types";
 import { buildQuery, formatMoney, formatNumber } from "@/lib/utils";
@@ -51,6 +53,7 @@ export function ServiciosTable({
   canManage,
 }: ServiciosTableProps) {
   const router = useRouter();
+  const { announce } = useAnnouncer();
   const [isPending, startTransition] = useTransition();
   const [searchInput, setSearchInput] = useSyncedDraft(query.search);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -108,6 +111,7 @@ export function ServiciosTable({
 
     try {
       await serviciosApi.remove(toDelete.id);
+      announce("Servicio eliminado.");
       setToDelete(null);
       refresh();
     } catch (error) {
@@ -121,9 +125,7 @@ export function ServiciosTable({
         );
       } else {
         setDeleteError(
-          isApiError(error)
-            ? error.message
-            : "No pudimos eliminar el servicio.",
+          apiErrorMessage(error, "No pudimos eliminar el servicio."),
         );
       }
     } finally {
@@ -191,6 +193,7 @@ export function ServiciosTable({
               size="sm"
               isIconOnly
               aria-label={`Editar ${servicio.nombre}`}
+              className="size-9"
               onPress={() => openEdit(servicio)}
             >
               <Pencil aria-hidden className="size-4" />
@@ -203,7 +206,7 @@ export function ServiciosTable({
               size="sm"
               isIconOnly
               aria-label={`Eliminar ${servicio.nombre}`}
-              className="text-danger"
+              className="size-9 text-danger"
               onPress={() => {
                 setDeleteError(null);
                 setToDelete(servicio);
@@ -229,6 +232,7 @@ export function ServiciosTable({
           className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
         >
           <TextField
+            aria-label="Buscar servicios"
             name="search"
             value={searchInput}
             onChange={setSearchInput}
@@ -236,6 +240,7 @@ export function ServiciosTable({
           >
             <Label className="sr-only">Buscar servicios</Label>
             <Input
+              aria-label="Buscar servicios"
               type="search"
               fullWidth
               placeholder="Buscar por nombre o categoría…"
@@ -260,7 +265,7 @@ export function ServiciosTable({
             }}
             className="w-full sm:w-44"
           >
-            <Select.Trigger>
+            <Select.Trigger aria-label="Filtrar por estado">
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>
@@ -293,7 +298,7 @@ export function ServiciosTable({
             }}
             className="w-full sm:w-48"
           >
-            <Select.Trigger>
+            <Select.Trigger aria-label="Filtrar por visibilidad en el catálogo">
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>
