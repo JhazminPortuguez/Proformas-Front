@@ -18,8 +18,7 @@ export type ProformaEstado =
   | "BORRADOR"
   | "ENVIADA"
   | "ACEPTADA"
-  | "RECHAZADA"
-  | "VENCIDA";
+  | "RECHAZADA";
 
 export const PROFORMA_ESTADOS: Record<ProformaEstado, EstadoMeta> = {
   BORRADOR: {
@@ -42,14 +41,9 @@ export const PROFORMA_ESTADOS: Record<ProformaEstado, EstadoMeta> = {
     tone: "danger",
     description: "El cliente no aceptó la propuesta.",
   },
-  VENCIDA: {
-    label: "Vencida",
-    tone: "neutral",
-    description: "Pasó la fecha de validez sin respuesta.",
-  },
 };
 
-export type SolicitudEstado = "PENDIENTE" | "CONVERTIDA" | "ANULADA";
+export type SolicitudEstado = "PENDIENTE" | "ATENDIDA" | "RECHAZADA";
 
 export const SOLICITUD_ESTADOS: Record<SolicitudEstado, EstadoMeta> = {
   PENDIENTE: {
@@ -57,13 +51,13 @@ export const SOLICITUD_ESTADOS: Record<SolicitudEstado, EstadoMeta> = {
     tone: "warning",
     description: "Solicitud recibida, todavía sin convertir en proforma.",
   },
-  CONVERTIDA: {
-    label: "Convertida",
+  ATENDIDA: {
+    label: "Atendida",
     tone: "success",
     description: "Ya generó una proforma en borrador.",
   },
-  ANULADA: {
-    label: "Anulada",
+  RECHAZADA: {
+    label: "Rechazada",
     tone: "neutral",
     description: "La solicitud se descartó y no se convertirá.",
   },
@@ -109,10 +103,9 @@ export const PROFORMA_TRANSICIONES: Record<
   readonly ProformaEstado[]
 > = {
   BORRADOR: ["ENVIADA"],
-  ENVIADA: ["ACEPTADA", "RECHAZADA", "VENCIDA"],
+  ENVIADA: ["ACEPTADA", "RECHAZADA"],
   ACEPTADA: [],
   RECHAZADA: [],
-  VENCIDA: [],
 };
 
 export const ORDEN_TRANSICIONES: Record<OrdenEstado, readonly OrdenEstado[]> = {

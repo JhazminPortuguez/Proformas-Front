@@ -30,8 +30,8 @@ interface SolicitudesTableProps {
 
 function estaConvertida(solicitud: Solicitud): boolean {
   return (
-    Boolean(solicitud.proforma_id) ||
-    parseSolicitudEstado(solicitud.estado) === "CONVERTIDA"
+    Boolean(solicitud.convertida_proforma_id) ||
+    parseSolicitudEstado(solicitud.estado) === "ATENDIDA"
   );
 }
 
@@ -204,9 +204,9 @@ export function SolicitudesTable({
               Ver
             </Button>
 
-            {convertida && solicitud.proforma_id ? (
+            {convertida && solicitud.convertida_proforma_id ? (
               <Link
-                href={`/proformas/${solicitud.proforma_id}`}
+                href={`/proformas/${solicitud.convertida_proforma_id}`}
                 aria-label={`Ver proforma de la solicitud ${referencia}`}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
@@ -365,9 +365,9 @@ export function SolicitudesTable({
                       Ver
                     </Button>
 
-                    {convertida && solicitud.proforma_id ? (
+                    {convertida && solicitud.convertida_proforma_id ? (
                       <Link
-                        href={`/proformas/${solicitud.proforma_id}`}
+                        href={`/proformas/${solicitud.convertida_proforma_id}`}
                         aria-label={`Ver proforma de la solicitud ${referencia}`}
                         className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                       >

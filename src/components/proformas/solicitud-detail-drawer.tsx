@@ -117,11 +117,11 @@ export function SolicitudDetailDrawer({
                     )}
                   </section>
 
-                  {solicitud.proforma_id ? (
+                  {solicitud.convertida_proforma_id ? (
                     <p className="rounded-lg border border-border bg-surface-secondary px-3 py-2">
                       Ya tiene una proforma asociada.{" "}
                       <Link
-                        href={`/proformas/${solicitud.proforma_id}`}
+                        href={`/proformas/${solicitud.convertida_proforma_id}`}
                         className="font-medium text-accent-soft-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                       >
                         Ver proforma

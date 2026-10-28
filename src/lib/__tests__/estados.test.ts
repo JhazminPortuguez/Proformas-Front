@@ -9,7 +9,26 @@ import {
   puedeTransicionarOrden,
   puedeTransicionarProforma,
   siguientesOrdenEstados,
+  siguientesProformaEstados,
+  solicitudEstadoMeta,
 } from "@/lib/estados";
+
+describe("estados de solicitud", () => {
+  it("usa los estados del backend", () => {
+    expect(solicitudEstadoMeta("PENDIENTE")).toMatchObject({
+      label: "Pendiente",
+      tone: "warning",
+    });
+    expect(solicitudEstadoMeta("ATENDIDA")).toMatchObject({
+      label: "Atendida",
+      tone: "success",
+    });
+    expect(solicitudEstadoMeta("RECHAZADA")).toMatchObject({
+      label: "Rechazada",
+      tone: "neutral",
+    });
+  });
+});
 
 describe("estados de proforma", () => {
   it("normaliza mayúsculas y minúsculas", () => {
@@ -23,12 +42,16 @@ describe("estados de proforma", () => {
       label: "Aceptada",
       tone: "success",
     });
-    expect(proformaEstadoMeta("vencida").tone).toBe("neutral");
+    expect(parseProformaEstado("vencida")).toBeNull();
   });
 
   it("solo permite transiciones legales", () => {
     expect(puedeTransicionarProforma("BORRADOR", "ENVIADA")).toBe(true);
     expect(puedeTransicionarProforma("ENVIADA", "ACEPTADA")).toBe(true);
+    expect(siguientesProformaEstados("ENVIADA")).toEqual([
+      "ACEPTADA",
+      "RECHAZADA",
+    ]);
     expect(puedeTransicionarProforma("BORRADOR", "ACEPTADA")).toBe(false);
     expect(esProformaTerminal("ACEPTADA")).toBe(true);
     expect(esProformaTerminal("ENVIADA")).toBe(false);

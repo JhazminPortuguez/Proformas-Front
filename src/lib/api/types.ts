@@ -477,7 +477,7 @@ export interface Solicitud {
   fecha?: string | null;
   created_at: string;
   updated_at?: string | null;
-  proforma_id?: number | null;
+  convertida_proforma_id?: number | null;
   cliente?: Cliente | null;
   items?: SolicitudItem[];
 }
