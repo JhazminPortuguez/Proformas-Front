@@ -35,6 +35,20 @@ describe("formatDateOnly", () => {
     );
   });
 
+  it("muestra un instante UTC con el día de Bolivia, no el de UTC", () => {
+    // 28/10 a las 21:47 en America/La_Paz es 29/10 01:47 en UTC.
+    expect(formatDateOnly("2026-10-29T01:47:00Z")).toBe(
+      expected(2026, 10, 28),
+    );
+    expect(formatDateOnly("2026-10-29T01:47:00.000000Z")).toBe(
+      expected(2026, 10, 28),
+    );
+  });
+
+  it("una fecha sin hora sigue mostrando el mismo día", () => {
+    expect(formatDateOnly("2026-10-28")).toBe(expected(2026, 10, 28));
+  });
+
   it("no reescribe fechas inexistentes ni valores vacíos", () => {
     expect(formatDateOnly("2026-02-30")).toBe("2026-02-30");
     expect(formatDateOnly("")).toBe("—");

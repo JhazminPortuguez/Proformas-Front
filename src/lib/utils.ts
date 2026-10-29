@@ -30,7 +30,14 @@ const dateOnlyFormatter = new Intl.DateTimeFormat("es-BO", {
   timeZone: "UTC",
 });
 
+/** Solo el día de un instante, en la misma zona que `dateFormatter`. */
+const instantDayFormatter = new Intl.DateTimeFormat("es-BO", {
+  dateStyle: "medium",
+  timeZone: "America/La_Paz",
+});
+
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
+const PURE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const otherMoneyFormatters = new Map<string, Intl.NumberFormat>();
 
@@ -90,11 +97,24 @@ export function formatDateTime(value: string | null | undefined): string {
  * No usa `new Date("YYYY-MM-DD")`: ese constructor interpreta la cadena como
  * medianoche UTC y, al mostrarla en America/La_Paz, resta un día. Acá se
  * construye la fecha en UTC y se formatea explícitamente en UTC.
+ *
+ * Si recibe un instante con hora (por ejemplo `created_at` en ISO UTC), no
+ * corta el texto: lo convierte a America/La_Paz igual que `formatDateTime` y
+ * muestra solo el día.
  */
 export function formatDateOnly(value: string | null | undefined): string {
   if (!value) return "—";
 
   const trimmed = value.trim();
+
+  if (!PURE_DATE_PATTERN.test(trimmed)) {
+    const instant = new Date(trimmed);
+
+    if (DATE_ONLY_PATTERN.test(trimmed) && !Number.isNaN(instant.getTime())) {
+      return instantDayFormatter.format(instant);
+    }
+  }
+
   const match = DATE_ONLY_PATTERN.exec(trimmed);
 
   if (!match) return trimmed;
