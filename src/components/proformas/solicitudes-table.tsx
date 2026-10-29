@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
 import { SolicitudEstadoChip } from "@/components/ui/status-chip";
+import { SelectControl } from "@/components/ui/fields";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { solicitudes as solicitudesApi } from "@/lib/api/client";
@@ -25,8 +26,21 @@ interface SolicitudesTableProps {
   meta: PaginationMeta;
   clientes: Cliente[];
   search: string;
+  estado: SolicitudFiltroEstado;
   canManage: boolean;
 }
+
+/**
+ * El back también define RECHAZADA, pero ninguna acción la asigna; por eso el
+ * filtro solo ofrece los estados que se ven en la práctica.
+ */
+export type SolicitudFiltroEstado = "" | "PENDIENTE" | "ATENDIDA";
+
+const ESTADO_OPTIONS: { value: string; label: string }[] = [
+  { value: "todos", label: "Todas" },
+  { value: "PENDIENTE", label: "Pendiente" },
+  { value: "ATENDIDA", label: "Atendida" },
+];
 
 function estaConvertida(solicitud: Solicitud): boolean {
   return (
@@ -40,6 +54,7 @@ export function SolicitudesTable({
   meta,
   clientes,
   search,
+  estado,
   canManage,
 }: SolicitudesTableProps) {
   const router = useRouter();
@@ -69,7 +84,12 @@ export function SolicitudesTable({
   }
 
   function navigatePage(next: number) {
-    const query = buildQuery({ tab: "solicitudes", search, page: next });
+    const query = buildQuery({
+      tab: "solicitudes",
+      search,
+      estado,
+      page: next,
+    });
 
     router.push(`/proformas${query}`);
   }
@@ -80,6 +100,18 @@ export function SolicitudesTable({
     const query = buildQuery({
       tab: "solicitudes",
       search: searchInput.trim(),
+      estado,
+      page: 1,
+    });
+
+    router.push(`/proformas${query}`);
+  }
+
+  function changeEstado(value: string) {
+    const query = buildQuery({
+      tab: "solicitudes",
+      search,
+      estado: value === "todos" ? "" : value,
       page: 1,
     });
 
@@ -133,19 +165,43 @@ export function SolicitudesTable({
     }
   }
 
+  const filtrosActivos = Boolean(search || estado);
+  const emptyTitle = filtrosActivos
+    ? "Sin coincidencias"
+    : "Todavía no hay solicitudes";
+  const emptyDescription = filtrosActivos
+    ? "Ajusta la búsqueda o el estado para ver más resultados."
+    : "Registra lo que pide un cliente para convertir la solicitud en una proforma.";
+
   const columns: DataTableColumn<Solicitud>[] = [
+    {
+      id: "fecha",
+      header: "Fecha",
+      isRowHeader: true,
+      cell: (solicitud) => (
+        <div>
+          <p className="numeric text-sm text-foreground">
+            {formatDateOnly(solicitud.fecha ?? solicitud.created_at)}
+          </p>
+          <p className="numeric text-xs text-muted">
+            {solicitud.numero ?? `#${solicitud.id}`}
+          </p>
+        </div>
+      ),
+    },
     {
       id: "cliente",
       header: "Cliente",
-      isRowHeader: true,
       cell: (solicitud) => (
         <div className="min-w-0">
           <p className="truncate font-medium text-foreground">
             {solicitud.cliente?.nombre_razon ??
               `Cliente #${solicitud.cliente_id}`}
           </p>
-          {solicitud.numero ? (
-            <p className="numeric text-xs text-muted">{solicitud.numero}</p>
+          {solicitud.cliente?.telefono ? (
+            <p className="numeric text-xs text-muted">
+              Tel. {solicitud.cliente.telefono}
+            </p>
           ) : null}
         </div>
       ),
@@ -160,20 +216,6 @@ export function SolicitudesTable({
       ),
     },
     {
-      id: "estado",
-      header: "Estado",
-      cell: (solicitud) => <SolicitudEstadoChip estado={solicitud.estado} />,
-    },
-    {
-      id: "fecha",
-      header: "Fecha",
-      cell: (solicitud) => (
-        <span className="numeric text-sm text-muted">
-          {formatDateOnly(solicitud.fecha ?? solicitud.created_at)}
-        </span>
-      ),
-    },
-    {
       id: "items",
       header: "Ítems",
       className: "hidden sm:table-cell text-end",
@@ -182,6 +224,11 @@ export function SolicitudesTable({
           {formatNumber(solicitud.items?.length ?? 0)}
         </span>
       ),
+    },
+    {
+      id: "estado",
+      header: "Estado",
+      cell: (solicitud) => <SolicitudEstadoChip estado={solicitud.estado} />,
     },
     {
       id: "acciones",
@@ -238,12 +285,22 @@ export function SolicitudesTable({
 
   return (
     <section aria-label="Listado de solicitudes">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <form
           role="search"
           onSubmit={submitSearch}
-          className="flex flex-col gap-2 sm:flex-row sm:items-center"
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
         >
+          <div className="w-full sm:w-44">
+            <SelectControl
+              name="estado"
+              label="Estado"
+              value={estado || "todos"}
+              onChange={changeEstado}
+              options={ESTADO_OPTIONS}
+            />
+          </div>
+
           <TextField
             aria-label="Buscar solicitudes"
             name="search"
@@ -281,8 +338,8 @@ export function SolicitudesTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
-          emptyTitle="Todavía no hay solicitudes"
-          emptyDescription="Registra lo que pide un cliente para convertir la solicitud en una proforma."
+          emptyTitle={emptyTitle}
+          emptyDescription={emptyDescription}
           emptyIcon={<FileText aria-hidden className="size-5" />}
           emptyAction={
             <Button variant="primary" size="sm" onPress={openCreate}>
@@ -303,8 +360,8 @@ export function SolicitudesTable({
       >
         {solicitudes.length === 0 ? (
           <EmptyState
-            title="Todavía no hay solicitudes"
-            description="Registra lo que pide un cliente para convertir la solicitud en una proforma."
+            title={emptyTitle}
+            description={emptyDescription}
             icon={<FileText aria-hidden className="size-5" />}
             action={
               <Button variant="primary" size="sm" onPress={openCreate}>
@@ -330,6 +387,11 @@ export function SolicitudesTable({
                         {solicitud.cliente?.nombre_razon ??
                           `Cliente #${solicitud.cliente_id}`}
                       </p>
+                      {solicitud.cliente?.telefono ? (
+                        <p className="numeric text-xs text-muted">
+                          Tel. {solicitud.cliente.telefono}
+                        </p>
+                      ) : null}
                       <p className="numeric text-xs text-muted">
                         {solicitud.numero ?? `Solicitud #${solicitud.id}`}
                       </p>

@@ -32,10 +32,40 @@ const dateOnlyFormatter = new Intl.DateTimeFormat("es-BO", {
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
 
-export function formatMoney(value: number | null | undefined): string {
+const otherMoneyFormatters = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Bs por defecto. Con otra moneda (USD, EUR) se muestra su símbolo real, sin
+ * convertir el monto; un código inválido cae a Bs.
+ */
+export function formatMoney(
+  value: number | null | undefined,
+  moneda?: string | null,
+): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
 
-  return moneyFormatter.format(value);
+  const code = moneda?.trim().toUpperCase();
+
+  if (!code || code === "BOB") return moneyFormatter.format(value);
+
+  let formatter = otherMoneyFormatters.get(code);
+
+  if (!formatter) {
+    try {
+      formatter = new Intl.NumberFormat("es-BO", {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    } catch {
+      return moneyFormatter.format(value);
+    }
+
+    otherMoneyFormatters.set(code, formatter);
+  }
+
+  return formatter.format(value);
 }
 
 export function formatNumber(value: number | null | undefined): string {

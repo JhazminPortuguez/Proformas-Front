@@ -60,10 +60,11 @@ const META = {
   last_page: 1,
 };
 
-function renderTable() {
+function renderTable(proforma: Proforma = PROFORMA, hoy = "2026-10-28") {
   return render(
     <ProformasTable
-      proformas={[PROFORMA]}
+      hoy={hoy}
+      proformas={[proforma]}
       meta={META}
       query={{
         search: "",
@@ -91,6 +92,35 @@ describe("ProformasTable", () => {
     expect(within(table).getByText("Constructora Andina")).toBeInTheDocument();
     expect(within(table).getByText("Borrador")).toBeInTheDocument();
     expect(within(table).getByText(/565,00/)).toBeInTheDocument();
+    expect(within(table).getByText("NIT/CI 123456789")).toBeInTheDocument();
+  });
+
+  it("avisa que una proforma enviada expiró sin cambiar su estado", () => {
+    renderTable({ ...PROFORMA, estado: "ENVIADA", fecha_validez: "2026-10-20" });
+
+    const table = screen.getByRole("grid", { name: "Proformas" });
+
+    expect(within(table).getByText("Aviso: Expiró 20/10")).toBeInTheDocument();
+    expect(within(table).getByText("Enviada")).toBeInTheDocument();
+  });
+
+  it("no avisa si la validez sigue vigente o la proforma no está enviada", () => {
+    const { unmount } = renderTable({ ...PROFORMA, estado: "ENVIADA" });
+
+    expect(screen.queryByText(/Expiró/)).not.toBeInTheDocument();
+    unmount();
+
+    renderTable({ ...PROFORMA, fecha_validez: "2026-10-20" });
+
+    expect(screen.queryByText(/Expiró/)).not.toBeInTheDocument();
+  });
+
+  it("muestra la moneda real si no es Bs, sin convertir el monto", () => {
+    renderTable({ ...PROFORMA, moneda: "USD" });
+
+    const table = screen.getByRole("grid", { name: "Proformas" });
+
+    expect(within(table).getByText(/USD\s?565,00/)).toBeInTheDocument();
   });
 
   it("pide confirmación antes de enviar", async () => {

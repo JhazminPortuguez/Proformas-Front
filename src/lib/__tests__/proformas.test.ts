@@ -3,15 +3,18 @@ import type { ProformaItem } from "@/lib/api/types";
 import {
   accionesProforma,
   computeProformaTotals,
+  formatDiaMes,
   isValidDateOnly,
   normalizarAccionProforma,
   normalizarBusqueda,
   parseCantidad,
+  proformaExpirada,
   proformaItemSubtotal,
   proformaItemTitle,
   proformaItemsCount,
   todayDateOnly,
 } from "@/lib/proformas";
+import { formatMoney } from "@/lib/utils";
 
 describe("cálculo estimado de proforma", () => {
   it("suma líneas, aplica descuento e impuesto sobre la base", () => {
@@ -228,5 +231,34 @@ describe("presentación de ítems", () => {
   it("prefiere items_count sobre el largo del array", () => {
     expect(proformaItemsCount({ items_count: 4, items: [item] })).toBe(4);
     expect(proformaItemsCount({ items: [item] })).toBe(1);
+  });
+});
+
+describe("aviso de validez expirada", () => {
+  const base = { estado: "ENVIADA" as const, fecha_validez: "2026-10-20" };
+
+  it("solo avisa en proformas enviadas con la validez ya pasada", () => {
+    expect(proformaExpirada(base, "2026-10-21")).toBe(true);
+    expect(proformaExpirada(base, "2026-10-20")).toBe(false);
+    expect(proformaExpirada({ ...base, estado: "BORRADOR" }, "2026-10-21")).toBe(
+      false,
+    );
+    expect(proformaExpirada({ ...base, fecha_validez: null }, "2026-10-21")).toBe(
+      false,
+    );
+  });
+
+  it("formatea la fecha como dd/mm", () => {
+    expect(formatDiaMes("2026-10-05")).toBe("05/10");
+  });
+});
+
+describe("formatMoney con moneda", () => {
+  it("usa Bs por defecto y la moneda real sin convertir el monto", () => {
+    expect(formatMoney(565)).toMatch(/Bs\s?565,00/);
+    expect(formatMoney(565, "BOB")).toMatch(/Bs\s?565,00/);
+    expect(formatMoney(565, "USD")).toMatch(/USD\s?565,00/);
+    expect(formatMoney(565, "EUR")).toMatch(/EUR\s?565,00/);
+    expect(formatMoney(565, "XX")).toMatch(/Bs\s?565,00/);
   });
 });

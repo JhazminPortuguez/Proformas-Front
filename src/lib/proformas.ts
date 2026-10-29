@@ -263,6 +263,30 @@ export function todayDateOnly(
   return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
+/**
+ * Una proforma enviada cuya validez ya pasó. No es un estado del backend:
+ * sigue siendo ENVIADA y la UI solo muestra un aviso.
+ */
+export function proformaExpirada(
+  proforma: Pick<Proforma, "estado" | "fecha_validez">,
+  hoy: string,
+): boolean {
+  const validez = proforma.fecha_validez ?? "";
+
+  return (
+    proforma.estado === "ENVIADA" &&
+    isValidDateOnly(validez) &&
+    compareDateOnly(validez, hoy) < 0
+  );
+}
+
+/** `YYYY-MM-DD` → `dd/mm`. */
+export function formatDiaMes(value: string): string {
+  const [, month, day] = value.split("-");
+
+  return `${day}/${month}`;
+}
+
 /** Cantidad decimal con coma o punto (`1,5` / `1.5`). */
 export function parseCantidad(value: string): number {
   return parseDecimal(value);
