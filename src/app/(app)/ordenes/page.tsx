@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FilePlus2 } from "lucide-react";
+import { NavTabs } from "@/components/ui/nav-tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
@@ -26,6 +27,7 @@ import type {
 } from "@/lib/api/types";
 import { parseOrdenEstado } from "@/lib/estados";
 import {
+  ordenesPestanas,
   type AccionesOrdenOpciones,
   type OrdenesQuery,
   type VistaOrdenes,
@@ -155,6 +157,13 @@ export default async function OrdenesPage({
           {ordenes.meta.total === 1 ? "orden" : "órdenes"}
         </p>
       </div>
+
+      <NavTabs
+        label="Estados de las órdenes"
+        current={estado || "todas"}
+        tabs={ordenesPestanas(query)}
+        className="mb-4"
+      />
 
       <OrdenesFiltros
         query={query}

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { OrdenesTable } from "@/components/ordenes/ordenes-table";
 import type { Orden } from "@/lib/api/types";
+import { formatDateOnly } from "@/lib/utils";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -37,7 +38,7 @@ const ORDEN: Orden = {
   cliente: {
     id: 3,
     nombre_razon: "Constructora Andina",
-    nit_ci: null,
+    nit_ci: "123456789",
     telefono: null,
     email: null,
     direccion: null,
@@ -103,7 +104,38 @@ describe("OrdenesTable", () => {
     ).toBeInTheDocument();
     expect(within(table).getByText("Pedro Operario")).toBeInTheDocument();
     expect(within(table).getByText("Asignada")).toBeInTheDocument();
-    expect(within(table).getByText(/Programada:/)).toBeInTheDocument();
+    expect(
+      within(table).getByText(formatDateOnly("2026-11-01")),
+    ).toBeInTheDocument();
+    expect(within(table).getByText("NIT/CI 123456789")).toBeInTheDocument();
+  });
+
+  it("usa las columnas aprobadas, sin ítems ni servicio principal", () => {
+    renderTable();
+
+    const table = screen.getByRole("grid", { name: "Órdenes de servicio" });
+    const headers = within(table)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent?.trim());
+
+    expect(headers).toEqual([
+      "Código",
+      "Cliente",
+      "Proforma",
+      "Operario",
+      "Fecha programada",
+      "Estado",
+      "Acciones",
+    ]);
+  });
+
+  it("muestra el NIT/CI también en las tarjetas del celular", () => {
+    renderTable();
+
+    const lista = screen.getByRole("list", { name: "Órdenes de servicio" });
+
+    expect(within(lista).getByText("NIT/CI 123456789")).toBeInTheDocument();
+    expect(within(lista).queryByText("Ítems")).not.toBeInTheDocument();
   });
 
   it("pide confirmación antes de iniciar la orden", async () => {

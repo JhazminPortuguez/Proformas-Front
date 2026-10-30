@@ -397,3 +397,30 @@ export function ordenesQueryToSearch(query: OrdenesQuery): string {
 export function ordenesHref(query: OrdenesQuery): string {
   return `/ordenes${ordenesQueryToSearch(query)}`;
 }
+
+/** Pestañas de estado del listado; "" es "Todas". */
+export const ORDENES_PESTANAS: readonly {
+  estado: EstadoOrden | "";
+  label: string;
+}[] = [
+  { estado: "", label: "Todas" },
+  { estado: "PENDIENTE", label: "Pendientes" },
+  { estado: "ASIGNADA", label: "Asignadas" },
+  { estado: "EN_PROCESO", label: "En proceso" },
+  { estado: "FINALIZADA", label: "Finalizadas" },
+  { estado: "CANCELADA", label: "Canceladas" },
+];
+
+/**
+ * Enlaces de las pestañas: cambian solo el estado, conservan la vista y los
+ * demás filtros, y vuelven a la primera página.
+ */
+export function ordenesPestanas(
+  query: OrdenesQuery,
+): { key: string; label: string; href: string }[] {
+  return ORDENES_PESTANAS.map(({ estado, label }) => ({
+    key: estado || "todas",
+    label,
+    href: ordenesHref({ ...query, estado, page: 1 }),
+  }));
+}
