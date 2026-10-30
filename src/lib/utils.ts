@@ -36,7 +36,15 @@ const instantDayFormatter = new Intl.DateTimeFormat("es-BO", {
   timeZone: "America/La_Paz",
 });
 
-const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
+/** `dd/mm/aaaa` de un instante, en la misma zona que `dateFormatter`. */
+const numericDayFormatter = new Intl.DateTimeFormat("es-BO", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "America/La_Paz",
+});
+
+const DATE_ONLY_PATTERN =/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
 const PURE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const otherMoneyFormatters = new Map<string, Intl.NumberFormat>();
@@ -134,6 +142,28 @@ export function formatDateOnly(value: string | null | undefined): string {
   }
 
   return dateOnlyFormatter.format(date);
+}
+
+/**
+ * Día de un instante ISO como `dd/mm/aaaa` en America/La_Paz. Una fecha
+ * date-only (`YYYY-MM-DD`) se reordena sin pasar por `Date`.
+ */
+export function formatDateNumeric(value: string | null | undefined): string {
+  if (!value) return "—";
+
+  const trimmed = value.trim();
+
+  if (PURE_DATE_PATTERN.test(trimmed)) {
+    const [year, month, day] = trimmed.split("-");
+
+    return `${day}/${month}/${year}`;
+  }
+
+  const instant = new Date(trimmed);
+
+  if (Number.isNaN(instant.getTime())) return trimmed;
+
+  return numericDayFormatter.format(instant);
 }
 
 /**

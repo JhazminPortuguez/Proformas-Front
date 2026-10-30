@@ -221,6 +221,18 @@ export function ordenProformaNumero(
   return orden.proforma?.numero ?? `Proforma #${orden.proforma_id}`;
 }
 
+/**
+ * Monto de la cuenta por cobrar que genera el cierre: el back cobra el total
+ * de la proforma, en su moneda. Sin proforma cargada no se muestra monto.
+ */
+export function ordenMontoCierre(
+  orden: Pick<Orden, "proforma">,
+): { total: number; moneda: string } | null {
+  if (!orden.proforma) return null;
+
+  return { total: orden.proforma.total, moneda: orden.proforma.moneda };
+}
+
 export function ordenItemsCount(
   orden: Pick<Orden, "items_count" | "items">,
 ): number {

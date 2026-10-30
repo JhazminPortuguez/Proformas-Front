@@ -16,6 +16,7 @@ import {
   ordenClienteNombre,
   ordenFechaProgramadaTexto,
   ordenItemsCount,
+  ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
   ordenesHref,
@@ -208,6 +209,7 @@ export function OrdenesBoard({
                             accionesOrden(orden, permisos),
                           )}
                           operarios={operarios}
+                          montoCierre={ordenMontoCierre(orden)}
                           display="icons"
                         />
                       </div>

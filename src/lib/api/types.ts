@@ -310,6 +310,8 @@ export interface OrdenItem {
   cantidad_consumida?: number;
   cantidad_pendiente?: number;
   consumido?: boolean;
+  /** Instante ISO en que la línea quedó consumida por completo. */
+  consumido_at?: string | null;
   producto?: Producto | null;
   servicio?: Servicio | null;
 }
@@ -332,6 +334,8 @@ export interface OrdenEvento {
 export interface OrdenCuentaRef {
   id: number;
   numero: string;
+  /** Moneda de la proforma de origen (BOB, USD, EUR). */
+  moneda?: string;
   saldo: number;
   estado_cobro: EstadoCobro;
 }

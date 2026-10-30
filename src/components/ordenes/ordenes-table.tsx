@@ -15,6 +15,7 @@ import {
   ordenClienteNombre,
   ordenFechaProgramadaTexto,
   ordenItemsCount,
+  ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
   ordenesHref,
@@ -141,6 +142,7 @@ export function OrdenesTable({
           numero={orden.numero}
           acciones={Array.from(accionesOrden(orden, permisos))}
           operarios={operarios}
+          montoCierre={ordenMontoCierre(orden)}
           display="icons"
         />
       ),
@@ -267,6 +269,7 @@ export function OrdenesTable({
                     numero={orden.numero}
                     acciones={Array.from(accionesOrden(orden, permisos))}
                     operarios={operarios}
+                    montoCierre={ordenMontoCierre(orden)}
                     display="labels"
                   />
                 </div>

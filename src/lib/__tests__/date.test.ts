@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateOnly } from "@/lib/utils";
+import { formatDateNumeric, formatDateOnly } from "@/lib/utils";
 
 const utcDate = new Intl.DateTimeFormat("es-BO", {
   dateStyle: "medium",
@@ -53,5 +53,19 @@ describe("formatDateOnly", () => {
     expect(formatDateOnly("2026-02-30")).toBe("2026-02-30");
     expect(formatDateOnly("")).toBe("—");
     expect(formatDateOnly(null)).toBe("—");
+  });
+});
+
+describe("formatDateNumeric", () => {
+  it("muestra dd/mm/aaaa del día en Bolivia", () => {
+    expect(formatDateNumeric("2026-10-29T01:47:00.000000Z")).toBe(
+      "28/10/2026",
+    );
+    expect(formatDateNumeric("2026-10-29T15:00:00Z")).toBe("29/10/2026");
+  });
+
+  it("reordena una fecha sin hora y tolera vacíos", () => {
+    expect(formatDateNumeric("2026-01-05")).toBe("05/01/2026");
+    expect(formatDateNumeric(null)).toBe("—");
   });
 });
