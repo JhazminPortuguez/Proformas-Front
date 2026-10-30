@@ -6,7 +6,12 @@ import { Button } from "@heroui/react";
 import { SelectControl, TextFieldControl } from "@/components/ui/fields";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import type { Cliente, User } from "@/lib/api/types";
-import { ordenesHref, type OrdenesQuery } from "@/lib/ordenes";
+import {
+  ordenesFiltrosActivos,
+  ordenesHref,
+  ordenesSinFiltros,
+  type OrdenesQuery,
+} from "@/lib/ordenes";
 
 interface OrdenesFiltrosProps {
   query: OrdenesQuery;
@@ -41,24 +46,10 @@ export function OrdenesFiltros({
   // El estado se elige con las pestañas: limpiar filtros no cambia de pestaña.
   function clearFilters() {
     setSearchInput("");
-
-    const empty: OrdenesQuery = {
-      search: "",
-      estado: query.estado,
-      operarioId: "",
-      clienteId: "",
-      vista: query.vista,
-      page: 1,
-    };
-
-    router.push(ordenesHref(empty));
+    router.push(ordenesHref(ordenesSinFiltros(query)));
   }
 
-  const filtersActive = Boolean(
-    query.search ||
-      query.operarioId !== "" ||
-      query.clienteId !== "",
-  );
+  const filtersActive = ordenesFiltrosActivos(query);
 
   const clienteOptions = [
     { value: "todos", label: "Todos los clientes" },

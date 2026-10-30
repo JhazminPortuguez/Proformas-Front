@@ -5,9 +5,11 @@ import { OrdenesTable } from "@/components/ordenes/ordenes-table";
 import type { Orden } from "@/lib/api/types";
 import { formatDateOnly } from "@/lib/utils";
 
+const push = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push,
     replace: vi.fn(),
     refresh: vi.fn(),
     back: vi.fn(),
@@ -136,6 +138,34 @@ describe("OrdenesTable", () => {
 
     expect(within(lista).getByText("NIT/CI 123456789")).toBeInTheDocument();
     expect(within(lista).queryByText("Ítems")).not.toBeInTheDocument();
+  });
+
+  it("limpiar filtros del estado vacío conserva la pestaña", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <OrdenesTable
+        ordenes={[]}
+        meta={{ ...META, total: 0 }}
+        query={{
+          search: "ORD-9",
+          estado: "EN_PROCESO",
+          operarioId: "",
+          clienteId: 3,
+          vista: "tabla",
+          page: 1,
+        }}
+        operarios={[]}
+        permisos={{ canAssign: true, canCancel: true, canClose: true }}
+      />,
+    );
+
+    // La tabla de escritorio y la lista del celular muestran el mismo botón.
+    await user.click(
+      screen.getAllByRole("button", { name: "Limpiar filtros" })[0],
+    );
+
+    expect(push).toHaveBeenCalledWith("/ordenes?estado=EN_PROCESO&vista=tabla");
   });
 
   it("pide confirmación antes de iniciar la orden", async () => {

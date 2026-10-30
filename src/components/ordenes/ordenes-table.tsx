@@ -18,6 +18,8 @@ import {
   ordenOperarioNombre,
   ordenProformaNumero,
   ordenesHref,
+  ordenesSinFiltros,
+  ordenesVacio,
   type AccionesOrdenOpciones,
   type OrdenesQuery,
 } from "@/lib/ordenes";
@@ -57,12 +59,7 @@ export function OrdenesTable({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const filtersActive = Boolean(
-    query.search ||
-      query.estado ||
-      query.operarioId !== "" ||
-      query.clienteId !== "",
-  );
+  const vacio = ordenesVacio(query);
 
   function navigatePage(page: number) {
     startTransition(() => {
@@ -141,22 +138,18 @@ export function OrdenesTable({
     },
   ];
 
-  const emptyTitle = filtersActive
-    ? "Sin coincidencias"
-    : "Todavía no hay órdenes de servicio";
-  const emptyDescription = filtersActive
-    ? "Ajusta la búsqueda, el estado o los filtros para ver más resultados."
-    : "Crea una orden desde una proforma aceptada para empezar a ejecutar el servicio.";
+  const emptyTitle = vacio.title;
+  const emptyDescription = vacio.description;
 
-  const emptyAction = filtersActive ? (
+  const emptyAction = vacio.limpiar ? (
     <Button
       variant="tertiary"
       size="sm"
-      onPress={() => router.push(ordenesHref({ ...query, search: "", estado: "", operarioId: "", clienteId: "", page: 1 }))}
+      onPress={() => router.push(ordenesHref(ordenesSinFiltros(query)))}
     >
       Limpiar filtros
     </Button>
-  ) : (
+  ) : query.estado ? undefined : (
     <Button
       variant="primary"
       size="sm"

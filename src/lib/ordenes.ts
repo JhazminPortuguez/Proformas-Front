@@ -398,6 +398,59 @@ export function ordenesHref(query: OrdenesQuery): string {
   return `/ordenes${ordenesQueryToSearch(query)}`;
 }
 
+/** Hay filtros activos además de la pestaña de estado. */
+export function ordenesFiltrosActivos(query: OrdenesQuery): boolean {
+  return Boolean(
+    query.search || query.operarioId !== "" || query.clienteId !== "",
+  );
+}
+
+/** Quita los filtros; conserva la pestaña de estado y la vista. */
+export function ordenesSinFiltros(query: OrdenesQuery): OrdenesQuery {
+  return {
+    search: "",
+    estado: query.estado,
+    operarioId: "",
+    clienteId: "",
+    vista: query.vista,
+    page: 1,
+  };
+}
+
+/**
+ * Textos del listado vacío. `limpiar` indica si corresponde ofrecer
+ * "Limpiar filtros"; sin filtros activos no hay nada que limpiar, y la
+ * pestaña se cambia con las pestañas.
+ */
+export function ordenesVacio(query: OrdenesQuery): {
+  title: string;
+  description: string;
+  limpiar: boolean;
+} {
+  if (ordenesFiltrosActivos(query)) {
+    return {
+      title: "Sin coincidencias",
+      description: "Ajusta la búsqueda o los filtros para ver más resultados.",
+      limpiar: true,
+    };
+  }
+
+  if (query.estado) {
+    return {
+      title: "Sin órdenes en este estado",
+      description: "Elige otra pestaña para ver las órdenes en otros estados.",
+      limpiar: false,
+    };
+  }
+
+  return {
+    title: "Todavía no hay órdenes de servicio",
+    description:
+      "Crea una orden desde una proforma aceptada para empezar a ejecutar el servicio.",
+    limpiar: false,
+  };
+}
+
 /** Pestañas de estado del listado; "" es "Todas". */
 export const ORDENES_PESTANAS: readonly {
   estado: EstadoOrden | "";

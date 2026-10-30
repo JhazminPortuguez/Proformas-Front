@@ -15,11 +15,12 @@ import {
   accionesOrden,
   ordenClienteNombre,
   ordenFechaProgramadaTexto,
-  ordenItemsCount,
   ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
   ordenesHref,
+  ordenesSinFiltros,
+  ordenesVacio,
   type AccionesOrdenOpciones,
   type OrdenesQuery,
 } from "@/lib/ordenes";
@@ -44,12 +45,7 @@ export function OrdenesBoard({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const filtersActive = Boolean(
-    query.search ||
-      query.estado ||
-      query.operarioId !== "" ||
-      query.clienteId !== "",
-  );
+  const vacio = ordenesVacio(query);
 
   const canceladas = ordenes.filter(
     (orden) => parseOrdenEstado(orden.estado) === "CANCELADA",
@@ -65,38 +61,21 @@ export function OrdenesBoard({
     return (
       <section aria-label="Tablero de órdenes de servicio">
         <EmptyState
-          title={
-            filtersActive
-              ? "Sin coincidencias"
-              : "Todavía no hay órdenes de servicio"
-          }
-          description={
-            filtersActive
-              ? "Ajusta la búsqueda, el estado o los filtros para ver más resultados."
-              : "Crea una orden desde una proforma aceptada para empezar a ejecutar el servicio."
-          }
+          title={vacio.title}
+          description={vacio.description}
           icon={<ClipboardList aria-hidden className="size-5" />}
           action={
-            filtersActive ? (
+            vacio.limpiar ? (
               <Button
                 variant="tertiary"
                 size="sm"
                 onPress={() =>
-                  router.push(
-                    ordenesHref({
-                      ...query,
-                      search: "",
-                      estado: "",
-                      operarioId: "",
-                      clienteId: "",
-                      page: 1,
-                    }),
-                  )
+                  router.push(ordenesHref(ordenesSinFiltros(query)))
                 }
               >
                 Limpiar filtros
               </Button>
-            ) : (
+            ) : query.estado ? undefined : (
               <Button
                 variant="primary"
                 size="sm"
@@ -165,6 +144,11 @@ export function OrdenesBoard({
                           <p className="truncate text-sm text-muted">
                             {ordenClienteNombre(orden)}
                           </p>
+                          {orden.cliente?.nit_ci ? (
+                            <p className="numeric text-xs text-muted">
+                              NIT/CI {orden.cliente.nit_ci}
+                            </p>
+                          ) : null}
                         </div>
                         <OrdenEstadoChip estado={orden.estado} />
                       </div>
@@ -191,12 +175,6 @@ export function OrdenesBoard({
                           <dt className="text-muted">Programada</dt>
                           <dd className="numeric text-foreground">
                             {ordenFechaProgramadaTexto(orden)}
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-2">
-                          <dt className="text-muted">Ítems</dt>
-                          <dd className="numeric text-foreground">
-                            {formatNumber(ordenItemsCount(orden))}
                           </dd>
                         </div>
                       </dl>
