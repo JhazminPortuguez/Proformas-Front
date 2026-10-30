@@ -34,6 +34,8 @@ Rama: `jhazmin` en los dos repos. No toqué `main` ni `Frank`, no hice merge, no
 | Back | `c448e16` | fix(cobros): la cuenta por cobrar usa el total y la moneda de la proforma |
 | Front | `b7826c6` | feat(ordenes): detalle con monto de cierre, NIT/CI, fecha de cierre, materiales del diseño y acciones fijas en el celular |
 | Front | `a6b2ec6` | feat(ordenes): listado con pestañas de estado, NIT/CI del cliente y columnas del diseño |
+| Back | `77ef709` | fix(proformas): solo se aceptan proformas en bolivianos (BOB) *(30/10, después de tu revisión)* |
+| Front | `7ed4604` | feat(ordenes): tablero con NIT/CI y sin ítems; limpiar filtros conserva la pestaña *(30/10, después de tu revisión)* |
 
 Este archivo va en un commit aparte (`docs:`), para que puedas borrarlo antes de juntar con `main` si no lo quieres en el repo.
 
@@ -44,12 +46,12 @@ Este archivo va en un commit aparte (`docs:`), para que puedas borrarlo antes de
 
 ## Decisiones pendientes (no las inventé; quedan para ti)
 
-1. **Pantalla de Cobros sin moneda.** Los montos de Cobros se muestran siempre en Bs. Una cuenta en USD aparecería como "Bs 339,00". El arreglo es pequeño (pasar `cuenta.moneda` a `formatMoney`). ¿Lo hago ahora o al revisar la pantalla de Cobros?
-2. **Totales que mezclan monedas.** El dashboard y el resumen de Cobros suman saldos de todas las cuentas sin separar monedas. Si hay cuentas en USD, el total mezcla USD y Bs. ¿Mostrar totales por moneda, convertir, o no permitir USD/EUR en las proformas?
+1. **Pantalla de Cobros sin moneda.** ✅ Resuelto: el sistema queda solo en bolivianos. El back rechaza proformas en otra moneda (commit `77ef709`); `formatMoney` sigue sabiendo mostrar otras monedas.
+2. **Totales que mezclan monedas.** ✅ Resuelto: con todo en bolivianos ya no hay monedas que mezclar (commit `77ef709`).
 3. **Base de datos local.** La cuenta demo sigue en Bs 530 porque se creó antes del arreglo. Solo cambia si vuelves a cargar la demo (`migrate:fresh --seed`, que **borra los datos**). No lo hice.
-4. **Contadores en las pestañas de órdenes.** Las pestañas no muestran cuántas órdenes hay en cada estado. Para hacerlo se necesitan 6 consultas o un endpoint nuevo en el back. ¿Los quieres?
-5. **Tarjetas del tablero.** El tablero no estaba en los cambios aprobados: sus tarjetas siguen mostrando Proforma e Ítems y no muestran el NIT/CI. ¿Lo igualo a la tabla?
-6. **"Limpiar filtros" en el listado vacío.** El botón del estado vacío (tabla y tablero) también vuelve a la pestaña "Todas", mientras que el del formulario conserva la pestaña. ¿Lo hago igual en los dos?
+4. **Contadores en las pestañas de órdenes.** ✅ Resuelto: las pestañas quedan sin contadores.
+5. **Tarjetas del tablero.** ✅ Resuelto: ahora son iguales a la tabla, con el NIT/CI y sin Ítems (commit `7ed4604`).
+6. **"Limpiar filtros" en el listado vacío.** ✅ Resuelto: también conserva la pestaña y la vista. Si la pestaña está vacía sin filtros, aparece "Sin órdenes en este estado" sin el botón (commit `7ed4604`).
 7. **Enlace "Crear desde una proforma aceptada"** en la cabecera del listado. No es un botón "Nueva orden" (solo lleva a las proformas aceptadas), así que lo dejé. ¿Se queda?
 8. **Fecha de consumo parcial.** El back solo guarda `consumido_at` cuando la línea se consumió completa. Con consumo parcial la columna muestra "—" (la cantidad consumida sí muestra el avance). ¿Está bien así?
 9. **Encabezado "Acciones".** El diseño dice "Acción", pero como decidiste mantener varios atajos por fila (D4), lo dejé en plural.
@@ -78,7 +80,6 @@ Este archivo va en un commit aparte (`docs:`), para que puedas borrarlo antes de
    - En una orden cerrada o cancelada, sin acciones, no aparece la barra.
 6. **Materiales:** en la pestaña Materiales de una orden con materiales, revisa las columnas Ítem, Unidad, Cantidad prevista, Cantidad consumida, Fecha de consumo y Stock actual, sin chip ni costo.
 7. **Operario:** entra como operario. Solo debe ver sus órdenes, y en sus órdenes no debe aparecer el botón de cierre.
-8. **Opcional, USD:** crea una proforma en USD, acéptala, crea la orden y llévala hasta el cierre. El mensaje debe decir "USD …" y la cuenta debe quedar en USD. En la pantalla de Cobros se verá "Bs" (pendiente 1).
 
 ### Pantalla 5 · Listado de órdenes
 1. En **Órdenes**, sobre la tabla, aparecen las pestañas Todas, Pendientes, Asignadas, En proceso, Finalizadas y Canceladas.
@@ -93,3 +94,10 @@ Este archivo va en un commit aparte (`docs:`), para que puedas borrarlo antes de
 5. **Celular:** en ancho de celular, las tarjetas muestran el NIT/CI y no muestran "Ítems".
 6. **Atajos:** en una fila con estado Asignada, el atajo "Iniciar" pide confirmación. En una Finalizada, "Cerrar" muestra el mensaje con el monto.
 7. **Operario:** como operario, la pantalla no muestra el filtro "Operario" y solo lista sus órdenes.
+8. **NIT/CI en el tablero:** cambia a "Tablero".
+   - En cada tarjeta, debajo del nombre del cliente, aparece "NIT/CI …" (solo si el cliente lo tiene cargado).
+   - Las tarjetas muestran Proforma, Operario y Programada, sin "Ítems".
+9. **"Limpiar filtros" del listado vacío:** entra a una pestaña, por ejemplo "Finalizadas", y elige un cliente o escribe una búsqueda que no tenga resultados.
+   - Aparece "Sin coincidencias" con el botón "Limpiar filtros".
+   - Al pulsarlo, se borran los filtros pero sigues en la misma pestaña y en la misma vista (tabla o tablero).
+   - Si una pestaña está vacía sin filtros, aparece "Sin órdenes en este estado" y no aparece el botón.
