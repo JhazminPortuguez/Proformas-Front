@@ -681,6 +681,36 @@ export interface ReporteServiciosProformas {
   servicios: ReporteServicio[];
 }
 
+export interface ReporteConsumoProducto {
+  producto_id: number;
+  nombre: string | null;
+  unidad_medida: string | null;
+  cantidad: number;
+  /** cantidad × costo_unitario de cada consumo. */
+  costo: number;
+}
+
+export interface ReporteStockBajo {
+  id: number;
+  nombre: string;
+  unidad_medida: string | null;
+  stock_actual: number;
+  stock_minimo: number;
+  faltante: number;
+}
+
+export interface ReporteInventario {
+  periodo: ReportePeriodo;
+  consumo: {
+    costo_total: number;
+    movimientos: number;
+    productos: number;
+  };
+  productos: ReporteConsumoProducto[];
+  /** Foto de hoy: no depende del periodo ni de los filtros. */
+  stock_bajo: ReporteStockBajo[];
+}
+
 export interface PaginationMeta {
   current_page: number;
   per_page: number;

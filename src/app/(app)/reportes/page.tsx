@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReporteInventarioView } from "@/components/reportes/reporte-inventario";
 import { ReporteOrdenesView } from "@/components/reportes/reporte-ordenes";
 import { ReporteServiciosView } from "@/components/reportes/reporte-servicios";
 import { ReportesView } from "@/components/reportes/reportes-view";
@@ -15,6 +16,7 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type {
   Cliente,
+  ReporteInventario,
   ReporteOrdenes,
   ReporteServiciosProformas,
   User,
@@ -66,6 +68,12 @@ async function cargarReporte(query: ReportesQuery): Promise<ReactNode> {
       return (
         <ReporteServiciosView
           data={await getReporte<ReporteServiciosProformas>(endpoint, params)}
+        />
+      );
+    case "inventario":
+      return (
+        <ReporteInventarioView
+          data={await getReporte<ReporteInventario>(endpoint, params)}
         />
       );
   }
