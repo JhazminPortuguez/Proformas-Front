@@ -566,6 +566,19 @@ export interface DashboardCobros {
   aging?: Partial<DashboardAging>;
 }
 
+/** Orden activa con fecha programada para hoy (hora de Bolivia). */
+export interface DashboardTrabajoHoy {
+  id: number;
+  numero: string;
+  cliente: {
+    nombre_razon: string | null;
+    nit_ci: string | null;
+  };
+  /** Nombre del operario asignado. */
+  operario: string | null;
+  estado: string;
+}
+
 export interface DashboardServicioSolicitado {
   servicio_id: number;
   nombre: string;
@@ -591,6 +604,10 @@ export interface DashboardData {
   ingresos_mes?: number;
   servicios_mas_solicitados?: DashboardServicioSolicitado[];
   actividad_reciente?: ActividadReciente[];
+  /** Máximo 10; el operario solo recibe las suyas. */
+  trabajos_hoy?: DashboardTrabajoHoy[];
+  /** Total sin el límite de 10. */
+  trabajos_hoy_total?: number;
 }
 
 export interface PaginationMeta {
