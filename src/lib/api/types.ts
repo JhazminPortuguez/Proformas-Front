@@ -711,6 +711,30 @@ export interface ReporteInventario {
   stock_bajo: ReporteStockBajo[];
 }
 
+export interface ReporteCuentaSaldo {
+  id: number;
+  numero: string;
+  cliente: ReporteClienteRef;
+  fecha_vencimiento: string | null;
+  dias_vencida: number;
+  saldo: number;
+  franja: keyof DashboardAging;
+}
+
+export interface ReporteCobros {
+  periodo: ReportePeriodo;
+  /** Pagos no anulados con fecha de pago en el periodo. */
+  cobrado: number;
+  pagos: number;
+  /** Desde aquí, foto de hoy: no depende del periodo. */
+  saldo_pendiente: number;
+  cuentas_con_saldo: number;
+  vencidas: number;
+  monto_vencido: number;
+  aging: DashboardAging;
+  cuentas: ReporteCuentaSaldo[];
+}
+
 export interface PaginationMeta {
   current_page: number;
   per_page: number;
