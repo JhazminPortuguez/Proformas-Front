@@ -20,7 +20,7 @@ import { ordenes as ordenesApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { OrdenAccion, User } from "@/lib/api/types";
-import { cn, firstError } from "@/lib/utils";
+import { cn, firstError, formatMoney } from "@/lib/utils";
 
 type DialogAction = Extract<
   OrdenAccion,
@@ -37,6 +37,11 @@ interface OrdenActionsProps {
   display?: "icons" | "labels" | "detail";
   /** Oculta el enlace "Ver" cuando ya estamos en el detalle. */
   hideVer?: boolean;
+  /**
+   * Total y moneda de la proforma: es el monto de la cuenta por cobrar que
+   * genera el cierre. Sin dato, la confirmación no muestra monto.
+   */
+  montoCierre?: { total: number; moneda?: string | null } | null;
 }
 
 const ICON_LINK = cn(
@@ -59,7 +64,10 @@ interface DialogConfig {
   tone: "danger" | "accent";
 }
 
-const DIALOGS: Record<DialogAction, (numero: string) => DialogConfig> = {
+const DIALOGS: Record<
+  DialogAction,
+  (numero: string, montoCierre?: OrdenActionsProps["montoCierre"]) => DialogConfig
+> = {
   iniciar: (numero) => ({
     title: "Iniciar orden",
     description: `La orden ${numero} pasará a "En proceso" y quedará registrada la fecha de inicio del trabajo.`,
@@ -81,9 +89,16 @@ const DIALOGS: Record<DialogAction, (numero: string) => DialogConfig> = {
     pendingLabel: "Cancelando…",
     tone: "danger",
   }),
-  cerrar: (numero) => ({
+  cerrar: (numero, montoCierre) => ({
     title: "Cerrar orden",
-    description: `Se completa el cierre administrativo de la orden ${numero}. Después ya no admitirá más acciones.`,
+    description: `${
+      montoCierre
+        ? `¿Cerrar la orden y generar la cuenta por cobrar por ${formatMoney(
+            montoCierre.total,
+            montoCierre.moneda,
+          )}?`
+        : "¿Cerrar la orden y generar la cuenta por cobrar?"
+    } Después ya no admitirá más acciones.`,
     confirmLabel: "Cerrar orden",
     pendingLabel: "Cerrando…",
     tone: "accent",
@@ -97,6 +112,7 @@ export function OrdenActions({
   operarios = [],
   display = "icons",
   hideVer = false,
+  montoCierre = null,
 }: OrdenActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -258,7 +274,7 @@ export function OrdenActions({
     );
   }
 
-  const config = dialog ? DIALOGS[dialog](numero) : null;
+  const config = dialog ? DIALOGS[dialog](numero, montoCierre) : null;
 
   return (
     <>
@@ -307,7 +323,13 @@ export function OrdenActions({
           : null}
 
         {available.has("cerrar")
-          ? actionButton("cerrar", "Cerrar", Lock)
+          ? actionButton(
+              "cerrar",
+              display === "detail"
+                ? "Cerrar orden (genera la cuenta por cobrar)"
+                : "Cerrar",
+              Lock,
+            )
           : null}
       </div>
 

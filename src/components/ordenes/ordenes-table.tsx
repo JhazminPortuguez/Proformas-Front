@@ -14,15 +14,32 @@ import {
   accionesOrden,
   ordenClienteNombre,
   ordenFechaProgramadaTexto,
-  ordenItemsCount,
+  ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
   ordenesHref,
+  ordenesSinFiltros,
+  ordenesVacio,
   type AccionesOrdenOpciones,
   type OrdenesQuery,
 } from "@/lib/ordenes";
-import { formatNumber } from "@/lib/utils";
 import { OrdenActions } from "./orden-actions";
+
+/** Nombre o razón social con su NIT/CI debajo. */
+function ClienteCell({ orden }: { orden: Orden }) {
+  return (
+    <div className="min-w-0">
+      <p className="max-w-[16rem] truncate text-sm">
+        {ordenClienteNombre(orden)}
+      </p>
+      {orden.cliente?.nit_ci ? (
+        <p className="numeric text-xs text-muted">
+          NIT/CI {orden.cliente.nit_ci}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 interface OrdenesTableProps {
   ordenes: Orden[];
@@ -42,12 +59,7 @@ export function OrdenesTable({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const filtersActive = Boolean(
-    query.search ||
-      query.estado ||
-      query.operarioId !== "" ||
-      query.clienteId !== "",
-  );
+  const vacio = ordenesVacio(query);
 
   function navigatePage(page: number) {
     startTransition(() => {
@@ -58,32 +70,21 @@ export function OrdenesTable({
   const columns: DataTableColumn<Orden>[] = [
     {
       id: "numero",
-      header: "Orden",
+      header: "Código",
       isRowHeader: true,
       cell: (orden) => (
-        <div className="min-w-0">
-          <Link
-            href={`/ordenes/${orden.id}`}
-            className="font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            {orden.numero}
-          </Link>
-          <p className="text-xs text-muted">
-            {orden.fecha_programada
-              ? `Programada: ${ordenFechaProgramadaTexto(orden)}`
-              : "Sin fecha programada"}
-          </p>
-        </div>
+        <Link
+          href={`/ordenes/${orden.id}`}
+          className="font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        >
+          {orden.numero}
+        </Link>
       ),
     },
     {
       id: "cliente",
       header: "Cliente",
-      cell: (orden) => (
-        <span className="block max-w-[16rem] truncate text-sm">
-          {ordenClienteNombre(orden)}
-        </span>
-      ),
+      cell: (orden) => <ClienteCell orden={orden} />,
     },
     {
       id: "proforma",
@@ -107,14 +108,8 @@ export function OrdenesTable({
       ),
     },
     {
-      id: "estado",
-      header: "Estado",
-      cell: (orden) => <OrdenEstadoChip estado={orden.estado} />,
-    },
-    {
       id: "programada",
       header: "Fecha programada",
-      className: "hidden lg:table-cell",
       cell: (orden) => (
         <span className="numeric text-sm text-muted">
           {ordenFechaProgramadaTexto(orden)}
@@ -122,14 +117,9 @@ export function OrdenesTable({
       ),
     },
     {
-      id: "items",
-      header: "Ítems",
-      className: "hidden sm:table-cell text-end",
-      cell: (orden) => (
-        <span className="numeric text-sm text-muted">
-          {formatNumber(ordenItemsCount(orden))}
-        </span>
-      ),
+      id: "estado",
+      header: "Estado",
+      cell: (orden) => <OrdenEstadoChip estado={orden.estado} />,
     },
     {
       id: "acciones",
@@ -141,28 +131,25 @@ export function OrdenesTable({
           numero={orden.numero}
           acciones={Array.from(accionesOrden(orden, permisos))}
           operarios={operarios}
+          montoCierre={ordenMontoCierre(orden)}
           display="icons"
         />
       ),
     },
   ];
 
-  const emptyTitle = filtersActive
-    ? "Sin coincidencias"
-    : "Todavía no hay órdenes de servicio";
-  const emptyDescription = filtersActive
-    ? "Ajusta la búsqueda, el estado o los filtros para ver más resultados."
-    : "Crea una orden desde una proforma aceptada para empezar a ejecutar el servicio.";
+  const emptyTitle = vacio.title;
+  const emptyDescription = vacio.description;
 
-  const emptyAction = filtersActive ? (
+  const emptyAction = vacio.limpiar ? (
     <Button
       variant="tertiary"
       size="sm"
-      onPress={() => router.push(ordenesHref({ ...query, search: "", estado: "", operarioId: "", clienteId: "", page: 1 }))}
+      onPress={() => router.push(ordenesHref(ordenesSinFiltros(query)))}
     >
       Limpiar filtros
     </Button>
-  ) : (
+  ) : query.estado ? undefined : (
     <Button
       variant="primary"
       size="sm"
@@ -224,6 +211,11 @@ export function OrdenesTable({
                     <p className="truncate text-sm text-muted">
                       {ordenClienteNombre(orden)}
                     </p>
+                    {orden.cliente?.nit_ci ? (
+                      <p className="numeric text-xs text-muted">
+                        NIT/CI {orden.cliente.nit_ci}
+                      </p>
+                    ) : null}
                   </div>
 
                   <OrdenEstadoChip estado={orden.estado} />
@@ -253,12 +245,6 @@ export function OrdenesTable({
                       {ordenFechaProgramadaTexto(orden)}
                     </dd>
                   </div>
-                  <div>
-                    <dt className="text-xs text-muted">Ítems</dt>
-                    <dd className="numeric text-foreground">
-                      {formatNumber(ordenItemsCount(orden))}
-                    </dd>
-                  </div>
                 </dl>
 
                 <div className="border-t border-border px-3 py-2">
@@ -267,6 +253,7 @@ export function OrdenesTable({
                     numero={orden.numero}
                     acciones={Array.from(accionesOrden(orden, permisos))}
                     operarios={operarios}
+                    montoCierre={ordenMontoCierre(orden)}
                     display="labels"
                   />
                 </div>

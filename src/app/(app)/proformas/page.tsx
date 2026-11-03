@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
-import { NavTabs } from "@/components/ui/nav-tabs";
+import { NavTabs, type NavTab } from "@/components/ui/nav-tabs";
 import { ProformasTable } from "@/components/proformas/proformas-table";
-import { SolicitudesTable } from "@/components/proformas/solicitudes-table";
+import {
+  SolicitudesTable,
+  type SolicitudFiltroEstado,
+} from "@/components/proformas/solicitudes-table";
 import {
   getClientes,
   getProformas,
@@ -21,12 +24,14 @@ import type {
   Proforma,
   Solicitud,
 } from "@/lib/api/types";
-import { isValidDateOnly } from "@/lib/proformas";
+import { isValidDateOnly, todayDateOnly } from "@/lib/proformas";
 import { can } from "@/lib/permissions";
 
 export const metadata: Metadata = {
-  title: "Proformas",
+  title: "Proformas y Solicitudes",
 };
+
+const TITULO = "Proformas y Solicitudes";
 
 const ESTADOS: EstadoProforma[] = [
   "BORRADOR",
@@ -34,6 +39,8 @@ const ESTADOS: EstadoProforma[] = [
   "ACEPTADA",
   "RECHAZADA",
 ];
+
+const ESTADOS_SOLICITUD: SolicitudFiltroEstado[] = ["PENDIENTE", "ATENDIDA"];
 
 const PER_PAGE = 15;
 
@@ -45,6 +52,50 @@ function positiveInt(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
+ * Contadores de las pestañas: total de proformas y solicitudes pendientes,
+ * leídos de `meta.total` de los listados existentes. Si fallan, la pestaña
+ * se muestra sin contador en vez de romper la pantalla.
+ */
+async function contarPestanas(): Promise<{
+  proformas?: number;
+  solicitudes?: number;
+}> {
+  const [proformas, solicitudes] = await Promise.allSettled([
+    getProformas({ perPage: 1 }),
+    getSolicitudes({ estado: "PENDIENTE", perPage: 1 }),
+  ]);
+
+  return {
+    proformas:
+      proformas.status === "fulfilled" ? proformas.value.meta.total : undefined,
+    solicitudes:
+      solicitudes.status === "fulfilled"
+        ? solicitudes.value.meta.total
+        : undefined,
+  };
+}
+
+function pestanas(counts: {
+  proformas?: number;
+  solicitudes?: number;
+}): NavTab[] {
+  return [
+    {
+      key: "proformas",
+      label: "Proformas",
+      href: "/proformas?tab=proformas",
+      count: counts.proformas,
+    },
+    {
+      key: "solicitudes",
+      label: "Solicitudes",
+      href: "/proformas?tab=solicitudes",
+      count: counts.solicitudes,
+    },
+  ];
 }
 
 export default async function ProformasPage({
@@ -63,6 +114,11 @@ export default async function ProformasPage({
   const estado = ESTADOS.includes(estadoParam as EstadoProforma)
     ? (estadoParam as EstadoProforma)
     : "";
+  const estadoSolicitud = ESTADOS_SOLICITUD.includes(
+    estadoParam as SolicitudFiltroEstado,
+  )
+    ? (estadoParam as SolicitudFiltroEstado)
+    : "";
   const clienteId = positiveInt(first(params.cliente_id));
   const desdeParam = first(params.desde);
   const hastaParam = first(params.hasta);
@@ -72,9 +128,10 @@ export default async function ProformasPage({
   let clientes: Cliente[];
   let proformas: Paginated<Proforma> | null = null;
   let solicitudes: Paginated<Solicitud> | null = null;
+  let counts: { proformas?: number; solicitudes?: number };
 
   try {
-    const [clientesPage, listado] = await Promise.all([
+    const [clientesPage, listado, conteos] = await Promise.all([
       getClientes({ perPage: 100 }),
       tab === "proformas"
         ? getProformas({
@@ -86,10 +143,17 @@ export default async function ProformasPage({
             page,
             perPage: PER_PAGE,
           })
-        : getSolicitudes({ search, page, perPage: PER_PAGE }),
+        : getSolicitudes({
+            search,
+            estado: estadoSolicitud,
+            page,
+            perPage: PER_PAGE,
+          }),
+      contarPestanas(),
     ]);
 
     clientes = clientesPage.data;
+    counts = conteos;
 
     if (tab === "proformas") {
       proformas = listado as Paginated<Proforma>;
@@ -103,22 +167,11 @@ export default async function ProformasPage({
 
     return (
       <>
-        <PageHeader title="Proformas" />
+        <PageHeader title={TITULO} />
         <NavTabs
           label="Secciones comerciales"
           current={tab}
-          tabs={[
-            {
-              key: "proformas",
-              label: "Proformas",
-              href: "/proformas?tab=proformas",
-            },
-            {
-              key: "solicitudes",
-              label: "Solicitudes",
-              href: "/proformas?tab=solicitudes",
-            },
-          ]}
+          tabs={pestanas({})}
           className="mb-6"
         />
         <ErrorState message={apiErrorMessage(error)} action={<RetryButton />} />
@@ -129,25 +182,14 @@ export default async function ProformasPage({
   return (
     <>
       <PageHeader
-        title="Proformas"
+        title={TITULO}
         description="Emisión, envío y seguimiento comercial. Las solicitudes se convierten en proformas en borrador."
       />
 
       <NavTabs
         label="Secciones comerciales"
         current={tab}
-        tabs={[
-          {
-            key: "proformas",
-            label: "Proformas",
-            href: "/proformas?tab=proformas",
-          },
-          {
-            key: "solicitudes",
-            label: "Solicitudes",
-            href: "/proformas?tab=solicitudes",
-          },
-        ]}
+        tabs={pestanas(counts)}
         className="mb-6"
       />
 
@@ -158,6 +200,7 @@ export default async function ProformasPage({
           query={{ search, estado, clienteId: clienteId ?? "", desde, hasta, page }}
           clientes={clientes}
           canDelete={can(user, "proformas.eliminar")}
+          hoy={todayDateOnly()}
         />
       ) : null}
 
@@ -167,6 +210,7 @@ export default async function ProformasPage({
           meta={solicitudes.meta}
           clientes={clientes}
           search={search}
+          estado={estadoSolicitud}
           canManage={can(user, "solicitudes.gestionar")}
         />
       ) : null}

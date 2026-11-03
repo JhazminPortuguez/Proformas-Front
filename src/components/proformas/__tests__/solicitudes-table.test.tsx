@@ -1,11 +1,17 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import { SolicitudesTable } from "@/components/proformas/solicitudes-table";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  SolicitudesTable,
+  type SolicitudFiltroEstado,
+} from "@/components/proformas/solicitudes-table";
 import type { Cliente, Solicitud } from "@/lib/api/types";
+
+const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push,
     replace: vi.fn(),
     refresh: vi.fn(),
     back: vi.fn(),
@@ -48,21 +54,55 @@ const META = {
   last_page: 1,
 };
 
-function renderTable(solicitud: Solicitud) {
+function renderTable(
+  solicitudes: Solicitud[],
+  estado: SolicitudFiltroEstado = "",
+) {
   return render(
     <SolicitudesTable
-      solicitudes={[solicitud]}
+      solicitudes={solicitudes}
       meta={META}
       clientes={[CLIENTE]}
       search=""
+      estado={estado}
       canManage
     />,
   );
 }
 
+beforeEach(() => {
+  push.mockClear();
+});
+
 describe("SolicitudesTable", () => {
+  it("muestra el teléfono del cliente", () => {
+    renderTable([
+      { ...PENDIENTE, cliente: { ...CLIENTE, telefono: "70012345" } },
+    ]);
+
+    expect(screen.getAllByText("Tel. 70012345").length).toBeGreaterThan(0);
+  });
+
+  it("filtra por estado conservando la pestaña de solicitudes", async () => {
+    const user = userEvent.setup();
+    renderTable([PENDIENTE]);
+
+    await user.click(screen.getByRole("button", { name: /Estado/ }));
+    await user.click(await screen.findByRole("option", { name: "Atendida" }));
+
+    expect(push).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/proformas\?(?=.*tab=solicitudes)(?=.*estado=ATENDIDA)/),
+    );
+  });
+
+  it("con un filtro activo y sin resultados muestra 'Sin coincidencias'", () => {
+    renderTable([], "ATENDIDA");
+
+    expect(screen.getAllByText("Sin coincidencias").length).toBeGreaterThan(0);
+  });
+
   it("ofrece convertir una solicitud pendiente", () => {
-    renderTable(PENDIENTE);
+    renderTable([PENDIENTE]);
 
     expect(
       screen.getAllByRole("button", { name: "Convertir solicitud #4" }).length,
@@ -71,7 +111,7 @@ describe("SolicitudesTable", () => {
   });
 
   it("una solicitud atendida enlaza su proforma y ya no se puede convertir", () => {
-    renderTable(ATENDIDA);
+    renderTable([ATENDIDA]);
 
     expect(
       screen.queryByRole("button", { name: "Convertir solicitud #5" }),

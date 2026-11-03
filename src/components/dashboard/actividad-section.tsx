@@ -17,7 +17,13 @@ import {
   type ActividadKind,
 } from "@/lib/dashboard";
 import type { DashboardData } from "@/lib/api/types";
-import { cn, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import {
+  cn,
+  formatDateOnly,
+  formatDateTime,
+  formatMoney,
+  formatNumber,
+} from "@/lib/utils";
 import {
   FOCUS_RING,
   SectionIntro,
@@ -102,7 +108,9 @@ export function ActividadSection({ data }: { data: DashboardData }) {
                           <>
                             <span aria-hidden>·</span>
                             <time dateTime={item.fecha}>
-                              {formatDateTime(item.fecha)}
+                              {item.kind === "pago"
+                                ? formatDateOnly(item.fecha)
+                                : formatDateTime(item.fecha)}
                             </time>
                           </>
                         ) : null}

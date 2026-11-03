@@ -3,10 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { OrdenesTable } from "@/components/ordenes/ordenes-table";
 import type { Orden } from "@/lib/api/types";
+import { formatDateOnly } from "@/lib/utils";
+
+const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push,
     replace: vi.fn(),
     refresh: vi.fn(),
     back: vi.fn(),
@@ -37,7 +40,7 @@ const ORDEN: Orden = {
   cliente: {
     id: 3,
     nombre_razon: "Constructora Andina",
-    nit_ci: null,
+    nit_ci: "123456789",
     telefono: null,
     email: null,
     direccion: null,
@@ -103,7 +106,66 @@ describe("OrdenesTable", () => {
     ).toBeInTheDocument();
     expect(within(table).getByText("Pedro Operario")).toBeInTheDocument();
     expect(within(table).getByText("Asignada")).toBeInTheDocument();
-    expect(within(table).getByText(/Programada:/)).toBeInTheDocument();
+    expect(
+      within(table).getByText(formatDateOnly("2026-11-01")),
+    ).toBeInTheDocument();
+    expect(within(table).getByText("NIT/CI 123456789")).toBeInTheDocument();
+  });
+
+  it("usa las columnas aprobadas, sin ítems ni servicio principal", () => {
+    renderTable();
+
+    const table = screen.getByRole("grid", { name: "Órdenes de servicio" });
+    const headers = within(table)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent?.trim());
+
+    expect(headers).toEqual([
+      "Código",
+      "Cliente",
+      "Proforma",
+      "Operario",
+      "Fecha programada",
+      "Estado",
+      "Acciones",
+    ]);
+  });
+
+  it("muestra el NIT/CI también en las tarjetas del celular", () => {
+    renderTable();
+
+    const lista = screen.getByRole("list", { name: "Órdenes de servicio" });
+
+    expect(within(lista).getByText("NIT/CI 123456789")).toBeInTheDocument();
+    expect(within(lista).queryByText("Ítems")).not.toBeInTheDocument();
+  });
+
+  it("limpiar filtros del estado vacío conserva la pestaña", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <OrdenesTable
+        ordenes={[]}
+        meta={{ ...META, total: 0 }}
+        query={{
+          search: "ORD-9",
+          estado: "EN_PROCESO",
+          operarioId: "",
+          clienteId: 3,
+          vista: "tabla",
+          page: 1,
+        }}
+        operarios={[]}
+        permisos={{ canAssign: true, canCancel: true, canClose: true }}
+      />,
+    );
+
+    // La tabla de escritorio y la lista del celular muestran el mismo botón.
+    await user.click(
+      screen.getAllByRole("button", { name: "Limpiar filtros" })[0],
+    );
+
+    expect(push).toHaveBeenCalledWith("/ordenes?estado=EN_PROCESO&vista=tabla");
   });
 
   it("pide confirmación antes de iniciar la orden", async () => {

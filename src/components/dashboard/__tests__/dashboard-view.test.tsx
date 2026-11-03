@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import type { DashboardData, User } from "@/lib/api/types";
 import { movimientosDeProductoHref } from "@/lib/inventario";
+import { formatDateOnly, formatDateTime } from "@/lib/utils";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -236,6 +237,33 @@ describe("DashboardView", () => {
       within(actividad).getByRole("link", { name: /PR-2026-000003/ }),
     ).toHaveAttribute("href", "/proformas/3");
     expect(within(actividad).getByText("Aceptada")).toBeInTheDocument();
+  });
+
+  it("muestra la fecha de un pago sin hora y la del resto con hora", () => {
+    // El back envía fecha_pago como medianoche de Bolivia en ISO UTC.
+    const fechaPago = "2026-10-28T04:00:00.000000Z";
+    const data: DashboardData = {
+      ...DATA,
+      actividad_reciente: (DATA.actividad_reciente ?? []).map((item) =>
+        item.tipo === "pago" ? { ...item, fecha: fechaPago } : item,
+      ),
+    };
+
+    render(<DashboardView user={USER} data={data} />);
+
+    const actividad = screen.getByRole("region", {
+      name: "Actividad reciente",
+    });
+    const tiempos = Array.from(actividad.querySelectorAll("time"));
+    const pago = tiempos.find((time) => time.dateTime === fechaPago);
+    const orden = tiempos.find(
+      (time) => time.dateTime === "2026-10-24T14:00:00.000000Z",
+    );
+
+    expect(pago?.textContent).toBe(formatDateOnly("2026-10-28"));
+    expect(orden?.textContent).toBe(
+      formatDateTime("2026-10-24T14:00:00.000000Z"),
+    );
   });
 
   it("ofrece los accesos contextuales del encabezado", () => {

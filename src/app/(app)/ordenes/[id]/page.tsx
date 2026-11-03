@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Building2, FileText, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, FileText, Lock, Wallet } from "lucide-react";
 import { Alert } from "@heroui/react";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState } from "@/components/ui/feedback";
@@ -25,13 +25,19 @@ import {
   ordenCreadaEn,
   ordenFechaProgramadaTexto,
   ordenItemsCount,
+  ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
   type AccionesOrdenOpciones,
 } from "@/lib/ordenes";
 import { materialesPendientes, ordenMateriales } from "@/lib/inventario";
 import { can } from "@/lib/permissions";
-import { formatDateOnly, formatDateTime, formatMoney } from "@/lib/utils";
+import {
+  formatDateNumeric,
+  formatDateOnly,
+  formatDateTime,
+  formatMoney,
+} from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Detalle de orden",
@@ -40,6 +46,8 @@ export const metadata: Metadata = {
 const TAB_KEYS = ["resumen", "items", "materiales", "historial"] as const;
 
 type TabKey = (typeof TAB_KEYS)[number];
+
+const ACCIONES_BARRA = ["iniciar", "finalizar", "cancelar", "cerrar"] as const;
 
 const ACTION_LINK =
   "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -119,6 +127,12 @@ export default async function OrdenDetallePage({
     }
   }
 
+  // Lo que OrdenActions dibuja en el detalle: "consumir" vive en Materiales y
+  // asignar requiere la lista de operarios.
+  const tieneAcciones =
+    ACCIONES_BARRA.some((accion) => acciones.has(accion)) ||
+    (acciones.has("asignar") && operarios.length > 0);
+
   const tabParam = first(query.tab);
   const tab: TabKey = TAB_KEYS.includes(tabParam as TabKey)
     ? (tabParam as TabKey)
@@ -180,20 +194,42 @@ export default async function OrdenDetallePage({
               </Link>
             ) : null}
 
-            <OrdenActions
-              ordenId={orden.id}
-              numero={orden.numero}
-              acciones={Array.from(acciones)}
-              operarios={operarios}
-              display="detail"
-              hideVer
-            />
+            {tieneAcciones ? (
+              // En el celular las acciones quedan fijas abajo; desde sm vuelven
+              // a la cabecera. Una sola instancia evita diálogos duplicados.
+              <div
+                role="group"
+                aria-label="Acciones de la orden"
+                className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 py-3 shadow-overlay sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none"
+              >
+                <OrdenActions
+                  ordenId={orden.id}
+                  numero={orden.numero}
+                  acciones={Array.from(acciones)}
+                  operarios={operarios}
+                  montoCierre={ordenMontoCierre(orden)}
+                  display="detail"
+                  hideVer
+                />
+              </div>
+            ) : null}
           </>
         }
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <OrdenEstadoChip estado={orden.estado} />
+        {orden.cerrada_at ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+            <Lock aria-hidden className="size-3.5 text-muted" />
+            <span>
+              Cerrada el{" "}
+              <time dateTime={orden.cerrada_at} className="numeric">
+                {formatDateNumeric(orden.cerrada_at)}
+              </time>
+            </span>
+          </span>
+        ) : null}
         <span className="text-sm text-muted">{estadoMeta.description}</span>
       </div>
 
@@ -208,19 +244,6 @@ export default async function OrdenDetallePage({
               {orden.cancelada_at
                 ? ` · ${formatDateTime(orden.cancelada_at)}`
                 : ""}
-            </Alert.Description>
-          </Alert.Content>
-        </Alert>
-      ) : null}
-
-      {orden.cerrada_at ? (
-        <Alert status="success" className="mb-6">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title>Cierre administrativo completado</Alert.Title>
-            <Alert.Description>
-              Cerrada el {formatDateTime(orden.cerrada_at)}
-              {orden.cerrador?.name ? ` por ${orden.cerrador.name}` : ""}.
             </Alert.Description>
           </Alert.Content>
         </Alert>
@@ -287,6 +310,11 @@ export default async function OrdenDetallePage({
                         Cliente #{orden.cliente_id}
                       </Link>
                     )}
+                    {cliente?.nit_ci ? (
+                      <span className="numeric block text-xs text-muted">
+                        NIT/CI {cliente.nit_ci}
+                      </span>
+                    ) : null}
                   </dd>
                 </div>
 
@@ -303,7 +331,7 @@ export default async function OrdenDetallePage({
                       <span className="text-xs text-muted">
                         {" "}
                         · {proformaEstadoMeta(proforma.estado).label} ·{" "}
-                        {formatMoney(proforma.total)}
+                        {formatMoney(proforma.total, proforma.moneda)}
                       </span>
                     ) : null}
                   </dd>
@@ -477,7 +505,7 @@ export default async function OrdenDetallePage({
                 Materiales de la orden
               </h2>
               <p className="mt-1 text-sm text-muted">
-                Requerido, consumido y pendiente por línea. El consumo descuenta
+                Cantidad prevista y consumida por línea. El consumo descuenta
                 stock del inventario.
               </p>
             </div>
@@ -496,6 +524,9 @@ export default async function OrdenDetallePage({
       ) : null}
 
       {tab === "historial" ? <OrdenTimeline orden={orden} /> : null}
+
+      {/* Reserva el alto de la barra fija para que no tape el contenido. */}
+      {tieneAcciones ? <div aria-hidden className="h-20 sm:hidden" /> : null}
     </>
   );
 }

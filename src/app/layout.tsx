@@ -1,18 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// Geist se sirve desde el paquete `geist` (next/font/local): no depende de
+// Google Fonts ni de internet al compilar.
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { AnnouncerProvider } from "@/components/ui/announcer";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -46,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} light`}
+      className={`${GeistSans.variable} ${GeistMono.variable} light`}
       suppressHydrationWarning
     >
       <head>

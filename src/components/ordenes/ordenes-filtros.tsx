@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { SelectControl, TextFieldControl } from "@/components/ui/fields";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
-import type { Cliente, EstadoOrden, User } from "@/lib/api/types";
-import { ordenesHref, type OrdenesQuery } from "@/lib/ordenes";
+import type { Cliente, User } from "@/lib/api/types";
+import {
+  ordenesFiltrosActivos,
+  ordenesHref,
+  ordenesSinFiltros,
+  type OrdenesQuery,
+} from "@/lib/ordenes";
 
 interface OrdenesFiltrosProps {
   query: OrdenesQuery;
@@ -16,15 +21,6 @@ interface OrdenesFiltrosProps {
   mostrarOperario: boolean;
   className?: string;
 }
-
-const ESTADO_OPTIONS: { value: string; label: string }[] = [
-  { value: "todos", label: "Todos los estados" },
-  { value: "PENDIENTE", label: "Pendiente" },
-  { value: "ASIGNADA", label: "Asignada" },
-  { value: "EN_PROCESO", label: "En proceso" },
-  { value: "FINALIZADA", label: "Finalizada" },
-  { value: "CANCELADA", label: "Cancelada" },
-];
 
 export function OrdenesFiltros({
   query,
@@ -47,27 +43,13 @@ export function OrdenesFiltros({
     );
   }
 
+  // El estado se elige con las pestañas: limpiar filtros no cambia de pestaña.
   function clearFilters() {
     setSearchInput("");
-
-    const empty: OrdenesQuery = {
-      search: "",
-      estado: "",
-      operarioId: "",
-      clienteId: "",
-      vista: query.vista,
-      page: 1,
-    };
-
-    router.push(ordenesHref(empty));
+    router.push(ordenesHref(ordenesSinFiltros(query)));
   }
 
-  const filtersActive = Boolean(
-    query.search ||
-      query.estado ||
-      query.operarioId !== "" ||
-      query.clienteId !== "",
-  );
+  const filtersActive = ordenesFiltrosActivos(query);
 
   const clienteOptions = [
     { value: "todos", label: "Todos los clientes" },
@@ -96,7 +78,7 @@ export function OrdenesFiltros({
       className={className}
     >
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-12 lg:items-end">
-        <div className="md:col-span-2 lg:col-span-3">
+        <div className="md:col-span-2 lg:col-span-4">
           <TextFieldControl
             name="search"
             label="Buscar"
@@ -106,22 +88,8 @@ export function OrdenesFiltros({
           />
         </div>
 
-        <div className="lg:col-span-2">
-          <SelectControl
-            name="estado"
-            label="Estado"
-            value={query.estado || "todos"}
-            onChange={(value) =>
-              navigate({
-                estado: value === "todos" ? "" : (value as EstadoOrden),
-              })
-            }
-            options={ESTADO_OPTIONS}
-          />
-        </div>
-
         {mostrarOperario ? (
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <SelectControl
               name="operario_id"
               label="Operario"
@@ -138,7 +106,7 @@ export function OrdenesFiltros({
           </div>
         ) : null}
 
-        <div className={mostrarOperario ? "lg:col-span-3" : "lg:col-span-5"}>
+        <div className={mostrarOperario ? "lg:col-span-5" : "lg:col-span-8"}>
           <SelectControl
             name="cliente_id"
             label="Cliente"

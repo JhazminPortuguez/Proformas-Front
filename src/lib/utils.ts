@@ -30,12 +30,57 @@ const dateOnlyFormatter = new Intl.DateTimeFormat("es-BO", {
   timeZone: "UTC",
 });
 
-const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
+/** Solo el día de un instante, en la misma zona que `dateFormatter`. */
+const instantDayFormatter = new Intl.DateTimeFormat("es-BO", {
+  dateStyle: "medium",
+  timeZone: "America/La_Paz",
+});
 
-export function formatMoney(value: number | null | undefined): string {
+/** `dd/mm/aaaa` de un instante, en la misma zona que `dateFormatter`. */
+const numericDayFormatter = new Intl.DateTimeFormat("es-BO", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "America/La_Paz",
+});
+
+const DATE_ONLY_PATTERN =/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
+const PURE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const otherMoneyFormatters = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Bs por defecto. Con otra moneda (USD, EUR) se muestra su símbolo real, sin
+ * convertir el monto; un código inválido cae a Bs.
+ */
+export function formatMoney(
+  value: number | null | undefined,
+  moneda?: string | null,
+): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
 
-  return moneyFormatter.format(value);
+  const code = moneda?.trim().toUpperCase();
+
+  if (!code || code === "BOB") return moneyFormatter.format(value);
+
+  let formatter = otherMoneyFormatters.get(code);
+
+  if (!formatter) {
+    try {
+      formatter = new Intl.NumberFormat("es-BO", {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    } catch {
+      return moneyFormatter.format(value);
+    }
+
+    otherMoneyFormatters.set(code, formatter);
+  }
+
+  return formatter.format(value);
 }
 
 export function formatNumber(value: number | null | undefined): string {
@@ -60,11 +105,24 @@ export function formatDateTime(value: string | null | undefined): string {
  * No usa `new Date("YYYY-MM-DD")`: ese constructor interpreta la cadena como
  * medianoche UTC y, al mostrarla en America/La_Paz, resta un día. Acá se
  * construye la fecha en UTC y se formatea explícitamente en UTC.
+ *
+ * Si recibe un instante con hora (por ejemplo `created_at` en ISO UTC), no
+ * corta el texto: lo convierte a America/La_Paz igual que `formatDateTime` y
+ * muestra solo el día.
  */
 export function formatDateOnly(value: string | null | undefined): string {
   if (!value) return "—";
 
   const trimmed = value.trim();
+
+  if (!PURE_DATE_PATTERN.test(trimmed)) {
+    const instant = new Date(trimmed);
+
+    if (DATE_ONLY_PATTERN.test(trimmed) && !Number.isNaN(instant.getTime())) {
+      return instantDayFormatter.format(instant);
+    }
+  }
+
   const match = DATE_ONLY_PATTERN.exec(trimmed);
 
   if (!match) return trimmed;
@@ -84,6 +142,28 @@ export function formatDateOnly(value: string | null | undefined): string {
   }
 
   return dateOnlyFormatter.format(date);
+}
+
+/**
+ * Día de un instante ISO como `dd/mm/aaaa` en America/La_Paz. Una fecha
+ * date-only (`YYYY-MM-DD`) se reordena sin pasar por `Date`.
+ */
+export function formatDateNumeric(value: string | null | undefined): string {
+  if (!value) return "—";
+
+  const trimmed = value.trim();
+
+  if (PURE_DATE_PATTERN.test(trimmed)) {
+    const [year, month, day] = trimmed.split("-");
+
+    return `${day}/${month}/${year}`;
+  }
+
+  const instant = new Date(trimmed);
+
+  if (Number.isNaN(instant.getTime())) return trimmed;
+
+  return numericDayFormatter.format(instant);
 }
 
 /**

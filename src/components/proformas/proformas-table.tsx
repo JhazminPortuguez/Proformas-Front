@@ -22,8 +22,12 @@ import type {
   PaginationMeta,
   Proforma,
 } from "@/lib/api/types";
-import { accionesProforma, proformaItemsCount } from "@/lib/proformas";
-import { buildQuery, formatDateOnly, formatMoney, formatNumber } from "@/lib/utils";
+import {
+  accionesProforma,
+  formatDiaMes,
+  proformaExpirada,
+} from "@/lib/proformas";
+import { buildQuery, formatDateOnly, formatMoney } from "@/lib/utils";
 import {
   ProformaListActions,
   type ProformaActionRequest,
@@ -44,6 +48,40 @@ interface ProformasTableProps {
   query: ProformasQuery;
   clientes: Cliente[];
   canDelete: boolean;
+  /** Hoy (`YYYY-MM-DD`) calculado en el servidor, para el aviso de validez. */
+  hoy: string;
+}
+
+/** Nombre o razón social con su NIT/CI debajo. */
+function ClienteCell({ proforma }: { proforma: Proforma }) {
+  return (
+    <div className="min-w-0">
+      <p className="max-w-[18rem] truncate text-sm">
+        {proforma.cliente?.nombre_razon ?? `Cliente #${proforma.cliente_id}`}
+      </p>
+      {proforma.cliente?.nit_ci ? (
+        <p className="numeric text-xs text-muted">
+          NIT/CI {proforma.cliente.nit_ci}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Fecha de validez; si la proforma enviada ya expiró, agrega un aviso. */
+function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
+  return (
+    <div>
+      <p className="numeric text-sm text-muted">
+        {formatDateOnly(proforma.fecha_validez)}
+      </p>
+      {proformaExpirada(proforma, hoy) && proforma.fecha_validez ? (
+        <p className="text-xs text-warning">
+          Aviso: Expiró {formatDiaMes(proforma.fecha_validez)}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 const ESTADO_OPTIONS: { value: string; label: string }[] = [
@@ -65,6 +103,7 @@ export function ProformasTable({
   query,
   clientes,
   canDelete,
+  hoy,
 }: ProformasTableProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -186,7 +225,7 @@ export function ProformasTable({
   const columns: DataTableColumn<Proforma>[] = [
     {
       id: "numero",
-      header: "Número",
+      header: "Código",
       isRowHeader: true,
       cell: (proforma) => (
         <div className="min-w-0">
@@ -207,26 +246,7 @@ export function ProformasTable({
     {
       id: "cliente",
       header: "Cliente",
-      cell: (proforma) => (
-        <span className="block max-w-[18rem] truncate text-sm">
-          {proforma.cliente?.nombre_razon ?? `Cliente #${proforma.cliente_id}`}
-        </span>
-      ),
-    },
-    {
-      id: "estado",
-      header: "Estado",
-      cell: (proforma) => <ProformaEstadoChip estado={proforma.estado} />,
-    },
-    {
-      id: "total",
-      header: "Total",
-      className: "text-end",
-      cell: (proforma) => (
-        <span className="numeric text-sm font-medium text-foreground">
-          {formatMoney(proforma.total)}
-        </span>
-      ),
+      cell: (proforma) => <ClienteCell proforma={proforma} />,
     },
     {
       id: "emision",
@@ -240,22 +260,22 @@ export function ProformasTable({
     {
       id: "validez",
       header: "Validez",
-      className: "hidden xl:table-cell",
+      cell: (proforma) => <ValidezCell proforma={proforma} hoy={hoy} />,
+    },
+    {
+      id: "total",
+      header: "Total",
+      className: "text-end",
       cell: (proforma) => (
-        <span className="numeric text-sm text-muted">
-          {formatDateOnly(proforma.fecha_validez)}
+        <span className="numeric text-sm font-medium text-foreground">
+          {formatMoney(proforma.total, proforma.moneda)}
         </span>
       ),
     },
     {
-      id: "items",
-      header: "Ítems",
-      className: "hidden sm:table-cell text-end",
-      cell: (proforma) => (
-        <span className="numeric text-sm text-muted">
-          {formatNumber(proformaItemsCount(proforma))}
-        </span>
-      ),
+      id: "estado",
+      header: "Estado",
+      cell: (proforma) => <ProformaEstadoChip estado={proforma.estado} />,
     },
     {
       id: "acciones",
@@ -464,6 +484,11 @@ export function ProformasTable({
                       {proforma.cliente?.nombre_razon ??
                         `Cliente #${proforma.cliente_id}`}
                     </p>
+                    {proforma.cliente?.nit_ci ? (
+                      <p className="numeric text-xs text-muted">
+                        NIT/CI {proforma.cliente.nit_ci}
+                      </p>
+                    ) : null}
                   </div>
 
                   <ProformaEstadoChip estado={proforma.estado} />
@@ -473,13 +498,7 @@ export function ProformasTable({
                   <div>
                     <dt className="text-xs text-muted">Total</dt>
                     <dd className="numeric font-medium text-foreground">
-                      {formatMoney(proforma.total)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted">Ítems</dt>
-                    <dd className="numeric text-foreground">
-                      {formatNumber(proformaItemsCount(proforma))}
+                      {formatMoney(proforma.total, proforma.moneda)}
                     </dd>
                   </div>
                   <div>
@@ -488,10 +507,10 @@ export function ProformasTable({
                       {formatDateOnly(proforma.fecha_emision)}
                     </dd>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <dt className="text-xs text-muted">Validez</dt>
-                    <dd className="numeric text-foreground">
-                      {formatDateOnly(proforma.fecha_validez)}
+                    <dd>
+                      <ValidezCell proforma={proforma} hoy={hoy} />
                     </dd>
                   </div>
                 </dl>

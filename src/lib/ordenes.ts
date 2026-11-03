@@ -221,6 +221,18 @@ export function ordenProformaNumero(
   return orden.proforma?.numero ?? `Proforma #${orden.proforma_id}`;
 }
 
+/**
+ * Monto de la cuenta por cobrar que genera el cierre: el back cobra el total
+ * de la proforma, en su moneda. Sin proforma cargada no se muestra monto.
+ */
+export function ordenMontoCierre(
+  orden: Pick<Orden, "proforma">,
+): { total: number; moneda: string } | null {
+  if (!orden.proforma) return null;
+
+  return { total: orden.proforma.total, moneda: orden.proforma.moneda };
+}
+
 export function ordenItemsCount(
   orden: Pick<Orden, "items_count" | "items">,
 ): number {
@@ -384,4 +396,84 @@ export function ordenesQueryToSearch(query: OrdenesQuery): string {
 
 export function ordenesHref(query: OrdenesQuery): string {
   return `/ordenes${ordenesQueryToSearch(query)}`;
+}
+
+/** Hay filtros activos además de la pestaña de estado. */
+export function ordenesFiltrosActivos(query: OrdenesQuery): boolean {
+  return Boolean(
+    query.search || query.operarioId !== "" || query.clienteId !== "",
+  );
+}
+
+/** Quita los filtros; conserva la pestaña de estado y la vista. */
+export function ordenesSinFiltros(query: OrdenesQuery): OrdenesQuery {
+  return {
+    search: "",
+    estado: query.estado,
+    operarioId: "",
+    clienteId: "",
+    vista: query.vista,
+    page: 1,
+  };
+}
+
+/**
+ * Textos del listado vacío. `limpiar` indica si corresponde ofrecer
+ * "Limpiar filtros"; sin filtros activos no hay nada que limpiar, y la
+ * pestaña se cambia con las pestañas.
+ */
+export function ordenesVacio(query: OrdenesQuery): {
+  title: string;
+  description: string;
+  limpiar: boolean;
+} {
+  if (ordenesFiltrosActivos(query)) {
+    return {
+      title: "Sin coincidencias",
+      description: "Ajusta la búsqueda o los filtros para ver más resultados.",
+      limpiar: true,
+    };
+  }
+
+  if (query.estado) {
+    return {
+      title: "Sin órdenes en este estado",
+      description: "Elige otra pestaña para ver las órdenes en otros estados.",
+      limpiar: false,
+    };
+  }
+
+  return {
+    title: "Todavía no hay órdenes de servicio",
+    description:
+      "Crea una orden desde una proforma aceptada para empezar a ejecutar el servicio.",
+    limpiar: false,
+  };
+}
+
+/** Pestañas de estado del listado; "" es "Todas". */
+export const ORDENES_PESTANAS: readonly {
+  estado: EstadoOrden | "";
+  label: string;
+}[] = [
+  { estado: "", label: "Todas" },
+  { estado: "PENDIENTE", label: "Pendientes" },
+  { estado: "ASIGNADA", label: "Asignadas" },
+  { estado: "EN_PROCESO", label: "En proceso" },
+  { estado: "FINALIZADA", label: "Finalizadas" },
+  { estado: "CANCELADA", label: "Canceladas" },
+];
+
+/**
+ * Enlaces de las pestañas: cambian solo el estado, conservan la vista y los
+ * demás filtros, y vuelven a la primera página.
+ */
+export function ordenesPestanas(
+  query: OrdenesQuery,
+): { key: string; label: string; href: string }[] {
+  return ORDENES_PESTANAS.map(({ estado, label }) => ({
+    key: estado || "todas",
+    label,
+    href: ordenesHref({ ...query, estado, page: 1 }),
+  }));
 }
