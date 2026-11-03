@@ -19,6 +19,10 @@ if (!window.matchMedia) {
   }));
 }
 
+// jsdom no dibuja en canvas: sin contexto, los gráficos no se crean.
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as unknown as HTMLCanvasElement["getContext"];
+
 if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = class {
     observe() {}

@@ -153,6 +153,14 @@ export function getDashboard(): Promise<DashboardData> {
   return request<DashboardData>("/dashboard");
 }
 
+/** Reportes del administrador: `endpoint` es la ruta bajo /reportes. */
+export function getReporte<T>(
+  endpoint: string,
+  params: Record<string, string | number>,
+): Promise<T> {
+  return request<T>(`/reportes/${endpoint}${buildQuery(params)}`);
+}
+
 export interface ListarClientesParams {
   search?: string;
   estado?: ClienteEstado | "";

@@ -610,6 +610,52 @@ export interface DashboardData {
   trabajos_hoy_total?: number;
 }
 
+/* Reportes (solo administrador) ------------------------------------------- */
+
+export interface ReportePeriodo {
+  desde: string;
+  hasta: string;
+}
+
+export interface ReporteClienteRef {
+  nombre_razon: string | null;
+  nit_ci: string | null;
+}
+
+export interface ReporteOrdenesOperario {
+  operario_id: number | null;
+  operario: string | null;
+  asignadas: number;
+  en_proceso: number;
+  finalizadas: number;
+  total: number;
+}
+
+export interface ReporteOrdenAtrasada {
+  id: number;
+  numero: string;
+  cliente: ReporteClienteRef;
+  operario: string | null;
+  fecha_programada: string;
+  fecha_finalizacion: string;
+  dias_atraso: number;
+}
+
+export interface ReporteOrdenes {
+  periodo: ReportePeriodo;
+  total: number;
+  por_estado: Record<string, number>;
+  por_operario: ReporteOrdenesOperario[];
+  cumplimiento: {
+    a_tiempo: number;
+    con_atraso: number;
+    sin_fecha: number;
+    /** null si no hay órdenes finalizadas con fecha programada. */
+    porcentaje_a_tiempo: number | null;
+  };
+  atrasadas: ReporteOrdenAtrasada[];
+}
+
 export interface PaginationMeta {
   current_page: number;
   per_page: number;
