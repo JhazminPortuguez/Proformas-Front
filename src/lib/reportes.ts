@@ -5,7 +5,7 @@ import { buildQuery } from "@/lib/utils";
 /* Pestañas                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export type ReporteTab = "ordenes";
+export type ReporteTab = "ordenes" | "servicios";
 
 export interface ReporteMeta {
   label: string;
@@ -20,6 +20,11 @@ export const REPORTES: Record<ReporteTab, ReporteMeta> = {
     label: "Órdenes de servicio",
     endpoint: "ordenes",
     filtros: { cliente: true, operario: true },
+  },
+  servicios: {
+    label: "Servicios y proformas",
+    endpoint: "servicios",
+    filtros: { cliente: true, operario: false },
   },
 };
 

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { ReporteOrdenesView } from "@/components/reportes/reporte-ordenes";
+import { ReporteServiciosView } from "@/components/reportes/reporte-servicios";
 import { ReportesView } from "@/components/reportes/reportes-view";
 import {
   getClientes,
@@ -12,7 +13,12 @@ import {
 } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { Cliente, ReporteOrdenes, User } from "@/lib/api/types";
+import type {
+  Cliente,
+  ReporteOrdenes,
+  ReporteServiciosProformas,
+  User,
+} from "@/lib/api/types";
 import {
   REPORTES,
   parseReportesQuery,
@@ -54,6 +60,12 @@ async function cargarReporte(query: ReportesQuery): Promise<ReactNode> {
       return (
         <ReporteOrdenesView
           data={await getReporte<ReporteOrdenes>(endpoint, params)}
+        />
+      );
+    case "servicios":
+      return (
+        <ReporteServiciosView
+          data={await getReporte<ReporteServiciosProformas>(endpoint, params)}
         />
       );
   }

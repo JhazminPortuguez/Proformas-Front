@@ -656,6 +656,31 @@ export interface ReporteOrdenes {
   atrasadas: ReporteOrdenAtrasada[];
 }
 
+export interface ReporteServicio {
+  servicio_id: number;
+  nombre: string | null;
+  categoria: string | null;
+  cantidad: number;
+  monto: number;
+}
+
+export interface ReporteServiciosProformas {
+  periodo: ReportePeriodo;
+  proformas: {
+    /** Enviadas, aceptadas o rechazadas emitidas en el periodo. */
+    cotizado: number;
+    cotizadas: number;
+    /** Aceptadas dentro del periodo. */
+    aceptado: number;
+    aceptadas: number;
+    rechazadas: number;
+    en_espera: number;
+    /** aceptadas / (aceptadas + rechazadas); null sin respuestas. */
+    tasa_aceptacion: number | null;
+  };
+  servicios: ReporteServicio[];
+}
+
 export interface PaginationMeta {
   current_page: number;
   per_page: number;
