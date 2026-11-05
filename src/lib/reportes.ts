@@ -118,6 +118,11 @@ export function reporteParams(
   };
 }
 
+/** Un rango escrito al revés en la dirección no se pide al back. */
+export function rangoInvertido(query: Pick<ReportesQuery, "desde" | "hasta">): boolean {
+  return query.desde > query.hasta;
+}
+
 export function reportesHref(query: ReportesQuery): string {
   return `/reportes${buildQuery({
     tab: query.tab === REPORTE_TABS[0] ? "" : query.tab,

@@ -7,7 +7,7 @@ import { Button } from "@heroui/react";
 import { CatalogSelect } from "@/components/ui/catalog-select";
 import { SelectControl, TextFieldControl } from "@/components/ui/fields";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
-import type { Cliente, User } from "@/lib/api/types";
+import type { ReporteClienteOpcion, User } from "@/lib/api/types";
 import {
   REPORTES,
   mesActualBolivia,
@@ -17,7 +17,7 @@ import {
 
 interface ReportesFiltrosProps {
   query: ReportesQuery;
-  clientes: readonly Cliente[];
+  clientes: readonly ReporteClienteOpcion[];
   operarios: readonly User[];
 }
 

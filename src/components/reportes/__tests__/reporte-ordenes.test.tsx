@@ -29,8 +29,8 @@ const DATA: ReporteOrdenes = {
   total: 8,
   por_estado: { PENDIENTE: 1, ASIGNADA: 1, EN_PROCESO: 1, FINALIZADA: 4, CANCELADA: 1 },
   por_operario: [
-    { operario_id: 2, operario: "Ana Operaria", asignadas: 1, en_proceso: 0, finalizadas: 2, total: 3 },
-    { operario_id: null, operario: null, asignadas: 0, en_proceso: 0, finalizadas: 0, total: 2 },
+    { operario_id: 2, operario: "Ana Operaria", pendientes: 0, asignadas: 1, en_proceso: 0, finalizadas: 2, canceladas: 0, total: 3 },
+    { operario_id: null, operario: null, pendientes: 1, asignadas: 0, en_proceso: 0, finalizadas: 0, canceladas: 1, total: 2 },
   ],
   cumplimiento: { a_tiempo: 2, con_atraso: 1, sin_fecha: 1, porcentaje_a_tiempo: 66.7 },
   atrasadas: [
@@ -81,8 +81,12 @@ describe("ReporteOrdenesView", () => {
 
     const operarios = screen.getByRole("table", { name: "Órdenes por operario" });
     const filas = within(operarios).getAllByRole("row");
-    expect(filas[1]).toHaveTextContent("Ana Operaria1023");
-    expect(filas[2]).toHaveTextContent("Sin asignar0002");
+    expect(filas[0]).toHaveTextContent(
+      "OperarioPendientesAsignadasEn procesoFinalizadasCanceladasTotal",
+    );
+    expect(filas[1]).toHaveTextContent("Ana Operaria010203");
+    // Una pendiente y una cancelada: las columnas suman el total.
+    expect(filas[2]).toHaveTextContent("Sin asignar100012");
 
     const atraso = screen.getByRole("table", { name: "Órdenes finalizadas con atraso" });
     expect(
@@ -140,6 +144,36 @@ describe("ReportesView con el reporte de órdenes", () => {
     const filtros = screen.getByRole("form", { name: "Filtros del reporte" });
     expect(within(filtros).getAllByLabelText("Cliente").length).toBeGreaterThan(0);
     expect(within(filtros).getAllByLabelText("Operario").length).toBeGreaterThan(0);
+  });
+
+  it("con el rango al revés avisa y ofrece volver al mes actual", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-15T16:00:00Z"));
+
+    render(
+      <ReportesView
+        query={{ ...QUERY, desde: "2026-10-31", hasta: "2026-10-01", clienteId: 3 }}
+        clientes={[]}
+        operarios={[]}
+      />,
+    );
+
+    vi.useRealTimers();
+
+    const alerta = screen.getByRole("alert");
+    expect(alerta).toHaveTextContent(
+      "La fecha inicial no puede ser posterior a la final.",
+    );
+    expect(alerta).not.toHaveTextContent("Reintentar");
+    expect(
+      within(alerta).getByRole("link", { name: "Ver el mes actual" }),
+    ).toHaveAttribute(
+      "href",
+      "/reportes?desde=2026-11-01&hasta=2026-11-30&cliente_id=3",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Exportar CSV" }),
+    ).not.toBeInTheDocument();
   });
 
   it("si el back falla muestra el error, sin datos ni CSV", () => {

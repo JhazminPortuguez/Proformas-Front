@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { buttonVariants } from "@heroui/react";
 import { NavTabs } from "@/components/ui/nav-tabs";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { CsvLink } from "@/components/reportes/reporte-ui";
 import { ReportesFiltros } from "@/components/reportes/reportes-filtros";
-import type { Cliente, User } from "@/lib/api/types";
+import type { ReporteClienteOpcion, User } from "@/lib/api/types";
 import {
   REPORTES,
+  mesActualBolivia,
+  rangoInvertido,
   reporteCsvHref,
+  reportesHref,
   reportesPestanas,
   type ReportesQuery,
 } from "@/lib/reportes";
@@ -15,7 +20,7 @@ import { formatDateNumeric } from "@/lib/utils";
 
 interface ReportesViewProps {
   query: ReportesQuery;
-  clientes: readonly Cliente[];
+  clientes: readonly ReporteClienteOpcion[];
   operarios: readonly User[];
   /** Mensaje si el reporte no se pudo cargar; reemplaza al contenido. */
   error?: string | null;
@@ -29,6 +34,8 @@ export function ReportesView({
   error,
   children,
 }: ReportesViewProps) {
+  const invertido = rangoInvertido(query);
+
   return (
     <div className="space-y-6">
       <NavTabs
@@ -50,10 +57,23 @@ export function ReportesView({
           </span>
         </h2>
 
-        {error ? null : <CsvLink href={reporteCsvHref(query)} />}
+        {error || invertido ? null : <CsvLink href={reporteCsvHref(query)} />}
       </div>
 
-      {error ? (
+      {invertido ? (
+        <ErrorState
+          title="Rango de fechas no válido"
+          message="La fecha inicial no puede ser posterior a la final."
+          action={
+            <Link
+              href={reportesHref({ ...query, ...mesActualBolivia() })}
+              className={buttonVariants({ variant: "secondary", size: "sm" })}
+            >
+              Ver el mes actual
+            </Link>
+          }
+        />
+      ) : error ? (
         <ErrorState message={error} action={<RetryButton />} />
       ) : (
         children

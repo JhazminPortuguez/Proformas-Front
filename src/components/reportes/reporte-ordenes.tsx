@@ -25,9 +25,11 @@ function nombreOperario(fila: Pick<ReporteOrdenesOperario, "operario">): string 
 
 const COLUMNAS_OPERARIO = [
   { header: "Operario", cell: (fila: ReporteOrdenesOperario) => nombreOperario(fila) },
+  { header: "Pendientes", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.pendientes) },
   { header: "Asignadas", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.asignadas) },
   { header: "En proceso", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.en_proceso) },
   { header: "Finalizadas", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.finalizadas) },
+  { header: "Canceladas", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.canceladas) },
   { header: "Total", numeric: true, cell: (fila: ReporteOrdenesOperario) => formatNumber(fila.total) },
 ];
 

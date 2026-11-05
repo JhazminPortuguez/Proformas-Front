@@ -8,15 +8,15 @@ import { ReporteOrdenesView } from "@/components/reportes/reporte-ordenes";
 import { ReporteServiciosView } from "@/components/reportes/reporte-servicios";
 import { ReportesView } from "@/components/reportes/reportes-view";
 import {
-  getClientes,
   getReporte,
+  getReporteClientes,
   getUsuarios,
   requireUser,
 } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type {
-  Cliente,
+  ReporteClienteOpcion,
   ReporteCobros,
   ReporteInventario,
   ReporteOrdenes,
@@ -26,6 +26,7 @@ import type {
 import {
   REPORTES,
   parseReportesQuery,
+  rangoInvertido,
   reporteParams,
   type ReportesQuery,
 } from "@/lib/reportes";
@@ -39,9 +40,9 @@ function first(value: string | string[] | undefined): string {
 }
 
 /** Opciones de los filtros: si fallan, el reporte se muestra igual sin ellas. */
-async function cargarClientes(): Promise<Cliente[]> {
+async function cargarClientes(): Promise<ReporteClienteOpcion[]> {
   try {
-    return (await getClientes({ perPage: 100 })).data;
+    return await getReporteClientes();
   } catch {
     return [];
   }
@@ -110,7 +111,8 @@ export default async function ReportesPage({
   let error: string | null = null;
 
   try {
-    contenido = await cargarReporte(query);
+    // Con el rango al revés la vista muestra el aviso; no se consulta al back.
+    contenido = rangoInvertido(query) ? null : await cargarReporte(query);
   } catch (caught) {
     if (isApiError(caught) && (caught.status === 401 || caught.status === 419)) {
       redirect("/login");

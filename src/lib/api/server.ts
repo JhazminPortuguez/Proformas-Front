@@ -26,6 +26,7 @@ import type {
   Paginated,
   Producto,
   Proforma,
+  ReporteClienteOpcion,
   Rol,
   Servicio,
   Solicitud,
@@ -159,6 +160,11 @@ export function getReporte<T>(
   params: Record<string, string | number>,
 ): Promise<T> {
   return request<T>(`/reportes/${endpoint}${buildQuery(params)}`);
+}
+
+export async function getReporteClientes(): Promise<ReporteClienteOpcion[]> {
+  return (await request<{ data: ReporteClienteOpcion[] }>("/reportes/clientes"))
+    .data;
 }
 
 export interface ListarClientesParams {

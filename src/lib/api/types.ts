@@ -617,6 +617,13 @@ export interface ReportePeriodo {
   hasta: string;
 }
 
+/** Opción del filtro de cliente: el back no envía datos de contacto. */
+export interface ReporteClienteOpcion {
+  id: number;
+  nombre_razon: string;
+  nit_ci: string | null;
+}
+
 export interface ReporteClienteRef {
   nombre_razon: string | null;
   nit_ci: string | null;
@@ -625,9 +632,11 @@ export interface ReporteClienteRef {
 export interface ReporteOrdenesOperario {
   operario_id: number | null;
   operario: string | null;
+  pendientes: number;
   asignadas: number;
   en_proceso: number;
   finalizadas: number;
+  canceladas: number;
   total: number;
 }
 

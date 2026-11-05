@@ -3,6 +3,7 @@ import {
   formatPorcentaje,
   mesActualBolivia,
   parseReportesQuery,
+  rangoInvertido,
   reporteCsvHref,
   reportesHref,
   reportesPestanas,
@@ -80,6 +81,14 @@ describe("enlaces", () => {
       label: "Órdenes de servicio",
       href: "/reportes?desde=2026-11-01&hasta=2026-11-30&cliente_id=3",
     });
+  });
+});
+
+describe("rangoInvertido", () => {
+  it("solo es inválido si la fecha inicial es posterior a la final", () => {
+    expect(rangoInvertido({ desde: "2026-10-31", hasta: "2026-10-01" })).toBe(true);
+    expect(rangoInvertido({ desde: "2026-10-01", hasta: "2026-10-01" })).toBe(false);
+    expect(rangoInvertido({ desde: "2026-10-01", hasta: "2026-10-31" })).toBe(false);
   });
 });
 

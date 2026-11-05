@@ -9,6 +9,7 @@ import {
   Legend,
   LinearScale,
   Tooltip,
+  type ChartOptions,
 } from "chart.js";
 import type { EstadoTone } from "@/lib/estados";
 import { formatMoney, formatNumber } from "@/lib/utils";
@@ -36,7 +37,7 @@ export interface BarSerie {
 interface BarChartProps {
   /** Resumen del gráfico para lectores de pantalla; los datos están en la tabla. */
   ariaLabel: string;
-  labels: string[];
+  labels: readonly string[];
   series: BarSerie[];
   horizontal?: boolean;
   money?: boolean;
@@ -79,6 +80,78 @@ function useThemeVersion(): number {
   return version;
 }
 
+interface BarChartOptionsInput {
+  labels: readonly string[];
+  seriesCount: number;
+  horizontal: boolean;
+  money: boolean;
+  stacked: boolean;
+  muted: string;
+  grid: string;
+}
+
+/**
+ * Opciones de Chart.js. El eje de categorías siempre muestra el nombre de la
+ * etiqueta: sin un `callback` propio Chart.js puede mostrar el índice (0, 1…).
+ */
+export function barChartOptions({
+  labels,
+  seriesCount,
+  horizontal,
+  money,
+  stacked,
+  muted,
+  grid,
+}: BarChartOptionsInput): ChartOptions<"bar"> {
+  const format = (value: number) =>
+    money ? formatMoney(value) : formatNumber(value);
+
+  const categorias = {
+    stacked,
+    grid: { color: "transparent" },
+    ticks: {
+      color: muted,
+      autoSkip: false,
+      callback: (value: string | number) =>
+        labels[Number(value)] ?? String(value),
+    },
+  };
+
+  const valores = {
+    stacked,
+    beginAtZero: true,
+    grid: { color: grid },
+    ticks: {
+      color: muted,
+      precision: money ? undefined : 0,
+      callback: (value: string | number) => format(Number(value)),
+    },
+  };
+
+  return {
+    indexAxis: horizontal ? "y" : "x",
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: {
+      legend: {
+        display: seriesCount > 1,
+        position: "bottom",
+        labels: { color: muted, boxWidth: 12, boxHeight: 12 },
+      },
+      tooltip: {
+        callbacks: {
+          label: (item) =>
+            `${item.dataset.label}: ${format(Number(item.raw ?? 0))}`,
+        },
+      },
+    },
+    scales: horizontal
+      ? { x: valores, y: categorias }
+      : { x: categorias, y: valores },
+  };
+}
+
 export function BarChart({
   ariaLabel,
   labels,
@@ -98,14 +171,11 @@ export function BarChart({
     if (!canvas || !context) return;
 
     const muted = cssVar("--muted", "#71717a");
-    const grid = cssVar("--separator", cssVar("--border", "#e4e4e7"));
-    const format = (value: number) =>
-      money ? formatMoney(value) : formatNumber(value);
 
     const chart = new Chart(context, {
       type: "bar",
       data: {
-        labels,
+        labels: [...labels],
         datasets: series.map((serie) => {
           const color = withAlpha(
             cssVar(TONE_VAR[serie.tone], muted),
@@ -121,50 +191,15 @@ export function BarChart({
           };
         }),
       },
-      options: {
-        indexAxis: horizontal ? "y" : "x",
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          legend: {
-            display: series.length > 1,
-            position: "bottom",
-            labels: { color: muted, boxWidth: 12, boxHeight: 12 },
-          },
-          tooltip: {
-            callbacks: {
-              label: (item) =>
-                `${item.dataset.label}: ${format(Number(item.raw ?? 0))}`,
-            },
-          },
-        },
-        scales: {
-          x: {
-            stacked,
-            grid: { color: horizontal ? grid : "transparent" },
-            ticks: {
-              color: muted,
-              precision: money ? undefined : 0,
-              callback: horizontal
-                ? (value) => format(Number(value))
-                : undefined,
-            },
-          },
-          y: {
-            stacked,
-            beginAtZero: true,
-            grid: { color: horizontal ? "transparent" : grid },
-            ticks: {
-              color: muted,
-              precision: money ? undefined : 0,
-              callback: horizontal
-                ? undefined
-                : (value) => format(Number(value)),
-            },
-          },
-        },
-      },
+      options: barChartOptions({
+        labels,
+        seriesCount: series.length,
+        horizontal,
+        money,
+        stacked,
+        muted,
+        grid: cssVar("--separator", cssVar("--border", "#e4e4e7")),
+      }),
     });
 
     return () => chart.destroy();
