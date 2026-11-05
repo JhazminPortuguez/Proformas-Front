@@ -4,6 +4,7 @@ import type {
   HistorialServicio,
 } from "@/lib/api/types";
 import type { EstadoTone } from "@/lib/estados";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatMoney, formatNumber } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -26,14 +27,19 @@ export function parseClienteTab(value: string | null | undefined): ClienteTab {
     : "resumen";
 }
 
-/** URL de una pestaña, preservando la página sólo dentro de la misma tab. */
+/**
+ * URL de una pestaña, preservando la página y las filas por página sólo
+ * dentro de la misma tab.
+ */
 export function clienteTabHref(
   clienteId: number,
   tab: ClienteTab,
   page = 1,
+  perPage?: number,
 ): string {
   return `/clientes/${clienteId}${buildQuery({
     tab,
+    per_page: filasParam(perPage),
     page: page > 1 ? page : "",
   })}`;
 }

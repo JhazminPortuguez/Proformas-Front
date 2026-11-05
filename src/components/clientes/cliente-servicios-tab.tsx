@@ -9,7 +9,7 @@ import {
   historialServicioOrdenNumero,
   historialServicioTitulo,
 } from "@/lib/clientes";
-import { formatDateOnly, formatMoney, formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { ClienteTabShell } from "./cliente-tab-shell";
 import { CLIENTE_LINK, ClienteEmptyAction } from "./cliente-tabs-ui";
 
@@ -38,7 +38,7 @@ export function ClienteServiciosTab({
           header: "Fecha",
           cell: (servicio) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateOnly(servicio.fecha)}
+              {formatDateNumeric(servicio.fecha)}
             </span>
           ),
         },
@@ -119,7 +119,7 @@ export function ClienteServiciosTab({
                 {historialServicioTitulo(servicio)}
               </p>
               <p className="text-xs text-muted">
-                {formatDateOnly(servicio.fecha)}
+                {formatDateNumeric(servicio.fecha)}
               </p>
             </div>
 

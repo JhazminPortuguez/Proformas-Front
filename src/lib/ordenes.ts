@@ -8,6 +8,7 @@ import type {
 } from "@/lib/api/types";
 import { ordenEstadoMeta } from "@/lib/estados";
 import { TIPO_ITEM_LABEL, roundMoney } from "@/lib/proformas";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatDateOnly } from "@/lib/utils";
 
 export type { OrdenAccion };
@@ -380,6 +381,8 @@ export interface OrdenesQuery {
   clienteId: number | "";
   vista: VistaOrdenes;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 /** Serializa el estado del listado preservando la vista y los filtros. */
@@ -390,6 +393,7 @@ export function ordenesQueryToSearch(query: OrdenesQuery): string {
     operario_id: query.operarioId,
     cliente_id: query.clienteId,
     vista: query.vista,
+    per_page: filasParam(query.perPage),
     page: query.page > 1 ? query.page : "",
   });
 }
@@ -414,6 +418,7 @@ export function ordenesSinFiltros(query: OrdenesQuery): OrdenesQuery {
     clienteId: "",
     vista: query.vista,
     page: 1,
+    perPage: query.perPage,
   };
 }
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { Lock } from "lucide-react";
 import { Chip } from "@heroui/react";
-import type { ClienteEstado, Rol } from "@/lib/api/types";
+import type { ClienteEstado, Orden, Rol } from "@/lib/api/types";
 import {
   ordenEstadoMeta,
   proformaEstadoMeta,
@@ -78,6 +79,30 @@ export function OrdenEstadoChip({ estado }: { estado: string }) {
   const meta = ordenEstadoMeta(estado);
 
   return <StatusChip tone={meta.tone}>{meta.label}</StatusChip>;
+}
+
+/**
+ * Estado de la orden y, si ya se cerró (`cerrada_at`), el texto «Cerrada».
+ * Cerrada no es un estado: la orden sigue Finalizada.
+ */
+export function OrdenEstadoConCierre({
+  orden,
+}: {
+  orden: Pick<Orden, "estado" | "cerrada_at">;
+}) {
+  const cerrada = orden.estado === "FINALIZADA" && Boolean(orden.cerrada_at);
+
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <OrdenEstadoChip estado={orden.estado} />
+      {cerrada ? (
+        <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted">
+          <Lock aria-hidden className="size-3" />
+          Cerrada
+        </span>
+      ) : null}
+    </span>
+  );
 }
 
 export function SolicitudEstadoChip({ estado }: { estado: string }) {

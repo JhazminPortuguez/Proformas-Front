@@ -23,11 +23,14 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Rol, User } from "@/lib/api/types";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery } from "@/lib/utils";
 
 interface Query {
   search: string;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface UsuariosTableProps {
@@ -282,7 +285,11 @@ export function UsuariosTable({
           role="search"
           onSubmit={(event) => {
             event.preventDefault();
-            const search = buildQuery({ search: searchInput.trim(), page: 1 });
+            const search = buildQuery({
+              search: searchInput.trim(),
+              per_page: filasParam(query.perPage),
+              page: 1,
+            });
 
             router.push(`/usuarios${search}`);
           }}
@@ -352,7 +359,20 @@ export function UsuariosTable({
         isPending={isPending}
         meta={meta}
         onPageChange={(page) => {
-          const search = buildQuery({ search: query.search, page });
+          const search = buildQuery({
+            search: query.search,
+            per_page: filasParam(query.perPage),
+            page,
+          });
+
+          router.push(`/usuarios${search}`);
+        }}
+        onPerPageChange={(perPage) => {
+          const search = buildQuery({
+            search: query.search,
+            per_page: filasParam(perPage),
+            page: 1,
+          });
 
           router.push(`/usuarios${search}`);
         }}

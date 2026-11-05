@@ -6,6 +6,7 @@ import type {
 } from "@/lib/api/types";
 import type { EstadoTone } from "@/lib/estados";
 import { roundMoney } from "@/lib/proformas";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -507,6 +508,8 @@ export interface CobrosQuery {
   desde: string;
   hasta: string;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 export const COBROS_QUERY_VACIA: CobrosQuery = {
@@ -527,6 +530,7 @@ export function cobrosQueryToSearch(query: CobrosQuery): string {
     cliente_id: query.clienteId,
     desde: query.desde,
     hasta: query.hasta,
+    per_page: filasParam(query.perPage),
     page: query.page > 1 ? query.page : "",
   });
 }

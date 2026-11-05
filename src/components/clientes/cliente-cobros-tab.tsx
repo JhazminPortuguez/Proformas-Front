@@ -11,7 +11,7 @@ import {
   cuentaSaldo,
   cuentaTotalPagado,
 } from "@/lib/cobros";
-import { cn, formatDateOnly, formatMoney } from "@/lib/utils";
+import { cn, formatDateNumeric, formatMoney } from "@/lib/utils";
 import { ClienteTabShell } from "./cliente-tab-shell";
 import { CLIENTE_LINK, ClienteEmptyAction } from "./cliente-tabs-ui";
 
@@ -62,7 +62,7 @@ export function ClienteCobrosTab({
           className: "hidden lg:table-cell",
           cell: (cuenta) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateOnly(cuenta.fecha_emision)}
+              {formatDateNumeric(cuenta.fecha_emision)}
             </span>
           ),
         },
@@ -78,7 +78,7 @@ export function ClienteCobrosTab({
                   : "text-muted",
               )}
             >
-              {formatDateOnly(cuenta.fecha_vencimiento)}
+              {formatDateNumeric(cuenta.fecha_vencimiento)}
             </span>
           ),
         },
@@ -155,7 +155,7 @@ export function ClienteCobrosTab({
             <div>
               <dt className="text-xs text-muted">Emisión</dt>
               <dd className="numeric text-foreground">
-                {formatDateOnly(cuenta.fecha_emision)}
+                {formatDateNumeric(cuenta.fecha_emision)}
               </dd>
             </div>
             <div>
@@ -166,7 +166,7 @@ export function ClienteCobrosTab({
                   cuentaEstaVencida(cuenta) && "font-medium text-danger",
                 )}
               >
-                {formatDateOnly(cuenta.fecha_vencimiento)}
+                {formatDateNumeric(cuenta.fecha_vencimiento)}
               </dd>
             </div>
             <div>

@@ -15,6 +15,7 @@ import { clientes as clientesApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, ClienteEstado, PaginationMeta } from "@/lib/api/types";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatNumber } from "@/lib/utils";
 import { ClienteFormDrawer } from "./cliente-form-drawer";
 
@@ -22,6 +23,8 @@ interface Query {
   search: string;
   estado: ClienteEstado | "";
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface ClientesTableProps {
@@ -60,6 +63,7 @@ export function ClientesTable({
     const search = buildQuery({
       search: merged.search,
       estado: merged.estado,
+      per_page: filasParam(merged.perPage),
       page: merged.page,
     });
 
@@ -348,6 +352,7 @@ export function ClientesTable({
         isPending={isPending}
         meta={meta}
         onPageChange={(page) => navigate({ page })}
+        onPerPageChange={(perPage) => navigate({ perPage })}
         emptyTitle={filtersActive ? "Sin coincidencias" : "Todavía no hay clientes"}
         emptyDescription={
           filtersActive

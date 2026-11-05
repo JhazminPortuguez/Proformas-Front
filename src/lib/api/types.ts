@@ -218,6 +218,7 @@ export interface Proforma {
   updated_at?: string | null;
   /** Orden vigente generada desde esta proforma (si existe). */
   orden_id?: number | null;
+  orden_numero?: string | null;
   cliente?: Cliente | null;
   items?: ProformaItem[];
   aceptador?: User | null;

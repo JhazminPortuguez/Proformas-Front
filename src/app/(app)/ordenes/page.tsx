@@ -32,14 +32,13 @@ import {
   type OrdenesQuery,
   type VistaOrdenes,
 } from "@/lib/ordenes";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import { can } from "@/lib/permissions";
 import { formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Órdenes de servicio",
 };
-
-const PER_PAGE = 15;
 
 const ACTION_LINK =
   "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -80,6 +79,7 @@ export default async function OrdenesPage({
   const params = await searchParams;
 
   const page = positiveInt(first(params.page)) ?? 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
   const search = first(params.search).trim();
   const estado: EstadoOrden | "" =
     parseOrdenEstado(first(params.estado)) ?? "";
@@ -95,6 +95,7 @@ export default async function OrdenesPage({
     clienteId: clienteId ?? "",
     vista,
     page,
+    perPage,
   };
 
   const permisos: AccionesOrdenOpciones = {
@@ -115,7 +116,7 @@ export default async function OrdenesPage({
         operarioId: operarioId ?? "",
         clienteId: clienteId ?? "",
         page,
-        perPage: PER_PAGE,
+        perPage,
       }),
       getClientes({ perPage: 100 }),
       cargarOperarios(user),

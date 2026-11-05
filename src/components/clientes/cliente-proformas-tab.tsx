@@ -5,7 +5,7 @@ import { FilePlus2, FileText } from "lucide-react";
 import { ProformaEstadoChip } from "@/components/ui/status-chip";
 import type { PaginationMeta, Proforma } from "@/lib/api/types";
 import { proformaItemsCount } from "@/lib/proformas";
-import { formatDateOnly, formatMoney, formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { ClienteTabShell } from "./cliente-tab-shell";
 import { CLIENTE_LINK, ClienteEmptyAction } from "./cliente-tabs-ui";
 
@@ -51,7 +51,7 @@ export function ClienteProformasTab({
           header: "Emisión",
           cell: (proforma) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateOnly(proforma.fecha_emision)}
+              {formatDateNumeric(proforma.fecha_emision)}
             </span>
           ),
         },
@@ -61,7 +61,7 @@ export function ClienteProformasTab({
           className: "hidden lg:table-cell",
           cell: (proforma) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateOnly(proforma.fecha_validez)}
+              {formatDateNumeric(proforma.fecha_validez)}
             </span>
           ),
         },
@@ -106,7 +106,7 @@ export function ClienteProformasTab({
                 {proforma.numero}
               </Link>
               <p className="text-xs text-muted">
-                Emitida el {formatDateOnly(proforma.fecha_emision)}
+                Emitida el {formatDateNumeric(proforma.fecha_emision)}
               </p>
             </div>
 
@@ -129,13 +129,13 @@ export function ClienteProformasTab({
             <div>
               <dt className="text-xs text-muted">Emisión</dt>
               <dd className="numeric text-foreground">
-                {formatDateOnly(proforma.fecha_emision)}
+                {formatDateNumeric(proforma.fecha_emision)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted">Validez</dt>
               <dd className="numeric text-foreground">
-                {formatDateOnly(proforma.fecha_validez)}
+                {formatDateNumeric(proforma.fecha_validez)}
               </dd>
             </div>
           </dl>

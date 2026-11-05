@@ -38,9 +38,8 @@ import {
   parseClienteTab,
   type ClienteTab,
 } from "@/lib/clientes";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import { can } from "@/lib/permissions";
-
-const PER_PAGE = 15;
 
 const ACTION_LINK_GHOST =
   "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -67,22 +66,23 @@ async function cargarListado(
   clienteId: number,
   tab: ClienteTab,
   page: number,
+  perPage: number,
 ): Promise<ListadoTab> {
   switch (tab) {
     case "proformas":
       return {
         tab,
-        data: await getProformas({ clienteId, page, perPage: PER_PAGE }),
+        data: await getProformas({ clienteId, page, perPage }),
       };
     case "ordenes":
       return {
         tab,
-        data: await getOrdenes({ clienteId, page, perPage: PER_PAGE }),
+        data: await getOrdenes({ clienteId, page, perPage }),
       };
     case "cobros":
       return {
         tab,
-        data: await getCuentasPorCobrar({ clienteId, page, perPage: PER_PAGE }),
+        data: await getCuentasPorCobrar({ clienteId, page, perPage }),
       };
     case "servicios":
       return {
@@ -90,7 +90,7 @@ async function cargarListado(
         data: await getHistorialServicios({
           clienteId,
           page,
-          perPage: PER_PAGE,
+          perPage,
         }),
       };
     default:
@@ -137,6 +137,7 @@ export default async function ClienteDetallePage({
 
   const tab = parseClienteTab(first(query.tab));
   const page = positiveInt(first(query.page)) ?? 1;
+  const perPage = parseFilasPorPagina(first(query.per_page));
 
   let resumen: ClienteResumen;
   let listado: ListadoTab;
@@ -144,7 +145,7 @@ export default async function ClienteDetallePage({
   try {
     [resumen, listado] = await Promise.all([
       getClienteResumen(clienteId),
-      cargarListado(clienteId, tab, page),
+      cargarListado(clienteId, tab, page, perPage),
     ]);
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {

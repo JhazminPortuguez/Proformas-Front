@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { ClipboardList, FilePlus2 } from "lucide-react";
 import { Button } from "@heroui/react";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
-import { OrdenEstadoChip } from "@/components/ui/status-chip";
+import { OrdenEstadoConCierre } from "@/components/ui/status-chip";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { Orden, PaginationMeta, User } from "@/lib/api/types";
 import {
   accionesOrden,
   ordenClienteNombre,
-  ordenFechaProgramadaTexto,
   ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
@@ -23,6 +23,7 @@ import {
   type AccionesOrdenOpciones,
   type OrdenesQuery,
 } from "@/lib/ordenes";
+import { formatDateNumeric } from "@/lib/utils";
 import { OrdenActions } from "./orden-actions";
 
 /** Nombre o razón social con su NIT/CI debajo. */
@@ -67,6 +68,12 @@ export function OrdenesTable({
     });
   }
 
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(ordenesHref({ ...query, perPage, page: 1 }));
+    });
+  }
+
   const columns: DataTableColumn<Orden>[] = [
     {
       id: "numero",
@@ -75,7 +82,7 @@ export function OrdenesTable({
       cell: (orden) => (
         <Link
           href={`/ordenes/${orden.id}`}
-          className="font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="whitespace-nowrap font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {orden.numero}
         </Link>
@@ -92,7 +99,7 @@ export function OrdenesTable({
       cell: (orden) => (
         <Link
           href={`/proformas/${orden.proforma_id}`}
-          className="text-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="whitespace-nowrap text-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {ordenProformaNumero(orden)}
         </Link>
@@ -111,15 +118,15 @@ export function OrdenesTable({
       id: "programada",
       header: "Fecha programada",
       cell: (orden) => (
-        <span className="numeric text-sm text-muted">
-          {ordenFechaProgramadaTexto(orden)}
+        <span className="numeric whitespace-nowrap text-sm text-muted">
+          {formatDateNumeric(orden.fecha_programada)}
         </span>
       ),
     },
     {
       id: "estado",
       header: "Estado",
-      cell: (orden) => <OrdenEstadoChip estado={orden.estado} />,
+      cell: (orden) => <OrdenEstadoConCierre orden={orden} />,
     },
     {
       id: "acciones",
@@ -171,6 +178,7 @@ export function OrdenesTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={<ClipboardList aria-hidden className="size-5" />}
@@ -218,7 +226,7 @@ export function OrdenesTable({
                     ) : null}
                   </div>
 
-                  <OrdenEstadoChip estado={orden.estado} />
+                  <OrdenEstadoConCierre orden={orden} />
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-sm">
@@ -242,7 +250,7 @@ export function OrdenesTable({
                   <div>
                     <dt className="text-xs text-muted">Programada</dt>
                     <dd className="numeric text-foreground">
-                      {ordenFechaProgramadaTexto(orden)}
+                      {formatDateNumeric(orden.fecha_programada)}
                     </dd>
                   </div>
                 </dl>
@@ -263,7 +271,11 @@ export function OrdenesTable({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
     </section>

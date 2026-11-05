@@ -11,7 +11,7 @@ import type {
   Orden,
   Proforma,
 } from "@/lib/api/types";
-import { formatDateOnly, formatMoney } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 
 const mocks = vi.hoisted(() => ({ push: vi.fn() }));
 
@@ -142,7 +142,7 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText("Aceptada")).toBeInTheDocument();
     expect(within(table).getByText(money(565))).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-10-25")),
+      within(table).getByText("25/10/2026"),
     ).toBeInTheDocument();
 
     const mobile = screen.getByRole("list", {
@@ -169,7 +169,7 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText("Finalizada")).toBeInTheDocument();
     expect(within(table).getByText("Ana Operaria")).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-10-28")),
+      within(table).getByText("28/10/2026"),
     ).toBeInTheDocument();
   });
 
@@ -188,7 +188,7 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText(money(400))).toBeInTheDocument();
     expect(within(table).getByText(money(600))).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-11-30")),
+      within(table).getByText("30/11/2026"),
     ).toBeInTheDocument();
   });
 

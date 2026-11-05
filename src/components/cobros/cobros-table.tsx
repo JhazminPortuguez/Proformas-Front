@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Eye, HandCoins, ReceiptText } from "lucide-react";
 import { Button } from "@heroui/react";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
@@ -25,7 +26,7 @@ import {
   puedeRegistrarPago,
   type CobrosQuery,
 } from "@/lib/cobros";
-import { cn, formatDateOnly, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { EstadoCobroChip, VencidaChip } from "./chips";
 
 interface CobrosTableProps {
@@ -68,9 +69,15 @@ export function CobrosTable({
     });
   }
 
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(cobrosHref({ ...query, perPage, page: 1 }));
+    });
+  }
+
   function clearFilters() {
     startTransition(() => {
-      router.push(cobrosHref({ ...COBROS_QUERY_VACIA }));
+      router.push(cobrosHref({ ...COBROS_QUERY_VACIA, perPage: query.perPage }));
     });
   }
 
@@ -81,7 +88,10 @@ export function CobrosTable({
       isRowHeader: true,
       cell: (cuenta) => (
         <div className="min-w-0">
-          <Link href={cobroDetalleHref(cuenta.id)} className={LINK}>
+          <Link
+            href={cobroDetalleHref(cuenta.id)}
+            className={cn(LINK, "whitespace-nowrap")}
+          >
             {cuenta.numero}
           </Link>
           <p className="numeric text-xs text-muted">
@@ -110,7 +120,7 @@ export function CobrosTable({
       cell: (cuenta) => (
         <Link
           href={cuentaOrdenHref(cuenta)}
-          className="text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="whitespace-nowrap text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {cuentaOrdenNumero(cuenta)}
         </Link>
@@ -122,7 +132,7 @@ export function CobrosTable({
       className: "hidden xl:table-cell",
       cell: (cuenta) => (
         <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatDateOnly(cuenta.fecha_emision)}
+          {formatDateNumeric(cuenta.fecha_emision)}
         </span>
       ),
     },
@@ -139,7 +149,7 @@ export function CobrosTable({
               vencida ? "font-medium text-danger" : "text-muted",
             )}
           >
-            {formatDateOnly(cuenta.fecha_vencimiento)}
+            {formatDateNumeric(cuenta.fecha_vencimiento)}
           </span>
         );
       },
@@ -250,6 +260,7 @@ export function CobrosTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={<ReceiptText aria-hidden className="size-5" />}
@@ -316,13 +327,13 @@ export function CobrosTable({
                           cuentaEstaVencida(cuenta) && "font-medium text-danger",
                         )}
                       >
-                        {formatDateOnly(cuenta.fecha_vencimiento)}
+                        {formatDateNumeric(cuenta.fecha_vencimiento)}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted">Emisión</dt>
                       <dd className="numeric text-foreground">
-                        {formatDateOnly(cuenta.fecha_emision)}
+                        {formatDateNumeric(cuenta.fecha_emision)}
                       </dd>
                     </div>
                     <div>
@@ -390,7 +401,11 @@ export function CobrosTable({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
     </section>

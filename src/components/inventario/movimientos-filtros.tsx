@@ -62,6 +62,7 @@ export function MovimientosFiltros({
         desde: "",
         hasta: "",
         page: 1,
+        perPage: query.perPage,
       }),
     );
   }

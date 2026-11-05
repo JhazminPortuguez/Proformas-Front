@@ -53,6 +53,7 @@ export function ExistenciasFiltros({
         bajoStock: false,
         activo: "",
         page: 1,
+        perPage: query.perPage,
       }),
     );
   }

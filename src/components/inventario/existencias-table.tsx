@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Boxes, PackagePlus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@heroui/react";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
@@ -48,6 +49,12 @@ export function ExistenciasTable({
     });
   }
 
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(existenciasHref({ ...query, perPage, page: 1 }));
+    });
+  }
+
   function clearFilters() {
     router.push(
       existenciasHref({
@@ -55,6 +62,7 @@ export function ExistenciasTable({
         bajoStock: false,
         activo: "",
         page: 1,
+        perPage: query.perPage,
       }),
     );
   }
@@ -205,6 +213,7 @@ export function ExistenciasTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={<Boxes aria-hidden className="size-5" />}
@@ -321,7 +330,11 @@ export function ExistenciasTable({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
     </section>

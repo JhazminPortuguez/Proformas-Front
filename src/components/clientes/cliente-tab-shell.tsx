@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { PaginationMeta } from "@/lib/api/types";
 import { clienteTabHref, type ClienteTab } from "@/lib/clientes";
+import type { FilasPorPagina } from "@/lib/paginacion";
 
 interface ClienteTabShellProps<T extends object> {
   clienteId: number;
@@ -47,7 +48,13 @@ export function ClienteTabShell<T extends object>({
 
   function navigatePage(page: number) {
     startTransition(() => {
-      router.push(clienteTabHref(clienteId, tab, page));
+      router.push(clienteTabHref(clienteId, tab, page, meta.per_page));
+    });
+  }
+
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(clienteTabHref(clienteId, tab, 1, perPage));
     });
   }
 
@@ -62,6 +69,7 @@ export function ClienteTabShell<T extends object>({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={emptyIcon}
@@ -98,7 +106,11 @@ export function ClienteTabShell<T extends object>({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
     </div>

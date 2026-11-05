@@ -19,7 +19,7 @@ import {
   pagosVigentes,
   puedeAnularPago,
 } from "@/lib/cobros";
-import { cn, formatDateOnly, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateNumeric, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
 import { PagoEstadoChip } from "./chips";
 
 interface PagosTableProps {
@@ -87,7 +87,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
       cell: (pago) => (
         <div className="min-w-0">
           <p className="numeric text-sm text-foreground">
-            {formatDateOnly(pago.fecha_pago)}
+            {formatDateNumeric(pago.fecha_pago)}
           </p>
           <p className="numeric text-xs text-muted">
             Registrado {formatDateTime(pago.created_at)}
@@ -265,7 +265,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                       {formatMoney(pago.monto)}
                     </p>
                     <p className="numeric text-xs text-muted">
-                      {formatDateOnly(pago.fecha_pago)} ·{" "}
+                      {formatDateNumeric(pago.fecha_pago)} ·{" "}
                       {metodoPagoLabel(pago.metodo)}
                     </p>
                   </div>
@@ -349,7 +349,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
           pagoAAnular
             ? `El pago de ${formatMoney(
                 pagoAAnular.monto,
-              )} del ${formatDateOnly(
+              )} del ${formatDateNumeric(
                 pagoAAnular.fecha_pago,
               )} dejará de contar para el saldo y volverá al historial como anulado.`
             : ""

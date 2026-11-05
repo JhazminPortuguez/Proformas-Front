@@ -139,4 +139,42 @@ describe("ProformasTable", () => {
       screen.getByRole("alertdialog", { name: "Enviar proforma" }),
     ).toBeInTheDocument();
   });
+
+  it("la aceptada con orden enlaza el número de la orden", () => {
+    renderTable({
+      ...PROFORMA,
+      estado: "ACEPTADA",
+      orden_id: 4,
+      orden_numero: "OS-2026-000004",
+      acciones_disponibles: ["ver", "pdf"],
+    });
+
+    const table = screen.getByRole("grid", { name: "Proformas" });
+    const orden = within(table).getByRole("link", { name: "OS-2026-000004" });
+
+    expect(orden).toHaveAttribute("href", "/ordenes/4");
+    expect(orden.closest("p")).toHaveTextContent("Orden OS-2026-000004");
+
+    // También en la tarjeta del celular.
+    expect(screen.getAllByRole("link", { name: "OS-2026-000004" })).toHaveLength(2);
+  });
+
+  it("sin orden no muestra el enlace", () => {
+    renderTable({ ...PROFORMA, estado: "ACEPTADA", orden_id: null, orden_numero: null });
+
+    expect(screen.queryByRole("link", { name: /^OS-/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Orden/)).not.toBeInTheDocument();
+  });
+
+  it("el código no se corta y las fechas son dd/mm/aaaa sin cortes", () => {
+    renderTable();
+
+    const table = screen.getByRole("grid", { name: "Proformas" });
+
+    expect(within(table).getByRole("link", { name: "PRF-000012" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(within(table).getByText("25/10/2026")).toHaveClass("whitespace-nowrap");
+    expect(within(table).getByText("10/11/2026")).toHaveClass("whitespace-nowrap");
+  });
 });

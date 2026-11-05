@@ -7,6 +7,7 @@ import type {
 } from "@/lib/api/types";
 import type { EstadoTone } from "@/lib/estados";
 import { roundMoney } from "@/lib/proformas";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatNumber } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -303,6 +304,8 @@ export interface ExistenciasQuery {
   bajoStock: boolean;
   activo: FiltroActivo;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 export interface MovimientosQuery {
@@ -312,6 +315,8 @@ export interface MovimientosQuery {
   desde: string;
   hasta: string;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 function activoParam(activo: FiltroActivo): "" | 1 | 0 {
@@ -327,6 +332,7 @@ export function existenciasHref(query: ExistenciasQuery): string {
     search: query.search.trim(),
     bajo_stock: query.bajoStock ? 1 : "",
     activo: activoParam(query.activo),
+    per_page: filasParam(query.perPage),
     page: query.page > 1 ? query.page : "",
   })}`;
 }
@@ -339,6 +345,7 @@ export function movimientosHref(query: MovimientosQuery): string {
     producto_id: query.productoId,
     desde: query.desde,
     hasta: query.hasta,
+    per_page: filasParam(query.perPage),
     page: query.page > 1 ? query.page : "",
   })}`;
 }

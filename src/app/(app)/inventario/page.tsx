@@ -34,14 +34,13 @@ import {
   type InventarioTab,
   type MovimientosQuery,
 } from "@/lib/inventario";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import { can } from "@/lib/permissions";
 import { isValidDateOnly } from "@/lib/proformas";
 
 export const metadata: Metadata = {
   title: "Inventario",
 };
-
-const PER_PAGE = 15;
 
 const TAB_KEYS = ["existencias", "movimientos"] as const;
 
@@ -81,6 +80,7 @@ export default async function InventarioPage({
 
   const search = first(params.search).trim();
   const page = positiveInt(first(params.page)) ?? 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
 
   const existenciasQuery: ExistenciasQuery = {
     search,
@@ -89,6 +89,7 @@ export default async function InventarioPage({
       first(params.bajo_stock) === "true",
     activo: parseActivo(first(params.activo)),
     page,
+    perPage,
   };
 
   const tipoParam = first(params.tipo);
@@ -99,6 +100,7 @@ export default async function InventarioPage({
     desde: parseFecha(first(params.desde)),
     hasta: parseFecha(first(params.hasta)),
     page,
+    perPage,
   };
 
   let resumen: InventarioResumen;
@@ -120,7 +122,7 @@ export default async function InventarioPage({
                   ? ""
                   : existenciasQuery.activo === "activo",
               page,
-              perPage: PER_PAGE,
+              perPage,
             })
           : Promise.resolve(null),
         tab === "movimientos"
@@ -131,7 +133,7 @@ export default async function InventarioPage({
               desde: movimientoQuery.desde,
               hasta: movimientoQuery.hasta,
               page,
-              perPage: PER_PAGE,
+              perPage,
             })
           : Promise.resolve(null),
       ]);
@@ -185,6 +187,7 @@ export default async function InventarioPage({
                   bajoStock: true,
                   activo: "",
                   page: 1,
+                  perPage,
                 })}
                 className="font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >

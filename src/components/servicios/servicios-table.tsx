@@ -14,6 +14,7 @@ import { servicios as serviciosApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Servicio } from "@/lib/api/types";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatMoney, formatNumber } from "@/lib/utils";
 import { ServicioFormDrawer } from "./servicio-form-drawer";
 
@@ -24,6 +25,8 @@ interface Query {
   activo: Filtro;
   visible: Filtro;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface ServiciosTableProps {
@@ -71,6 +74,7 @@ export function ServiciosTable({
       activo: merged.activo === "" ? "" : merged.activo === "activo" ? 1 : 0,
       visible_catalogo:
         merged.visible === "" ? "" : merged.visible === "activo" ? 1 : 0,
+      per_page: filasParam(merged.perPage),
       page: merged.page,
     });
 
@@ -354,6 +358,7 @@ export function ServiciosTable({
         isPending={isPending}
         meta={meta}
         onPageChange={(page) => navigate({ page })}
+        onPerPageChange={(perPage) => navigate({ perPage })}
         emptyTitle={
           filtersActive ? "Sin coincidencias" : "Todavía no hay servicios"
         }

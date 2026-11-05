@@ -27,7 +27,8 @@ import {
   formatDiaMes,
   proformaExpirada,
 } from "@/lib/proformas";
-import { buildQuery, formatDateOnly, formatMoney } from "@/lib/utils";
+import { filasParam } from "@/lib/paginacion";
+import { buildQuery, formatDateNumeric, formatMoney } from "@/lib/utils";
 import {
   ProformaListActions,
   type ProformaActionRequest,
@@ -40,6 +41,8 @@ export interface ProformasQuery {
   desde: string;
   hasta: string;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface ProformasTableProps {
@@ -72,8 +75,8 @@ function ClienteCell({ proforma }: { proforma: Proforma }) {
 function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
   return (
     <div>
-      <p className="numeric text-sm text-muted">
-        {formatDateOnly(proforma.fecha_validez)}
+      <p className="numeric whitespace-nowrap text-sm text-muted">
+        {formatDateNumeric(proforma.fecha_validez)}
       </p>
       {proformaExpirada(proforma, hoy) && proforma.fecha_validez ? (
         <p className="text-xs text-warning">
@@ -81,6 +84,29 @@ function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** Proforma aceptada que ya tiene orden: enlace a la orden. */
+function OrdenDeProforma({ proforma }: { proforma: Proforma }) {
+  if (
+    proforma.estado !== "ACEPTADA" ||
+    !proforma.orden_id ||
+    !proforma.orden_numero
+  ) {
+    return null;
+  }
+
+  return (
+    <p className="whitespace-nowrap text-xs text-muted">
+      Orden{" "}
+      <Link
+        href={`/ordenes/${proforma.orden_id}`}
+        className="numeric font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      >
+        {proforma.orden_numero}
+      </Link>
+    </p>
   );
 }
 
@@ -132,6 +158,7 @@ export function ProformasTable({
       cliente_id: merged.clienteId,
       desde: merged.desde,
       hasta: merged.hasta,
+      per_page: filasParam(merged.perPage),
       page: merged.page,
     });
 
@@ -231,12 +258,13 @@ export function ProformasTable({
         <div className="min-w-0">
           <Link
             href={`/proformas/${proforma.id}`}
-            className="font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="whitespace-nowrap font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             {proforma.numero}
           </Link>
+          <OrdenDeProforma proforma={proforma} />
           {proforma.solicitud_id ? (
-            <p className="text-xs text-muted">
+            <p className="whitespace-nowrap text-xs text-muted">
               Desde solicitud #{proforma.solicitud_id}
             </p>
           ) : null}
@@ -252,8 +280,8 @@ export function ProformasTable({
       id: "emision",
       header: "Emisión",
       cell: (proforma) => (
-        <span className="numeric text-sm text-muted">
-          {formatDateOnly(proforma.fecha_emision)}
+        <span className="numeric whitespace-nowrap text-sm text-muted">
+          {formatDateNumeric(proforma.fecha_emision)}
         </span>
       ),
     },
@@ -405,6 +433,7 @@ export function ProformasTable({
           isPending={isPending}
           meta={meta}
           onPageChange={(page) => navigate({ page })}
+          onPerPageChange={(perPage) => navigate({ perPage })}
           emptyTitle={filtersActive ? "Sin coincidencias" : "Todavía no hay proformas"}
           emptyDescription={
             filtersActive
@@ -480,6 +509,7 @@ export function ProformasTable({
                     >
                       {proforma.numero}
                     </Link>
+                    <OrdenDeProforma proforma={proforma} />
                     <p className="truncate text-sm text-muted">
                       {proforma.cliente?.nombre_razon ??
                         `Cliente #${proforma.cliente_id}`}
@@ -504,7 +534,7 @@ export function ProformasTable({
                   <div>
                     <dt className="text-xs text-muted">Emisión</dt>
                     <dd className="numeric text-foreground">
-                      {formatDateOnly(proforma.fecha_emision)}
+                      {formatDateNumeric(proforma.fecha_emision)}
                     </dd>
                   </div>
                   <div className="col-span-2">
@@ -532,6 +562,7 @@ export function ProformasTable({
           <TablePagination
             meta={meta}
             onPageChange={(page) => navigate({ page })}
+            onPerPageChange={(perPage) => navigate({ perPage })}
           />
         </div>
       </div>
