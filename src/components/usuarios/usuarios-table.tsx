@@ -13,6 +13,7 @@ import {
   Switch,
   TextField,
 } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -248,24 +249,26 @@ export function UsuariosTable({
 
         return (
           <div className="flex items-center justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={
-                isSelf
-                  ? "No puedes eliminar tu propia cuenta"
-                  : `Eliminar ${usuario.name}`
-              }
-              className="size-9 text-danger"
-              isDisabled={isSelf}
-              onPress={() => {
-                setDeleteError(null);
-                setToDelete(usuario);
-              }}
-            >
-              <Trash2 aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Eliminar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={
+                  isSelf
+                    ? "No puedes eliminar tu propia cuenta"
+                    : `Eliminar ${usuario.name}`
+                }
+                className="size-9 text-danger"
+                isDisabled={isSelf}
+                onPress={() => {
+                  setDeleteError(null);
+                  setToDelete(usuario);
+                }}
+              >
+                <Trash2 aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           </div>
         );
       },

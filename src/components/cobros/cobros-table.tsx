@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Eye, HandCoins, ReceiptText } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -195,26 +196,30 @@ export function CobrosTable({
       className: "w-24",
       cell: (cuenta) => (
         <div className="flex items-center justify-end gap-0.5">
-          <Link
-            href={cobroDetalleHref(cuenta.id)}
-            className={ICON_ACTION}
-            aria-label={`Ver cobro ${cuenta.numero}`}
-          >
-            <Eye aria-hidden className="size-4" />
-          </Link>
+          <LinkTooltip label="Ver detalle">
+            <Link
+              href={cobroDetalleHref(cuenta.id)}
+              className={ICON_ACTION}
+              aria-label={`Ver cobro ${cuenta.numero}`}
+            >
+              <Eye aria-hidden className="size-4" />
+            </Link>
+          </LinkTooltip>
 
           {puedeRegistrarPago(cuenta, canPay) ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className="size-9 text-muted"
-              aria-label={`Registrar pago ${cuenta.numero}`}
-              onPress={() => onPagar(cuenta)}
-            >
-              <HandCoins aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Registrar pago">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className="size-9 text-muted"
+                aria-label={`Registrar pago ${cuenta.numero}`}
+                onPress={() => onPagar(cuenta)}
+              >
+                <HandCoins aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
         </div>
       ),

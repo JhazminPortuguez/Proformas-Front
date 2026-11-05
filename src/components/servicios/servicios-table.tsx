@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { Button, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -188,32 +189,36 @@ export function ServiciosTable({
       cell: (servicio) => (
         <div className="flex items-center justify-end gap-1">
           {canManage ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={`Editar ${servicio.nombre}`}
-              className="size-9"
-              onPress={() => openEdit(servicio)}
-            >
-              <Pencil aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Editar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={`Editar ${servicio.nombre}`}
+                className="size-9"
+                onPress={() => openEdit(servicio)}
+              >
+                <Pencil aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
 
           {canDelete ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={`Eliminar ${servicio.nombre}`}
-              className="size-9 text-danger"
-              onPress={() => {
-                setDeleteError(null);
-                setToDelete(servicio);
-              }}
-            >
-              <Trash2 aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Eliminar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={`Eliminar ${servicio.nombre}`}
+                className="size-9 text-danger"
+                onPress={() => {
+                  setDeleteError(null);
+                  setToDelete(servicio);
+                }}
+              >
+                <Trash2 aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
         </div>
       ),

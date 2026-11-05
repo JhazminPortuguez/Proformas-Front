@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Ban, CreditCard } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
@@ -181,20 +182,22 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
       cell: (pago) =>
         puedeAnularPago(pago, canAnular) ? (
           <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className={ICON_ACTION}
-              aria-label={`Anular pago de ${formatMoney(pago.monto)}`}
-              onPress={() => {
-                setError(null);
-                setPagoAAnular(pago);
-              }}
-            >
-              <Ban aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Anular pago">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className={ICON_ACTION}
+                aria-label={`Anular pago de ${formatMoney(pago.monto)}`}
+                onPress={() => {
+                  setError(null);
+                  setPagoAAnular(pago);
+                }}
+              >
+                <Ban aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           </div>
         ) : (
           <span className="block text-end text-xs text-muted">—</span>

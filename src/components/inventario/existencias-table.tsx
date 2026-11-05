@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Boxes, PackagePlus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -144,26 +145,30 @@ export function ExistenciasTable({
       cell: (producto) =>
         canAdjust ? (
           <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className="size-9"
-              aria-label={`Registrar entrada de ${producto.nombre}`}
-              onPress={() => onEntrada(producto)}
-            >
-              <PackagePlus aria-hidden className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className="size-9"
-              aria-label={`Ajustar stock de ${producto.nombre}`}
-              onPress={() => onAjuste(producto)}
-            >
-              <SlidersHorizontal aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Registrar entrada">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className="size-9"
+                aria-label={`Registrar entrada de ${producto.nombre}`}
+                onPress={() => onEntrada(producto)}
+              >
+                <PackagePlus aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
+            <ActionTooltip label="Ajustar stock">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className="size-9"
+                aria-label={`Ajustar stock de ${producto.nombre}`}
+                onPress={() => onAjuste(producto)}
+              >
+                <SlidersHorizontal aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           </div>
         ) : (
           <span className="text-xs text-muted">—</span>

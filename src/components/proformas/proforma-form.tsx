@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Alert, Button } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { CatalogSelect } from "@/components/ui/catalog-select";
 import type { CatalogOption } from "@/components/ui/catalog-select";
 import { TextAreaControl, TextFieldControl } from "@/components/ui/fields";
@@ -915,28 +916,32 @@ export function ProformaForm({
                       </div>
 
                       <div className="flex items-center gap-0.5">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          isIconOnly
-                          className="size-9 text-muted"
-                          aria-label={`Duplicar ítem ${index + 1}`}
-                          onPress={() => duplicateItem(item.key)}
-                        >
-                          <Copy aria-hidden className="size-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          isIconOnly
-                          className="size-9 text-danger"
-                          aria-label={`Quitar ítem ${index + 1}`}
-                          onPress={() => removeItem(item.key)}
-                        >
-                          <Trash2 aria-hidden className="size-4" />
-                        </Button>
+                        <ActionTooltip label="Duplicar ítem">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            isIconOnly
+                            className="size-9 text-muted"
+                            aria-label={`Duplicar ítem ${index + 1}`}
+                            onPress={() => duplicateItem(item.key)}
+                          >
+                            <Copy aria-hidden className="size-4" />
+                          </Button>
+                        </ActionTooltip>
+                        <ActionTooltip label="Quitar ítem">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            isIconOnly
+                            className="size-9 text-danger"
+                            aria-label={`Quitar ítem ${index + 1}`}
+                            onPress={() => removeItem(item.key)}
+                          >
+                            <Trash2 aria-hidden className="size-4" />
+                          </Button>
+                        </ActionTooltip>
                       </div>
                     </div>
 
