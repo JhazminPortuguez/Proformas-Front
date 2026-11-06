@@ -40,7 +40,7 @@ const COLUMNAS_ATRASO = [
       <Link
         href={`/ordenes/${orden.id}`}
         className={cn(
-          "font-medium text-accent-soft-foreground underline-offset-4 hover:underline",
+          "whitespace-nowrap font-medium text-accent-soft-foreground underline-offset-4 hover:underline",
           FOCUS_RING,
         )}
       >

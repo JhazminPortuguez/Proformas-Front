@@ -92,6 +92,10 @@ describe("ReporteOrdenesView", () => {
     expect(
       within(atraso).getByRole("link", { name: "OS-2026-000002" }),
     ).toHaveAttribute("href", "/ordenes/12");
+    // El código no se corta en el celular.
+    expect(
+      within(atraso).getByRole("link", { name: "OS-2026-000002" }),
+    ).toHaveClass("whitespace-nowrap");
     expect(within(atraso).getByText("NIT/CI 111")).toBeInTheDocument();
     expect(within(atraso).getByText("05/11/2026")).toBeInTheDocument();
     expect(within(atraso).getByText("08/11/2026")).toBeInTheDocument();

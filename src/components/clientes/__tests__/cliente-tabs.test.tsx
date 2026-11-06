@@ -213,6 +213,29 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText("Finalizada")).toBeInTheDocument();
   });
 
+  it("los números de documento no se cortan en ninguna pestaña", () => {
+    const { unmount } = render(
+      <>
+        <ClienteProformasTab clienteId={5} proformas={[PROFORMA]} meta={META} />
+        <ClienteOrdenesTab clienteId={5} ordenes={[ORDEN]} meta={META} />
+        <ClienteCobrosTab clienteId={5} cuentas={[CUENTA]} meta={META} />
+      </>,
+    );
+
+    for (const name of ["PRF-000012", "OS-2026-000009", "CXC-000007"]) {
+      // Tabla y tarjeta del celular.
+      for (const enlace of screen.getAllByRole("link", { name })) {
+        expect(enlace).toHaveClass("whitespace-nowrap");
+      }
+    }
+    unmount();
+
+    render(<ClienteServiciosTab clienteId={5} servicios={[SERVICIO]} meta={META} />);
+    for (const enlace of screen.getAllByRole("link", { name: "OS-2026-000009" })) {
+      expect(enlace).toHaveClass("whitespace-nowrap");
+    }
+  });
+
   it("pagina desde la tabla y desde las tarjetas usando la URL", async () => {
     const user = userEvent.setup();
 

@@ -100,6 +100,10 @@ describe("ReporteCobrosView", () => {
     expect(
       within(filas[1]).getByRole("link", { name: "CXC-2026-000007" }),
     ).toHaveAttribute("href", "/cobros/7");
+    // El número no se corta en el celular.
+    expect(
+      within(filas[1]).getByRole("link", { name: "CXC-2026-000007" }),
+    ).toHaveClass("whitespace-nowrap");
     expect(filas[1]).toHaveTextContent("NIT/CI 222");
     expect(filas[1]).toHaveTextContent("16/08/2026");
     expect(filas[1]).toHaveTextContent("91");
