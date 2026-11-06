@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, type ReactElement } from "react";
+import { cloneElement, type ReactElement, type ReactNode } from "react";
 import { Tooltip } from "@heroui/react";
 
 /**
@@ -28,7 +28,7 @@ export function ActionTooltip({ label, children }: ActionTooltipProps) {
 interface LinkTooltipProps {
   label: string;
   /** Un `<a>` o `next/link`; el propio enlace es el disparador. */
-  children: ReactElement<{ className?: string }>;
+  children: ReactElement<{ className?: string; children?: ReactNode }>;
 }
 
 export function LinkTooltip({ label, children }: LinkTooltipProps) {
@@ -37,11 +37,14 @@ export function LinkTooltip({ label, children }: LinkTooltipProps) {
       <Tooltip.Trigger
         className={children.props.className}
         // El disparador se dibuja como el enlace: sin un div extra ni otra
-        // parada de tabulación, y conserva su rol de enlace.
+        // parada de tabulación, y conserva su rol de enlace. Las props del
+        // disparador traen `children` vacío: se mantiene el contenido del
+        // enlace (su icono).
         render={(props) =>
           cloneElement(children as ReactElement<Record<string, unknown>>, {
             ...props,
             role: undefined,
+            children: children.props.children,
           })
         }
       />

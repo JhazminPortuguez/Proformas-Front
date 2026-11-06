@@ -68,6 +68,8 @@ describe("LinkTooltip", () => {
     const enlace = screen.getByRole("link", { name: "Ver proforma PR-2026-000004" });
     expect(enlace).toHaveAttribute("href", "/proformas/4");
     expect(enlace).toHaveClass("size-9");
+    // El icono del enlace no se pierde al usar el enlace como disparador.
+    expect(enlace.querySelector("svg")).toBeInTheDocument();
 
     await user.tab();
     expect(enlace).toHaveFocus();
@@ -75,5 +77,22 @@ describe("LinkTooltip", () => {
 
     await user.tab();
     expect(screen.getByRole("button", { name: "Siguiente" })).toHaveFocus();
+  });
+
+  it("conserva el contenido de un <a> normal", () => {
+    render(
+      <LinkTooltip label="Abrir PDF">
+        <a href="/api/v1/proformas/4/pdf" target="_blank" aria-label="Abrir PDF de PR-2026-000004">
+          <Pencil aria-hidden className="size-4" />
+          <span className="sr-only">(se abre en otra pestaña)</span>
+        </a>
+      </LinkTooltip>,
+    );
+
+    const enlace = screen.getByRole("link", { name: "Abrir PDF de PR-2026-000004" });
+
+    expect(enlace.querySelector("svg")).toBeInTheDocument();
+    expect(enlace).toHaveTextContent("(se abre en otra pestaña)");
+    expect(enlace).toHaveAttribute("target", "_blank");
   });
 });

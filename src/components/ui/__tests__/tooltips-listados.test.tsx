@@ -24,6 +24,18 @@ vi.mock("@/lib/api/client", () => ({
   proformaPdfUrl: (id: number) => `/api/v1/proformas/${id}/pdf`,
 }));
 
+/** Todos los iconos de acción (enlaces y botones con aria-label) muestran su dibujo. */
+function expectIconosVisibles() {
+  const iconos = [...screen.queryAllByRole("link"), ...screen.queryAllByRole("button")].filter(
+    (el) => el.hasAttribute("aria-label"),
+  );
+
+  expect(iconos.length).toBeGreaterThan(0);
+  for (const icono of iconos) {
+    expect(icono.querySelector("svg"), icono.getAttribute("aria-label") ?? "").not.toBeNull();
+  }
+}
+
 /**
  * Enfoca el icono como lo haría el teclado y devuelve el texto del tooltip.
  * (En jsdom React Aria no abre tooltips con el hover simulado; el hover se
@@ -83,6 +95,8 @@ describe("tooltips en las acciones de proformas", () => {
       [/^Eliminar/, "button", "Eliminar"],
     ];
 
+    expectIconosVisibles();
+
     for (const [name, role, texto] of esperados) {
       expect(await tooltipDe(screen.getByRole(role, { name }))).toBe(texto);
     }
@@ -123,6 +137,8 @@ describe("tooltips en las acciones de órdenes (tabla y tablero)", () => {
       />,
     );
 
+    expectIconosVisibles();
+
     expect(
       await tooltipDe(screen.getByRole("link", { name: "Ver orden OS-2026-000009" })),
     ).toBe("Ver detalle");
@@ -157,6 +173,11 @@ describe("tooltips en el listado de clientes", () => {
     );
 
     const tabla = screen.getByRole("grid", { name: "Clientes" });
+    const historial = within(tabla).getByRole("link", {
+      name: "Ver historial de Constructora Andina",
+    });
+
+    expect(historial.querySelector("svg")).toBeInTheDocument();
 
     expect(
       await tooltipDe(
