@@ -19,7 +19,7 @@ import {
   pagosVigentes,
   puedeAnularPago,
 } from "@/lib/cobros";
-import { cn, formatDateNumeric, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateNumeric, formatDateTimeNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { PagoEstadoChip } from "./chips";
 
 interface PagosTableProps {
@@ -90,7 +90,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
             {formatDateNumeric(pago.fecha_pago)}
           </p>
           <p className="numeric text-xs text-muted">
-            Registrado {formatDateTime(pago.created_at)}
+            Registrado {formatDateTimeNumeric(pago.created_at)}
           </p>
         </div>
       ),
@@ -289,7 +289,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                   <div className="col-span-2">
                     <dt className="text-xs text-muted">Registrado</dt>
                     <dd className="numeric text-foreground">
-                      {formatDateTime(pago.created_at)}
+                      {formatDateTimeNumeric(pago.created_at)}
                     </dd>
                   </div>
                   {pago.anulado ? (
@@ -302,7 +302,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                         {pago.motivo_anulacion?.trim() ||
                           "Sin motivo registrado."}
                         {pago.anulado_at
-                          ? ` · ${formatDateTime(pago.anulado_at)}`
+                          ? ` · ${formatDateTimeNumeric(pago.anulado_at)}`
                           : ""}
                       </dd>
                     </div>

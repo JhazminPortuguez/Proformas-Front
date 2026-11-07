@@ -142,24 +142,24 @@ export function OrdenesBoard({
                       key={orden.id}
                       className="rounded-lg border border-border bg-surface p-3"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <Link
-                            href={`/ordenes/${orden.id}`}
-                            className="text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                          >
-                            {orden.numero}
-                          </Link>
-                          <p className="truncate text-sm text-muted">
-                            {ordenClienteNombre(orden)}
-                          </p>
-                          {orden.cliente?.nit_ci ? (
-                            <p className="numeric text-xs text-muted">
-                              NIT/CI {orden.cliente.nit_ci}
-                            </p>
-                          ) : null}
+                      <div className="min-w-0">
+                        <Link
+                          href={`/ordenes/${orden.id}`}
+                          className="whitespace-nowrap text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                        >
+                          {orden.numero}
+                        </Link>
+                        <div className="mt-1" data-testid="tablero-estado">
+                          <OrdenEstadoConCierre orden={orden} />
                         </div>
-                        <OrdenEstadoConCierre orden={orden} />
+                        <p className="mt-1 truncate text-sm text-muted">
+                          {ordenClienteNombre(orden)}
+                        </p>
+                        {orden.cliente?.nit_ci ? (
+                          <p className="numeric text-xs text-muted">
+                            NIT/CI {orden.cliente.nit_ci}
+                          </p>
+                        ) : null}
                       </div>
 
                       <dl className="mt-2 space-y-1 text-xs">
@@ -235,7 +235,7 @@ export function OrdenesBoard({
                 <div className="min-w-0">
                   <Link
                     href={`/ordenes/${orden.id}`}
-                    className="text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                    className="whitespace-nowrap text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                   >
                     {orden.numero}
                   </Link>

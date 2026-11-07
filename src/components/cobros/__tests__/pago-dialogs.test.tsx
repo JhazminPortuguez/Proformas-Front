@@ -251,5 +251,11 @@ describe("PagosTable · anulación", () => {
     expect(
       screen.queryByRole("button", { name: /^Anular pago de / }),
     ).not.toBeInTheDocument();
+    // Fecha y hora numéricas (24 h).
+    expect(
+      within(table).getByText("Registrado 15/09/2026 14:30"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("15/09/2026 14:30")).toBeInTheDocument();
+    expect(screen.getByText(/· 20\/09\/2026 10:00$/)).toBeInTheDocument();
   });
 });

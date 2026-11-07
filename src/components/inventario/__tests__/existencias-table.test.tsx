@@ -195,7 +195,13 @@ describe("MovimientosTable", () => {
     expect(
       within(table).getByRole("link", { name: "ORD-000009" }),
     ).toHaveAttribute("href", "/ordenes/9");
+    // El número de la orden no se corta (tabla y tarjeta).
+    for (const enlace of screen.getAllByRole("link", { name: "ORD-000009" })) {
+      expect(enlace).toHaveClass("whitespace-nowrap");
+    }
     expect(within(table).getByText(/10 → 8/)).toBeInTheDocument();
+    // 14:30 UTC = 10:30 en Bolivia.
+    expect(within(table).getByText("25/10/2026 10:30")).toBeInTheDocument();
   });
 
   it("muestra el estado vacío según los filtros", () => {

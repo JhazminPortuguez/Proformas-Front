@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatDateNumeric, formatDateOnly } from "@/lib/utils";
+import {
+  formatDateNumeric,
+  formatDateOnly,
+  formatDateTimeNumeric,
+} from "@/lib/utils";
 
 const utcDate = new Intl.DateTimeFormat("es-BO", {
   dateStyle: "medium",
@@ -67,5 +71,31 @@ describe("formatDateNumeric", () => {
   it("reordena una fecha sin hora y tolera vacíos", () => {
     expect(formatDateNumeric("2026-01-05")).toBe("05/01/2026");
     expect(formatDateNumeric(null)).toBe("—");
+  });
+});
+
+describe("formatDateTimeNumeric", () => {
+  it("muestra dd/mm/aaaa HH:mm en 24 horas y hora de Bolivia", () => {
+    // 04:39 UTC = 00:39 en La Paz.
+    expect(formatDateTimeNumeric("2026-11-02T04:39:00.000000Z")).toBe(
+      "02/11/2026 00:39",
+    );
+    expect(formatDateTimeNumeric("2026-10-26T15:57:00Z")).toBe(
+      "26/10/2026 11:57",
+    );
+    // Tarde: 16:30, no "4:30 p. m.".
+    expect(formatDateTimeNumeric("2026-10-26T20:30:00Z")).toBe(
+      "26/10/2026 16:30",
+    );
+    // Cambio de día: 02:00 UTC del 1 de enero es 31/12 a las 22:00.
+    expect(formatDateTimeNumeric("2027-01-01T02:00:00Z")).toBe(
+      "31/12/2026 22:00",
+    );
+  });
+
+  it("tolera vacíos y textos que no son fecha", () => {
+    expect(formatDateTimeNumeric(null)).toBe("—");
+    expect(formatDateTimeNumeric("")).toBe("—");
+    expect(formatDateTimeNumeric("no es fecha")).toBe("no es fecha");
   });
 });

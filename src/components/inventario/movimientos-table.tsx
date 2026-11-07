@@ -19,7 +19,7 @@ import {
   movimientosHref,
   type MovimientosQuery,
 } from "@/lib/inventario";
-import { cn, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateTimeNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { MovimientoTipoChip } from "./chips";
 
 interface MovimientosTableProps {
@@ -80,7 +80,7 @@ export function MovimientosTable({
       header: "Fecha",
       cell: (movimiento) => (
         <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatDateTime(movimiento.created_at)}
+          {formatDateTimeNumeric(movimiento.created_at)}
         </span>
       ),
     },
@@ -161,7 +161,7 @@ export function MovimientosTable({
         return (
           <Link
             href={`/ordenes/${movimiento.orden.id}`}
-            className="text-sm text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="whitespace-nowrap text-sm text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             {numero}
           </Link>
@@ -257,7 +257,7 @@ export function MovimientosTable({
                         {movimientoProductoNombre(movimiento)}
                       </p>
                       <p className="numeric text-xs text-muted">
-                        {formatDateTime(movimiento.created_at)}
+                        {formatDateTimeNumeric(movimiento.created_at)}
                       </p>
                     </div>
 
@@ -295,7 +295,7 @@ export function MovimientosTable({
                         {numeroOrden && movimiento.orden ? (
                           <Link
                             href={`/ordenes/${movimiento.orden.id}`}
-                            className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                            className="whitespace-nowrap underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                           >
                             {numeroOrden}
                           </Link>

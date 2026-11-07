@@ -302,11 +302,11 @@ export function SolicitudesTable({
 
   return (
     <section aria-label="Listado de solicitudes">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <form
           role="search"
           onSubmit={submitSearch}
-          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+          className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end"
         >
           <div className="w-full sm:w-44">
             <SelectControl

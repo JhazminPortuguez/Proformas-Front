@@ -171,6 +171,9 @@ describe("pestañas de la ficha del cliente", () => {
     expect(
       within(table).getByText("28/10/2026"),
     ).toBeInTheDocument();
+    // Cierre con hora: dd/mm/aaaa HH:mm, en la tabla y en la tarjeta.
+    expect(within(table).getByText("29/10/2026 10:15")).toBeInTheDocument();
+    expect(screen.getAllByText("29/10/2026 10:15")).toHaveLength(2);
   });
 
   it("muestra cobros con estado, mora y saldo", () => {

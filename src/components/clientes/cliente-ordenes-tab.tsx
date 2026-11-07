@@ -9,7 +9,7 @@ import {
   ordenOperarioNombre,
   ordenProformaNumero,
 } from "@/lib/ordenes";
-import { formatDateNumeric, formatDateTime, formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatDateTimeNumeric, formatNumber } from "@/lib/utils";
 import { ClienteTabShell } from "./cliente-tab-shell";
 import { CLIENTE_LINK, ClienteEmptyAction } from "./cliente-tabs-ui";
 
@@ -83,7 +83,7 @@ export function ClienteOrdenesTab({
           className: "hidden xl:table-cell",
           cell: (orden) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateTime(orden.cerrada_at)}
+              {formatDateTimeNumeric(orden.cerrada_at)}
             </span>
           ),
         },
@@ -142,7 +142,7 @@ export function ClienteOrdenesTab({
             <div>
               <dt className="text-xs text-muted">Cierre</dt>
               <dd className="numeric text-foreground">
-                {formatDateTime(orden.cerrada_at)}
+                {formatDateTimeNumeric(orden.cerrada_at)}
               </dd>
             </div>
           </dl>

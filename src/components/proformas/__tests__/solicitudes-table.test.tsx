@@ -83,6 +83,16 @@ describe("SolicitudesTable", () => {
     expect(screen.getAllByText("Tel. 70012345").length).toBeGreaterThan(0);
   });
 
+  it("la barra de filtros se acomoda en dos filas y no corta 'Nueva solicitud'", () => {
+    renderTable([PENDIENTE]);
+
+    const boton = screen.getAllByRole("button", { name: "Nueva solicitud" })[0];
+    const barra = boton.parentElement as HTMLElement;
+
+    expect(barra).toHaveClass("sm:flex-wrap");
+    expect(screen.getByRole("search")).toHaveClass("sm:flex-wrap", "min-w-0");
+  });
+
   it("filtra por estado conservando la pestaña de solicitudes", async () => {
     const user = userEvent.setup();
     renderTable([PENDIENTE]);
