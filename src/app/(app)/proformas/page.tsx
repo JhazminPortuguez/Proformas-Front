@@ -25,6 +25,7 @@ import type {
   Solicitud,
 } from "@/lib/api/types";
 import { isValidDateOnly, todayDateOnly } from "@/lib/proformas";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import { can } from "@/lib/permissions";
 
 export const metadata: Metadata = {
@@ -41,8 +42,6 @@ const ESTADOS: EstadoProforma[] = [
 ];
 
 const ESTADOS_SOLICITUD: SolicitudFiltroEstado[] = ["PENDIENTE", "ATENDIDA"];
-
-const PER_PAGE = 15;
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
@@ -108,6 +107,7 @@ export default async function ProformasPage({
 
   const tab = first(params.tab) === "solicitudes" ? "solicitudes" : "proformas";
   const page = positiveInt(first(params.page)) ?? 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
 
   const search = first(params.search).trim();
   const estadoParam = first(params.estado);
@@ -141,13 +141,13 @@ export default async function ProformasPage({
             desde,
             hasta,
             page,
-            perPage: PER_PAGE,
+            perPage,
           })
         : getSolicitudes({
             search,
             estado: estadoSolicitud,
             page,
-            perPage: PER_PAGE,
+            perPage,
           }),
       contarPestanas(),
     ]);
@@ -197,7 +197,15 @@ export default async function ProformasPage({
         <ProformasTable
           proformas={proformas.data}
           meta={proformas.meta}
-          query={{ search, estado, clienteId: clienteId ?? "", desde, hasta, page }}
+          query={{
+            search,
+            estado,
+            clienteId: clienteId ?? "",
+            desde,
+            hasta,
+            page,
+            perPage,
+          }}
           clientes={clientes}
           canDelete={can(user, "proformas.eliminar")}
           hoy={todayDateOnly()}

@@ -1,9 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { OrdenesTable } from "@/components/ordenes/ordenes-table";
 import type { Orden } from "@/lib/api/types";
-import { formatDateOnly } from "@/lib/utils";
 
 const push = vi.fn();
 
@@ -72,6 +71,15 @@ const META = {
   last_page: 1,
 };
 
+const QUERY = {
+  search: "",
+  estado: "" as const,
+  operarioId: "" as const,
+  clienteId: "" as const,
+  vista: "tabla" as const,
+  page: 1,
+};
+
 function renderTable() {
   return render(
     <OrdenesTable
@@ -107,7 +115,7 @@ describe("OrdenesTable", () => {
     expect(within(table).getByText("Pedro Operario")).toBeInTheDocument();
     expect(within(table).getByText("Asignada")).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-11-01")),
+      within(table).getByText("01/11/2026"),
     ).toBeInTheDocument();
     expect(within(table).getByText("NIT/CI 123456789")).toBeInTheDocument();
   });
@@ -229,5 +237,93 @@ describe("OrdenesTable", () => {
       screen.getByRole("dialog", { name: "Asignar operario" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Operario")).toBeInTheDocument();
+  });
+
+  it("marca «Cerrada» junto a Finalizada solo si la orden tiene cerrada_at", () => {
+    render(
+      <OrdenesTable
+        ordenes={[
+          { ...ORDEN, estado: "FINALIZADA", cerrada_at: "2026-11-02T15:00:00Z", acciones_disponibles: ["ver"] },
+          { ...ORDEN, id: 10, numero: "ORD-000010", estado: "FINALIZADA", cerrada_at: null, acciones_disponibles: ["ver"] },
+        ]}
+        meta={{ ...META, total: 2 }}
+        query={QUERY}
+        operarios={[]}
+        permisos={{ canAssign: true, canCancel: true, canClose: true }}
+      />,
+    );
+
+    const table = screen.getByRole("grid", { name: "Órdenes de servicio" });
+    const filas = within(table).getAllByRole("row");
+
+    expect(filas[1]).toHaveTextContent("ORD-000009");
+    expect(within(filas[1]).getByText("Finalizada")).toBeInTheDocument();
+    expect(within(filas[1]).getByText("Cerrada")).toBeInTheDocument();
+
+    expect(filas[2]).toHaveTextContent("ORD-000010");
+    expect(within(filas[2]).getByText("Finalizada")).toBeInTheDocument();
+    expect(within(filas[2]).queryByText("Cerrada")).not.toBeInTheDocument();
+  });
+
+  it("el código y la fecha programada no se parten y la fecha es dd/mm/aaaa", () => {
+    renderTable();
+
+    const table = screen.getByRole("grid", { name: "Órdenes de servicio" });
+
+    expect(within(table).getByRole("link", { name: "ORD-000009" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(within(table).getByText("01/11/2026")).toHaveClass("whitespace-nowrap");
+  });
+
+  describe("filas por página", () => {
+    beforeEach(() => push.mockClear());
+
+    it("ofrece 15, 25 y 50; al cambiar conserva los filtros y vuelve a la página 1", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <OrdenesTable
+          ordenes={[ORDEN]}
+          meta={{ current_page: 3, per_page: 15, total: 60, last_page: 4 }}
+          query={{ ...QUERY, estado: "ASIGNADA", clienteId: 3, page: 3 }}
+          operarios={[]}
+          permisos={{ canAssign: true, canCancel: true, canClose: true }}
+        />,
+      );
+
+      const [selector] = screen.getAllByRole("button", { name: /Filas por página/ });
+      expect(selector).toHaveTextContent("15");
+
+      await user.click(selector);
+
+      const opciones = screen.getAllByRole("option").map((option) => option.textContent);
+      expect(opciones).toEqual(["15", "25", "50"]);
+
+      await user.click(screen.getByRole("option", { name: "25" }));
+
+      expect(push).toHaveBeenCalledWith(
+        "/ordenes?estado=ASIGNADA&cliente_id=3&vista=tabla&per_page=25",
+      );
+    });
+
+    it("al pasar de página mantiene las filas elegidas", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <OrdenesTable
+          ordenes={[ORDEN]}
+          meta={{ current_page: 1, per_page: 25, total: 40, last_page: 2 }}
+          query={{ ...QUERY, perPage: 25 }}
+          operarios={[]}
+          permisos={{ canAssign: true, canCancel: true, canClose: true }}
+        />,
+      );
+
+      const [siguiente] = screen.getAllByRole("button", { name: "Página siguiente" });
+      await user.click(siguiente);
+
+      expect(push).toHaveBeenCalledWith("/ordenes?vista=tabla&per_page=25&page=2");
+    });
   });
 });

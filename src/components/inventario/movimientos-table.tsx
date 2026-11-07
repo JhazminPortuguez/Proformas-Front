@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { History } from "lucide-react";
 import { Button } from "@heroui/react";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -18,7 +19,7 @@ import {
   movimientosHref,
   type MovimientosQuery,
 } from "@/lib/inventario";
-import { cn, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateTimeNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { MovimientoTipoChip } from "./chips";
 
 interface MovimientosTableProps {
@@ -53,6 +54,12 @@ export function MovimientosTable({
     });
   }
 
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(movimientosHref({ ...query, perPage, page: 1 }));
+    });
+  }
+
   function clearFilters() {
     router.push(
       movimientosHref({
@@ -62,6 +69,7 @@ export function MovimientosTable({
         desde: "",
         hasta: "",
         page: 1,
+        perPage: query.perPage,
       }),
     );
   }
@@ -72,7 +80,7 @@ export function MovimientosTable({
       header: "Fecha",
       cell: (movimiento) => (
         <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatDateTime(movimiento.created_at)}
+          {formatDateTimeNumeric(movimiento.created_at)}
         </span>
       ),
     },
@@ -153,7 +161,7 @@ export function MovimientosTable({
         return (
           <Link
             href={`/ordenes/${movimiento.orden.id}`}
-            className="text-sm text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="whitespace-nowrap text-sm text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             {numero}
           </Link>
@@ -209,6 +217,7 @@ export function MovimientosTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={<History aria-hidden className="size-5" />}
@@ -248,7 +257,7 @@ export function MovimientosTable({
                         {movimientoProductoNombre(movimiento)}
                       </p>
                       <p className="numeric text-xs text-muted">
-                        {formatDateTime(movimiento.created_at)}
+                        {formatDateTimeNumeric(movimiento.created_at)}
                       </p>
                     </div>
 
@@ -286,7 +295,7 @@ export function MovimientosTable({
                         {numeroOrden && movimiento.orden ? (
                           <Link
                             href={`/ordenes/${movimiento.orden.id}`}
-                            className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                            className="whitespace-nowrap underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                           >
                             {numeroOrden}
                           </Link>
@@ -315,7 +324,11 @@ export function MovimientosTable({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
     </section>

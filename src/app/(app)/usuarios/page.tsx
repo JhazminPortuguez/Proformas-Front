@@ -7,6 +7,7 @@ import { UsuariosTable } from "@/components/usuarios/usuarios-table";
 import { getUsuarios, requireUser } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import type { Paginated, User } from "@/lib/api/types";
 
 export const metadata: Metadata = {
@@ -28,11 +29,12 @@ export default async function UsuariosPage({
   const search = first(params.search).trim();
   const parsedPage = Number.parseInt(first(params.page), 10);
   const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
 
   let result: Paginated<User>;
 
   try {
-    result = await getUsuarios({ search, page });
+    result = await getUsuarios({ search, page, perPage });
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {
       redirect("/login");
@@ -59,7 +61,7 @@ export default async function UsuariosPage({
       <UsuariosTable
         usuarios={result.data}
         meta={result.meta}
-        query={{ search, page }}
+        query={{ search, page, perPage }}
         currentUserId={user.id}
       />
     </>

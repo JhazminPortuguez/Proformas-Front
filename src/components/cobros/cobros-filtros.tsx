@@ -58,7 +58,7 @@ export function CobrosFiltros({
     setSearchInput("");
     setDesde("");
     setHasta("");
-    router.push(cobrosHref({ ...COBROS_QUERY_VACIA }));
+    router.push(cobrosHref({ ...COBROS_QUERY_VACIA, perPage: query.perPage }));
   }
 
   const filtersActive = Boolean(

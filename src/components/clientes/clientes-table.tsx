@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { History, Pencil, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { Button, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -14,6 +15,7 @@ import { clientes as clientesApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, ClienteEstado, PaginationMeta } from "@/lib/api/types";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatNumber } from "@/lib/utils";
 import { ClienteFormDrawer } from "./cliente-form-drawer";
 
@@ -21,6 +23,8 @@ interface Query {
   search: string;
   estado: ClienteEstado | "";
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface ClientesTableProps {
@@ -59,6 +63,7 @@ export function ClientesTable({
     const search = buildQuery({
       search: merged.search,
       estado: merged.estado,
+      per_page: filasParam(merged.perPage),
       page: merged.page,
     });
 
@@ -209,39 +214,45 @@ export function ClientesTable({
       className: "text-end",
       cell: (cliente) => (
         <div className="flex items-center justify-end gap-1">
-          <Link
-            href={`/clientes/${cliente.id}`}
-            className="grid size-9 place-items-center rounded-lg text-muted transition-colors duration-200 hover:bg-surface-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-            aria-label={`Ver historial de ${cliente.nombre_razon}`}
-          >
-            <History aria-hidden className="size-4" />
-          </Link>
+          <LinkTooltip label="Ver historial">
+            <Link
+              href={`/clientes/${cliente.id}`}
+              className="grid size-9 place-items-center rounded-lg text-muted transition-colors duration-200 hover:bg-surface-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              aria-label={`Ver historial de ${cliente.nombre_razon}`}
+            >
+              <History aria-hidden className="size-4" />
+            </Link>
+          </LinkTooltip>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            aria-label={`Editar ${cliente.nombre_razon}`}
-            className="size-9"
-            onPress={() => openEdit(cliente)}
-          >
-            <Pencil aria-hidden className="size-4" />
-          </Button>
-
-          {canDelete ? (
+          <ActionTooltip label="Editar">
             <Button
               variant="ghost"
               size="sm"
               isIconOnly
-              aria-label={`Eliminar ${cliente.nombre_razon}`}
-              className="size-9 text-danger"
-              onPress={() => {
-                setDeleteError(null);
-                setToDelete(cliente);
-              }}
+              aria-label={`Editar ${cliente.nombre_razon}`}
+              className="size-9"
+              onPress={() => openEdit(cliente)}
             >
-              <Trash2 aria-hidden className="size-4" />
+              <Pencil aria-hidden className="size-4" />
             </Button>
+          </ActionTooltip>
+
+          {canDelete ? (
+            <ActionTooltip label="Eliminar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={`Eliminar ${cliente.nombre_razon}`}
+                className="size-9 text-danger"
+                onPress={() => {
+                  setDeleteError(null);
+                  setToDelete(cliente);
+                }}
+              >
+                <Trash2 aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
         </div>
       ),
@@ -341,6 +352,7 @@ export function ClientesTable({
         isPending={isPending}
         meta={meta}
         onPageChange={(page) => navigate({ page })}
+        onPerPageChange={(perPage) => navigate({ perPage })}
         emptyTitle={filtersActive ? "Sin coincidencias" : "Todavía no hay clientes"}
         emptyDescription={
           filtersActive

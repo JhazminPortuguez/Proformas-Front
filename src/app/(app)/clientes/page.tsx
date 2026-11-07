@@ -7,6 +7,7 @@ import { ClientesTable } from "@/components/clientes/clientes-table";
 import { getClientes, requireUser } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import type { Cliente, ClienteEstado, Paginated } from "@/lib/api/types";
 import { can } from "@/lib/permissions";
 
@@ -35,11 +36,12 @@ export default async function ClientesPage({
     : "";
   const parsedPage = Number.parseInt(first(params.page), 10);
   const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
 
   let result: Paginated<Cliente>;
 
   try {
-    result = await getClientes({ search, estado, page });
+    result = await getClientes({ search, estado, page, perPage });
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {
       redirect("/login");
@@ -66,7 +68,7 @@ export default async function ClientesPage({
       <ClientesTable
         clientes={result.data}
         meta={result.meta}
-        query={{ search, estado, page }}
+        query={{ search, estado, page, perPage }}
         canDelete={can(user, "clientes.eliminar")}
       />
     </>

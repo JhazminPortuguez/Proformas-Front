@@ -11,7 +11,7 @@ import type {
   Orden,
   Proforma,
 } from "@/lib/api/types";
-import { formatDateOnly, formatMoney } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 
 const mocks = vi.hoisted(() => ({ push: vi.fn() }));
 
@@ -142,7 +142,7 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText("Aceptada")).toBeInTheDocument();
     expect(within(table).getByText(money(565))).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-10-25")),
+      within(table).getByText("25/10/2026"),
     ).toBeInTheDocument();
 
     const mobile = screen.getByRole("list", {
@@ -169,8 +169,11 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText("Finalizada")).toBeInTheDocument();
     expect(within(table).getByText("Ana Operaria")).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-10-28")),
+      within(table).getByText("28/10/2026"),
     ).toBeInTheDocument();
+    // Cierre con hora: dd/mm/aaaa HH:mm, en la tabla y en la tarjeta.
+    expect(within(table).getByText("29/10/2026 10:15")).toBeInTheDocument();
+    expect(screen.getAllByText("29/10/2026 10:15")).toHaveLength(2);
   });
 
   it("muestra cobros con estado, mora y saldo", () => {
@@ -188,7 +191,7 @@ describe("pestañas de la ficha del cliente", () => {
     expect(within(table).getByText(money(400))).toBeInTheDocument();
     expect(within(table).getByText(money(600))).toBeInTheDocument();
     expect(
-      within(table).getByText(formatDateOnly("2026-11-30")),
+      within(table).getByText("30/11/2026"),
     ).toBeInTheDocument();
   });
 
@@ -211,6 +214,29 @@ describe("pestañas de la ficha del cliente", () => {
     ).toHaveAttribute("href", "/ordenes/9");
     expect(within(table).getByText("Sin operario")).toBeInTheDocument();
     expect(within(table).getByText("Finalizada")).toBeInTheDocument();
+  });
+
+  it("los números de documento no se cortan en ninguna pestaña", () => {
+    const { unmount } = render(
+      <>
+        <ClienteProformasTab clienteId={5} proformas={[PROFORMA]} meta={META} />
+        <ClienteOrdenesTab clienteId={5} ordenes={[ORDEN]} meta={META} />
+        <ClienteCobrosTab clienteId={5} cuentas={[CUENTA]} meta={META} />
+      </>,
+    );
+
+    for (const name of ["PRF-000012", "OS-2026-000009", "CXC-000007"]) {
+      // Tabla y tarjeta del celular.
+      for (const enlace of screen.getAllByRole("link", { name })) {
+        expect(enlace).toHaveClass("whitespace-nowrap");
+      }
+    }
+    unmount();
+
+    render(<ClienteServiciosTab clienteId={5} servicios={[SERVICIO]} meta={META} />);
+    for (const enlace of screen.getAllByRole("link", { name: "OS-2026-000009" })) {
+      expect(enlace).toHaveClass("whitespace-nowrap");
+    }
   });
 
   it("pagina desde la tabla y desde las tarjetas usando la URL", async () => {

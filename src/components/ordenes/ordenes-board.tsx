@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { ClipboardList, FilePlus2 } from "lucide-react";
 import { Button } from "@heroui/react";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { EmptyState } from "@/components/ui/feedback";
-import { OrdenEstadoChip } from "@/components/ui/status-chip";
+import {
+  OrdenEstadoChip,
+  OrdenEstadoConCierre,
+} from "@/components/ui/status-chip";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { Orden, PaginationMeta, User } from "@/lib/api/types";
 import { parseOrdenEstado, ordenEstadoMeta } from "@/lib/estados";
@@ -14,7 +18,6 @@ import {
   ORDENES_TABLERO_ESTADOS,
   accionesOrden,
   ordenClienteNombre,
-  ordenFechaProgramadaTexto,
   ordenMontoCierre,
   ordenOperarioNombre,
   ordenProformaNumero,
@@ -24,7 +27,7 @@ import {
   type AccionesOrdenOpciones,
   type OrdenesQuery,
 } from "@/lib/ordenes";
-import { formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatNumber } from "@/lib/utils";
 import { OrdenActions } from "./orden-actions";
 
 interface OrdenesBoardProps {
@@ -54,6 +57,12 @@ export function OrdenesBoard({
   function navigatePage(page: number) {
     startTransition(() => {
       router.push(ordenesHref({ ...query, page }));
+    });
+  }
+
+  function navigatePerPage(perPage: FilasPorPagina) {
+    startTransition(() => {
+      router.push(ordenesHref({ ...query, perPage, page: 1 }));
     });
   }
 
@@ -133,24 +142,24 @@ export function OrdenesBoard({
                       key={orden.id}
                       className="rounded-lg border border-border bg-surface p-3"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <Link
-                            href={`/ordenes/${orden.id}`}
-                            className="text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                          >
-                            {orden.numero}
-                          </Link>
-                          <p className="truncate text-sm text-muted">
-                            {ordenClienteNombre(orden)}
-                          </p>
-                          {orden.cliente?.nit_ci ? (
-                            <p className="numeric text-xs text-muted">
-                              NIT/CI {orden.cliente.nit_ci}
-                            </p>
-                          ) : null}
+                      <div className="min-w-0">
+                        <Link
+                          href={`/ordenes/${orden.id}`}
+                          className="whitespace-nowrap text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                        >
+                          {orden.numero}
+                        </Link>
+                        <div className="mt-1" data-testid="tablero-estado">
+                          <OrdenEstadoConCierre orden={orden} />
                         </div>
-                        <OrdenEstadoChip estado={orden.estado} />
+                        <p className="mt-1 truncate text-sm text-muted">
+                          {ordenClienteNombre(orden)}
+                        </p>
+                        {orden.cliente?.nit_ci ? (
+                          <p className="numeric text-xs text-muted">
+                            NIT/CI {orden.cliente.nit_ci}
+                          </p>
+                        ) : null}
                       </div>
 
                       <dl className="mt-2 space-y-1 text-xs">
@@ -174,7 +183,7 @@ export function OrdenesBoard({
                         <div className="flex items-baseline justify-between gap-2">
                           <dt className="text-muted">Programada</dt>
                           <dd className="numeric text-foreground">
-                            {ordenFechaProgramadaTexto(orden)}
+                            {formatDateNumeric(orden.fecha_programada)}
                           </dd>
                         </div>
                       </dl>
@@ -226,7 +235,7 @@ export function OrdenesBoard({
                 <div className="min-w-0">
                   <Link
                     href={`/ordenes/${orden.id}`}
-                    className="text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                    className="whitespace-nowrap text-sm font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                   >
                     {orden.numero}
                   </Link>
@@ -247,7 +256,11 @@ export function OrdenesBoard({
       ) : null}
 
       <div className="mt-4">
-        <TablePagination meta={meta} onPageChange={navigatePage} />
+        <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
       </div>
     </section>
   );

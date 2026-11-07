@@ -7,6 +7,7 @@ import { ServiciosTable } from "@/components/servicios/servicios-table";
 import { getServicios, requireUser } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import type { Paginated, Servicio } from "@/lib/api/types";
 import { can } from "@/lib/permissions";
 
@@ -38,6 +39,7 @@ export default async function ServiciosPage({
   const visible = triState(first(params.visible_catalogo));
   const parsedPage = Number.parseInt(first(params.page), 10);
   const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const perPage = parseFilasPorPagina(first(params.per_page));
 
   let result: Paginated<Servicio>;
 
@@ -47,6 +49,7 @@ export default async function ServiciosPage({
       activo: activo === "" ? "" : activo === "activo",
       visible_catalogo: visible === "" ? "" : visible === "activo",
       page,
+      perPage,
     });
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {
@@ -74,7 +77,7 @@ export default async function ServiciosPage({
       <ServiciosTable
         servicios={result.data}
         meta={result.meta}
-        query={{ search, activo, visible, page }}
+        query={{ search, activo, visible, page, perPage }}
         canDelete={can(user, "servicios.eliminar")}
         canManage={can(user, "servicios.gestionar")}
       />

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Ban, CreditCard } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
@@ -18,7 +19,7 @@ import {
   pagosVigentes,
   puedeAnularPago,
 } from "@/lib/cobros";
-import { cn, formatDateOnly, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { cn, formatDateNumeric, formatDateTimeNumeric, formatMoney, formatNumber } from "@/lib/utils";
 import { PagoEstadoChip } from "./chips";
 
 interface PagosTableProps {
@@ -86,10 +87,10 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
       cell: (pago) => (
         <div className="min-w-0">
           <p className="numeric text-sm text-foreground">
-            {formatDateOnly(pago.fecha_pago)}
+            {formatDateNumeric(pago.fecha_pago)}
           </p>
           <p className="numeric text-xs text-muted">
-            Registrado {formatDateTime(pago.created_at)}
+            Registrado {formatDateTimeNumeric(pago.created_at)}
           </p>
         </div>
       ),
@@ -181,20 +182,22 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
       cell: (pago) =>
         puedeAnularPago(pago, canAnular) ? (
           <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className={ICON_ACTION}
-              aria-label={`Anular pago de ${formatMoney(pago.monto)}`}
-              onPress={() => {
-                setError(null);
-                setPagoAAnular(pago);
-              }}
-            >
-              <Ban aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Anular pago">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className={ICON_ACTION}
+                aria-label={`Anular pago de ${formatMoney(pago.monto)}`}
+                onPress={() => {
+                  setError(null);
+                  setPagoAAnular(pago);
+                }}
+              >
+                <Ban aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           </div>
         ) : (
           <span className="block text-end text-xs text-muted">—</span>
@@ -262,7 +265,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                       {formatMoney(pago.monto)}
                     </p>
                     <p className="numeric text-xs text-muted">
-                      {formatDateOnly(pago.fecha_pago)} ·{" "}
+                      {formatDateNumeric(pago.fecha_pago)} ·{" "}
                       {metodoPagoLabel(pago.metodo)}
                     </p>
                   </div>
@@ -286,7 +289,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                   <div className="col-span-2">
                     <dt className="text-xs text-muted">Registrado</dt>
                     <dd className="numeric text-foreground">
-                      {formatDateTime(pago.created_at)}
+                      {formatDateTimeNumeric(pago.created_at)}
                     </dd>
                   </div>
                   {pago.anulado ? (
@@ -299,7 +302,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
                         {pago.motivo_anulacion?.trim() ||
                           "Sin motivo registrado."}
                         {pago.anulado_at
-                          ? ` · ${formatDateTime(pago.anulado_at)}`
+                          ? ` · ${formatDateTimeNumeric(pago.anulado_at)}`
                           : ""}
                       </dd>
                     </div>
@@ -346,7 +349,7 @@ export function PagosTable({ pagos, canAnular }: PagosTableProps) {
           pagoAAnular
             ? `El pago de ${formatMoney(
                 pagoAAnular.monto,
-              )} del ${formatDateOnly(
+              )} del ${formatDateNumeric(
                 pagoAAnular.fecha_pago,
               )} dejará de contar para el saldo y volverá al historial como anulado.`
             : ""

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { CatalogSelect } from "@/components/ui/catalog-select";
 import { DrawerActions, FormDrawer } from "@/components/ui/form-drawer";
 import { TextAreaControl, TextFieldControl } from "@/components/ui/fields";
@@ -296,17 +297,19 @@ export function SolicitudFormDrawer({
                   </span>
 
                   {form.items.length > 1 ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      isIconOnly
-                      className="size-8 text-danger"
-                      aria-label={`Quitar ítem ${index + 1}`}
-                      onPress={() => removeItem(item.key)}
-                    >
-                      <Trash2 aria-hidden className="size-4" />
-                    </Button>
+                    <ActionTooltip label="Quitar ítem">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        isIconOnly
+                        className="size-8 text-danger"
+                        aria-label={`Quitar ítem ${index + 1}`}
+                        onPress={() => removeItem(item.key)}
+                      >
+                        <Trash2 aria-hidden className="size-4" />
+                      </Button>
+                    </ActionTooltip>
                   ) : null}
                 </div>
 

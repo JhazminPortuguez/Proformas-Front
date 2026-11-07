@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { ClipboardList, FilePlus2 } from "lucide-react";
-import { OrdenEstadoChip } from "@/components/ui/status-chip";
+import { OrdenEstadoConCierre } from "@/components/ui/status-chip";
 import type { Orden, PaginationMeta } from "@/lib/api/types";
 import {
-  ordenFechaProgramadaTexto,
   ordenItemsCount,
   ordenOperarioNombre,
   ordenProformaNumero,
 } from "@/lib/ordenes";
-import { formatDateTime, formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatDateTimeNumeric, formatNumber } from "@/lib/utils";
 import { ClienteTabShell } from "./cliente-tab-shell";
 import { CLIENTE_LINK, ClienteEmptyAction } from "./cliente-tabs-ui";
 
@@ -47,14 +46,14 @@ export function ClienteOrdenesTab({
         {
           id: "estado",
           header: "Estado",
-          cell: (orden) => <OrdenEstadoChip estado={orden.estado} />,
+          cell: (orden) => <OrdenEstadoConCierre orden={orden} />,
         },
         {
           id: "programada",
           header: "Programada",
           cell: (orden) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {ordenFechaProgramadaTexto(orden)}
+              {formatDateNumeric(orden.fecha_programada)}
             </span>
           ),
         },
@@ -84,7 +83,7 @@ export function ClienteOrdenesTab({
           className: "hidden xl:table-cell",
           cell: (orden) => (
             <span className="numeric text-sm whitespace-nowrap text-muted">
-              {formatDateTime(orden.cerrada_at)}
+              {formatDateTimeNumeric(orden.cerrada_at)}
             </span>
           ),
         },
@@ -118,14 +117,14 @@ export function ClienteOrdenesTab({
               </p>
             </div>
 
-            <OrdenEstadoChip estado={orden.estado} />
+            <OrdenEstadoConCierre orden={orden} />
           </div>
 
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-sm">
             <div>
               <dt className="text-xs text-muted">Programada</dt>
               <dd className="numeric text-foreground">
-                {ordenFechaProgramadaTexto(orden)}
+                {formatDateNumeric(orden.fecha_programada)}
               </dd>
             </div>
             <div>
@@ -143,7 +142,7 @@ export function ClienteOrdenesTab({
             <div>
               <dt className="text-xs text-muted">Cierre</dt>
               <dd className="numeric text-foreground">
-                {formatDateTime(orden.cerrada_at)}
+                {formatDateTimeNumeric(orden.cerrada_at)}
               </dd>
             </div>
           </dl>

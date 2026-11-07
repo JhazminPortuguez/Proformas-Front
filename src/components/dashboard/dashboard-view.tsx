@@ -7,6 +7,7 @@ import { InventarioSection } from "@/components/dashboard/inventario-section";
 import { KpiOverview } from "@/components/dashboard/kpi-overview";
 import { PipelineSection } from "@/components/dashboard/pipeline-section";
 import { ServiciosSection } from "@/components/dashboard/servicios-section";
+import { TrabajosHoySection } from "@/components/dashboard/trabajos-hoy-section";
 import { primerNombre } from "@/lib/dashboard";
 import type { DashboardData, User } from "@/lib/api/types";
 import { can } from "@/lib/permissions";
@@ -65,6 +66,7 @@ export function DashboardView({ user, data }: DashboardViewProps) {
 
       <div className="space-y-6">
         <KpiOverview data={data} />
+        <TrabajosHoySection data={data} />
         <PipelineSection data={data} />
         <CobranzaSection data={data} />
         <InventarioSection data={data} />

@@ -71,7 +71,7 @@ const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
   "cobros.ver": ["admin", "operario"],
   "pagos.registrar": ["admin", "operario"],
   "pagos.anular": ["admin"],
-  "reportes.ver": ["admin", "operario"],
+  "reportes.ver": ["admin"],
   "usuarios.ver": ["admin"],
   "usuarios.gestionar": ["admin"],
   "configuracion.gestionar": ["admin"],

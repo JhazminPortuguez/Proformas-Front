@@ -26,6 +26,7 @@ import type {
   Paginated,
   Producto,
   Proforma,
+  ReporteClienteOpcion,
   Rol,
   Servicio,
   Solicitud,
@@ -151,6 +152,19 @@ export async function requireCliente(): Promise<User> {
 
 export function getDashboard(): Promise<DashboardData> {
   return request<DashboardData>("/dashboard");
+}
+
+/** Reportes del administrador: `endpoint` es la ruta bajo /reportes. */
+export function getReporte<T>(
+  endpoint: string,
+  params: Record<string, string | number>,
+): Promise<T> {
+  return request<T>(`/reportes/${endpoint}${buildQuery(params)}`);
+}
+
+export async function getReporteClientes(): Promise<ReporteClienteOpcion[]> {
+  return (await request<{ data: ReporteClienteOpcion[] }>("/reportes/clientes"))
+    .data;
 }
 
 export interface ListarClientesParams {

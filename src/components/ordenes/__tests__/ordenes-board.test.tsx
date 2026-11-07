@@ -93,6 +93,32 @@ describe("OrdenesBoard", () => {
     expect(within(columna).queryByText("Ítems")).not.toBeInTheDocument();
   });
 
+  it("el código va arriba sin cortarse y los chips en una línea debajo", () => {
+    renderBoard([
+      {
+        ...ORDEN,
+        id: 3,
+        numero: "OS-2026-000003",
+        estado: "FINALIZADA",
+        cerrada_at: "2026-11-02T04:39:00Z",
+      },
+    ]);
+
+    const columna = screen.getByRole("region", { name: "Finalizada" });
+    const enlace = within(columna).getByRole("link", {
+      name: "OS-2026-000003",
+    });
+
+    expect(enlace).toHaveClass("whitespace-nowrap");
+
+    // Los chips no comparten fila con el código: van en el bloque siguiente.
+    const estado = enlace.nextElementSibling as HTMLElement;
+    expect(estado).toHaveAttribute("data-testid", "tablero-estado");
+    expect(within(estado).getByText("Finalizada")).toBeInTheDocument();
+    expect(within(estado).getByText("Cerrada")).toBeInTheDocument();
+    expect(enlace.parentElement).not.toHaveClass("flex");
+  });
+
   it("limpiar filtros del estado vacío conserva la pestaña y la vista", async () => {
     const user = userEvent.setup();
     renderBoard([], { ...QUERY, estado: "FINALIZADA", clienteId: 3 });

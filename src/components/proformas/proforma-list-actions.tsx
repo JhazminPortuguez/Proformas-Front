@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactElement } from "react";
 import Link from "next/link";
 import {
   Check,
@@ -12,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { proformaPdfUrl } from "@/lib/api/client";
 import type { Proforma } from "@/lib/api/types";
 import type { AccionProforma } from "@/lib/proformas";
@@ -55,13 +57,35 @@ export function ProformaListActions({
   const href = `/proformas/${proforma.id}`;
   const editHref = `/proformas/${proforma.id}/editar`;
 
+  /** En la tabla, el icono muestra un tooltip con lo que hace. */
+  function conTooltip(tooltip: string, element: ReactElement) {
+    return icon ? (
+      <ActionTooltip label={tooltip}>{element}</ActionTooltip>
+    ) : (
+      element
+    );
+  }
+
+  function conTooltipEnlace(
+    tooltip: string,
+    element: ReactElement<{ className?: string }>,
+  ) {
+    return icon ? (
+      <LinkTooltip label={tooltip}>{element}</LinkTooltip>
+    ) : (
+      element
+    );
+  }
+
   function actionButton(
     action: ProformaActionRequest,
     label: string,
     Icon: typeof Send,
+    tooltip: string,
     danger = false,
   ) {
-    return (
+    return conTooltip(
+      tooltip,
       <Button
         key={action}
         variant="ghost"
@@ -76,7 +100,7 @@ export function ProformaListActions({
       >
         <Icon aria-hidden className="size-4" />
         {icon ? <span className="sr-only">{label}</span> : label}
-      </Button>
+      </Button>,
     );
   }
 
@@ -87,70 +111,82 @@ export function ProformaListActions({
         icon ? "justify-end gap-0.5" : "flex-wrap gap-1",
       )}
     >
-      {acciones.has("ver") ? (
-        <Link
-          href={href}
-          className={icon ? ICON_LINK : LABEL_LINK}
-          aria-label={`Ver proforma ${numero}`}
-        >
-          <Eye aria-hidden className="size-4" />
-          {icon ? <span className="sr-only">Ver</span> : "Ver"}
-        </Link>
-      ) : null}
+      {acciones.has("ver")
+        ? conTooltipEnlace(
+            "Ver detalle",
+            <Link
+              href={href}
+              className={icon ? ICON_LINK : LABEL_LINK}
+              aria-label={`Ver proforma ${numero}`}
+            >
+              <Eye aria-hidden className="size-4" />
+              {icon ? <span className="sr-only">Ver</span> : "Ver"}
+            </Link>,
+          )
+        : null}
 
-      {acciones.has("editar") ? (
-        <Link
-          href={editHref}
-          className={icon ? ICON_LINK : LABEL_LINK}
-          aria-label={`Editar proforma ${numero}`}
-        >
-          <Pencil aria-hidden className="size-4" />
-          {icon ? <span className="sr-only">Editar</span> : "Editar"}
-        </Link>
-      ) : null}
+      {acciones.has("editar")
+        ? conTooltipEnlace(
+            "Editar",
+            <Link
+              href={editHref}
+              className={icon ? ICON_LINK : LABEL_LINK}
+              aria-label={`Editar proforma ${numero}`}
+            >
+              <Pencil aria-hidden className="size-4" />
+              {icon ? <span className="sr-only">Editar</span> : "Editar"}
+            </Link>,
+          )
+        : null}
 
       {acciones.has("enviar")
-        ? actionButton("enviar", "Enviar", Send)
+        ? actionButton("enviar", "Enviar", Send, "Enviar al cliente")
         : null}
 
       {acciones.has("aceptar")
-        ? actionButton("aceptar", "Aceptar", Check)
+        ? actionButton("aceptar", "Aceptar", Check, "Aceptar")
         : null}
 
       {acciones.has("rechazar")
-        ? actionButton("rechazar", "Rechazar", X, true)
+        ? actionButton("rechazar", "Rechazar", X, "Rechazar", true)
         : null}
 
-      {acciones.has("crear_orden") ? (
-        <Link
-          href={`/proformas/${proforma.id}?crear_orden=1`}
-          className={icon ? ICON_LINK : LABEL_LINK}
-          aria-label={`Crear orden desde la proforma ${numero}`}
-        >
-          <ClipboardList aria-hidden className="size-4" />
-          {icon ? (
-            <span className="sr-only">Crear orden</span>
-          ) : (
-            "Crear orden"
-          )}
-        </Link>
-      ) : null}
+      {acciones.has("crear_orden")
+        ? conTooltipEnlace(
+            "Crear orden",
+            <Link
+              href={`/proformas/${proforma.id}?crear_orden=1`}
+              className={icon ? ICON_LINK : LABEL_LINK}
+              aria-label={`Crear orden desde la proforma ${numero}`}
+            >
+              <ClipboardList aria-hidden className="size-4" />
+              {icon ? (
+                <span className="sr-only">Crear orden</span>
+              ) : (
+                "Crear orden"
+              )}
+            </Link>,
+          )
+        : null}
 
-      {acciones.has("pdf") ? (
-        <a
-          href={proformaPdfUrl(proforma.id)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={icon ? ICON_LINK : LABEL_LINK}
-          aria-label={`Abrir PDF de la proforma ${numero} en una pestaña nueva`}
-        >
-          <FileDown aria-hidden className="size-4" />
-          {icon ? <span className="sr-only">PDF</span> : "PDF"}
-        </a>
-      ) : null}
+      {acciones.has("pdf")
+        ? conTooltipEnlace(
+            "Abrir PDF",
+            <a
+              href={proformaPdfUrl(proforma.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={icon ? ICON_LINK : LABEL_LINK}
+              aria-label={`Abrir PDF de la proforma ${numero} en una pestaña nueva`}
+            >
+              <FileDown aria-hidden className="size-4" />
+              {icon ? <span className="sr-only">PDF</span> : "PDF"}
+            </a>,
+          )
+        : null}
 
       {acciones.has("eliminar")
-        ? actionButton("eliminar", "Eliminar", Trash2, true)
+        ? actionButton("eliminar", "Eliminar", Trash2, "Eliminar", true)
         : null}
     </div>
   );

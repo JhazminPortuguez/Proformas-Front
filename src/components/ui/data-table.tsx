@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Table } from "@heroui/react";
 import type { PaginationMeta } from "@/lib/api/types";
+import type { FilasPorPagina } from "@/lib/paginacion";
 import { cn, formatNumber } from "@/lib/utils";
 import { useAnnouncer } from "./announcer";
 import { EmptyState, ErrorState, TableSkeleton } from "./feedback";
@@ -40,6 +41,7 @@ interface DataTableProps<T extends object> {
   emptyAction?: ReactNode;
   meta?: PaginationMeta;
   onPageChange?: (page: number) => void;
+  onPerPageChange?: (perPage: FilasPorPagina) => void;
   sortDescriptor?: DataTableSortDescriptor;
   onSortChange?: (descriptor: DataTableSortDescriptor) => void;
   className?: string;
@@ -59,6 +61,7 @@ export function DataTable<T extends object>({
   emptyAction,
   meta,
   onPageChange,
+  onPerPageChange,
   sortDescriptor,
   onSortChange,
   className,
@@ -164,7 +167,11 @@ export function DataTable<T extends object>({
 
           {meta && onPageChange ? (
             <Table.Footer>
-              <TablePagination meta={meta} onPageChange={onPageChange} />
+              <TablePagination
+                meta={meta}
+                onPageChange={onPageChange}
+                onPerPageChange={onPerPageChange}
+              />
             </Table.Footer>
           ) : null}
         </Table>

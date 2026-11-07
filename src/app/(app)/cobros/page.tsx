@@ -31,13 +31,12 @@ import {
 } from "@/lib/cobros";
 import { can } from "@/lib/permissions";
 import { isValidDateOnly } from "@/lib/proformas";
+import { parseFilasPorPagina } from "@/lib/paginacion";
 import { formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Cuentas por cobrar",
 };
-
-const PER_PAGE = 15;
 
 const ACTION_LINK =
   "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -79,6 +78,7 @@ export default async function CobrosPage({
     desde: parseFecha(first(params.desde)),
     hasta: parseFecha(first(params.hasta)),
     page: positiveInt(first(params.page)) ?? 1,
+    perPage: parseFilasPorPagina(first(params.per_page)),
   };
 
   let resumen: CxCResumen;
@@ -96,7 +96,7 @@ export default async function CobrosPage({
         desde: query.desde,
         hasta: query.hasta,
         page: query.page,
-        perPage: PER_PAGE,
+        perPage: query.perPage,
       }),
       getClientes({ perPage: 100 }),
     ]);

@@ -4,6 +4,7 @@ import type {
   DashboardData,
   DashboardOrdenes,
   DashboardServicioSolicitado,
+  DashboardTrabajoHoy,
 } from "@/lib/api/types";
 import { COBROS_QUERY_VACIA, cobrosHref, cobrosVencidasHref } from "@/lib/cobros";
 import { proformaEstadoMeta, ordenEstadoMeta, type EstadoTone } from "@/lib/estados";
@@ -483,6 +484,24 @@ export function dashboardServiciosTop(
     }))
     .sort((a, b) => b.cantidad - a.cantidad || b.total - a.total)
     .slice(0, Math.max(limit, 0));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Trabajos programados para hoy                                               */
+/* -------------------------------------------------------------------------- */
+
+export interface DashboardTrabajosHoy {
+  items: DashboardTrabajoHoy[];
+  total: number;
+  /** El back listó solo una parte: hay más órdenes de hoy que las visibles. */
+  hayMas: boolean;
+}
+
+export function dashboardTrabajosHoy(data: DashboardData): DashboardTrabajosHoy {
+  const items = data.trabajos_hoy ?? [];
+  const total = Math.max(noNegativo(data.trabajos_hoy_total), items.length);
+
+  return { items, total, hayMas: total > items.length };
 }
 
 /* -------------------------------------------------------------------------- */

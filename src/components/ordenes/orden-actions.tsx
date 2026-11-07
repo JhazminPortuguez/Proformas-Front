@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition, type FormEvent } from "react";
+import {
+  useState,
+  useTransition,
+  type FormEvent,
+  type ReactElement,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
@@ -13,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Alert, Button, Modal } from "@heroui/react";
+import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SelectControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -248,13 +254,24 @@ export function OrdenActions({
     }
   }
 
+  /** En la tabla y el tablero, el icono muestra un tooltip con lo que hace. */
+  function conTooltip(tooltip: string, element: ReactElement) {
+    return icon ? (
+      <ActionTooltip label={tooltip}>{element}</ActionTooltip>
+    ) : (
+      element
+    );
+  }
+
   function actionButton(
     action: DialogAction,
     label: string,
     Icon: LucideIcon,
+    tooltip: string,
     danger = false,
   ) {
-    return (
+    return conTooltip(
+      tooltip,
       <Button
         key={action}
         type="button"
@@ -270,7 +287,7 @@ export function OrdenActions({
       >
         <Icon aria-hidden className="size-4" />
         {icon ? <span className="sr-only">{label}</span> : label}
-      </Button>
+      </Button>,
     );
   }
 
@@ -285,41 +302,57 @@ export function OrdenActions({
         )}
       >
         {!hideVer && available.has("ver") ? (
-          <Link
-            href={`/ordenes/${ordenId}`}
-            className={icon ? ICON_LINK : LABEL_LINK}
-            aria-label={`Ver orden ${numero}`}
-          >
-            <Eye aria-hidden className="size-4" />
-            {icon ? <span className="sr-only">Ver</span> : "Ver"}
-          </Link>
+          icon ? (
+            <LinkTooltip label="Ver detalle">
+              <Link
+                href={`/ordenes/${ordenId}`}
+                className={ICON_LINK}
+                aria-label={`Ver orden ${numero}`}
+              >
+                <Eye aria-hidden className="size-4" />
+                <span className="sr-only">Ver</span>
+              </Link>
+            </LinkTooltip>
+          ) : (
+            <Link
+              href={`/ordenes/${ordenId}`}
+              className={LABEL_LINK}
+              aria-label={`Ver orden ${numero}`}
+            >
+              <Eye aria-hidden className="size-4" />
+              Ver
+            </Link>
+          )
         ) : null}
 
-        {puedeAsignar ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            isIconOnly={icon}
-            className={cn(icon ? "size-9 text-muted" : "h-9 text-foreground")}
-            aria-label={`Asignar ${numero}`}
-            onPress={openAssign}
-          >
-            <UserPlus aria-hidden className="size-4" />
-            {icon ? <span className="sr-only">Asignar</span> : "Asignar"}
-          </Button>
-        ) : null}
+        {puedeAsignar
+          ? conTooltip(
+              "Asignar operario",
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly={icon}
+                className={cn(icon ? "size-9 text-muted" : "h-9 text-foreground")}
+                aria-label={`Asignar ${numero}`}
+                onPress={openAssign}
+              >
+                <UserPlus aria-hidden className="size-4" />
+                {icon ? <span className="sr-only">Asignar</span> : "Asignar"}
+              </Button>,
+            )
+          : null}
 
         {available.has("iniciar")
-          ? actionButton("iniciar", "Iniciar", Play)
+          ? actionButton("iniciar", "Iniciar", Play, "Iniciar")
           : null}
 
         {available.has("finalizar")
-          ? actionButton("finalizar", "Finalizar", Check)
+          ? actionButton("finalizar", "Finalizar", Check, "Finalizar")
           : null}
 
         {available.has("cancelar")
-          ? actionButton("cancelar", "Cancelar", X, true)
+          ? actionButton("cancelar", "Cancelar", X, "Cancelar orden", true)
           : null}
 
         {available.has("cerrar")
@@ -329,6 +362,7 @@ export function OrdenActions({
                 ? "Cerrar orden (genera la cuenta por cobrar)"
                 : "Cerrar",
               Lock,
+              "Cerrar orden",
             )
           : null}
       </div>

@@ -17,7 +17,9 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, PaginationMeta, Solicitud } from "@/lib/api/types";
 import { parseSolicitudEstado } from "@/lib/estados";
-import { buildQuery, formatDateOnly, formatNumber } from "@/lib/utils";
+import type { FilasPorPagina } from "@/lib/paginacion";
+import { filasParam } from "@/lib/paginacion";
+import { buildQuery, formatDateNumeric, formatNumber } from "@/lib/utils";
 import { SolicitudDetailDrawer } from "./solicitud-detail-drawer";
 import { SolicitudFormDrawer } from "./solicitud-form-drawer";
 
@@ -86,9 +88,22 @@ export function SolicitudesTable({
   function navigatePage(next: number) {
     const query = buildQuery({
       tab: "solicitudes",
+      per_page: filasParam(meta.per_page),
       search,
       estado,
       page: next,
+    });
+
+    router.push(`/proformas${query}`);
+  }
+
+  function navigatePerPage(perPage: FilasPorPagina) {
+    const query = buildQuery({
+      tab: "solicitudes",
+      search,
+      estado,
+      per_page: filasParam(perPage),
+      page: 1,
     });
 
     router.push(`/proformas${query}`);
@@ -99,6 +114,7 @@ export function SolicitudesTable({
 
     const query = buildQuery({
       tab: "solicitudes",
+      per_page: filasParam(meta.per_page),
       search: searchInput.trim(),
       estado,
       page: 1,
@@ -110,6 +126,7 @@ export function SolicitudesTable({
   function changeEstado(value: string) {
     const query = buildQuery({
       tab: "solicitudes",
+      per_page: filasParam(meta.per_page),
       search,
       estado: value === "todos" ? "" : value,
       page: 1,
@@ -180,10 +197,10 @@ export function SolicitudesTable({
       isRowHeader: true,
       cell: (solicitud) => (
         <div>
-          <p className="numeric text-sm text-foreground">
-            {formatDateOnly(solicitud.fecha ?? solicitud.created_at)}
+          <p className="numeric whitespace-nowrap text-sm text-foreground">
+            {formatDateNumeric(solicitud.fecha ?? solicitud.created_at)}
           </p>
-          <p className="numeric text-xs text-muted">
+          <p className="numeric whitespace-nowrap text-xs text-muted">
             {solicitud.numero ?? `#${solicitud.id}`}
           </p>
         </div>
@@ -285,11 +302,11 @@ export function SolicitudesTable({
 
   return (
     <section aria-label="Listado de solicitudes">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <form
           role="search"
           onSubmit={submitSearch}
-          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+          className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end"
         >
           <div className="w-full sm:w-44">
             <SelectControl
@@ -338,6 +355,7 @@ export function SolicitudesTable({
           isPending={isPending}
           meta={meta}
           onPageChange={navigatePage}
+          onPerPageChange={navigatePerPage}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           emptyIcon={<FileText aria-hidden className="size-5" />}
@@ -405,7 +423,7 @@ export function SolicitudesTable({
                     </p>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                       <span className="numeric">
-                        {formatDateOnly(
+                        {formatDateNumeric(
                           solicitud.fecha ?? solicitud.created_at,
                         )}
                       </span>
@@ -461,7 +479,11 @@ export function SolicitudesTable({
         )}
 
         <div className="mt-4">
-          <TablePagination meta={meta} onPageChange={navigatePage} />
+          <TablePagination
+            meta={meta}
+            onPageChange={navigatePage}
+            onPerPageChange={navigatePerPage}
+          />
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { Button, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -13,6 +14,7 @@ import { servicios as serviciosApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Servicio } from "@/lib/api/types";
+import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatMoney, formatNumber } from "@/lib/utils";
 import { ServicioFormDrawer } from "./servicio-form-drawer";
 
@@ -23,6 +25,8 @@ interface Query {
   activo: Filtro;
   visible: Filtro;
   page: number;
+  /** Filas por página (15, 25 o 50); sin dato, 15. */
+  perPage?: number;
 }
 
 interface ServiciosTableProps {
@@ -70,6 +74,7 @@ export function ServiciosTable({
       activo: merged.activo === "" ? "" : merged.activo === "activo" ? 1 : 0,
       visible_catalogo:
         merged.visible === "" ? "" : merged.visible === "activo" ? 1 : 0,
+      per_page: filasParam(merged.perPage),
       page: merged.page,
     });
 
@@ -188,32 +193,36 @@ export function ServiciosTable({
       cell: (servicio) => (
         <div className="flex items-center justify-end gap-1">
           {canManage ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={`Editar ${servicio.nombre}`}
-              className="size-9"
-              onPress={() => openEdit(servicio)}
-            >
-              <Pencil aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Editar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={`Editar ${servicio.nombre}`}
+                className="size-9"
+                onPress={() => openEdit(servicio)}
+              >
+                <Pencil aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
 
           {canDelete ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={`Eliminar ${servicio.nombre}`}
-              className="size-9 text-danger"
-              onPress={() => {
-                setDeleteError(null);
-                setToDelete(servicio);
-              }}
-            >
-              <Trash2 aria-hidden className="size-4" />
-            </Button>
+            <ActionTooltip label="Eliminar">
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={`Eliminar ${servicio.nombre}`}
+                className="size-9 text-danger"
+                onPress={() => {
+                  setDeleteError(null);
+                  setToDelete(servicio);
+                }}
+              >
+                <Trash2 aria-hidden className="size-4" />
+              </Button>
+            </ActionTooltip>
           ) : null}
         </div>
       ),
@@ -349,6 +358,7 @@ export function ServiciosTable({
         isPending={isPending}
         meta={meta}
         onPageChange={(page) => navigate({ page })}
+        onPerPageChange={(perPage) => navigate({ perPage })}
         emptyTitle={
           filtersActive ? "Sin coincidencias" : "Todavía no hay servicios"
         }

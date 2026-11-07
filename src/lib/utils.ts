@@ -44,6 +44,17 @@ const numericDayFormatter = new Intl.DateTimeFormat("es-BO", {
   timeZone: "America/La_Paz",
 });
 
+/** `dd/mm/aaaa HH:mm` (24 horas) de un instante, en America/La_Paz. */
+const numericDateTimeFormatter = new Intl.DateTimeFormat("es-BO", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "America/La_Paz",
+});
+
 const DATE_ONLY_PATTERN =/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/;
 const PURE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -164,6 +175,26 @@ export function formatDateNumeric(value: string | null | undefined): string {
   if (Number.isNaN(instant.getTime())) return trimmed;
 
   return numericDayFormatter.format(instant);
+}
+
+/**
+ * Instante como `dd/mm/aaaa HH:mm` (24 horas, hora de Bolivia), para las
+ * columnas de listados que muestran fecha y hora.
+ */
+export function formatDateTimeNumeric(
+  value: string | null | undefined,
+): string {
+  if (!value) return "—";
+
+  const date = new Date(value.trim());
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  const parts = numericDateTimeFormatter.formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+
+  return `${part("day")}/${part("month")}/${part("year")} ${part("hour")}:${part("minute")}`;
 }
 
 /**

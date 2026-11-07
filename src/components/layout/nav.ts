@@ -73,7 +73,13 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Análisis",
     items: [
-      { label: "Reportes", href: "/reportes", icon: BarChart3, ready: false },
+      {
+        label: "Reportes",
+        href: "/reportes",
+        icon: BarChart3,
+        ready: true,
+        roles: ["admin"],
+      },
     ],
   },
   {

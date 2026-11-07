@@ -165,8 +165,7 @@ export function Sidebar({ rol, collapsed, onToggleCollapsed }: SidebarProps) {
         </div>
       ) : (
         <p className="border-t border-border px-4 py-3 text-[11px] text-muted">
-          Clientes, servicios, proformas, órdenes, inventario y cobros ·
-          reportes en preparación
+          Clientes, servicios, proformas, órdenes, inventario y cobros
         </p>
       )}
     </aside>

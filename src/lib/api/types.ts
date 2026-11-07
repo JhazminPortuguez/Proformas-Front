@@ -218,6 +218,7 @@ export interface Proforma {
   updated_at?: string | null;
   /** Orden vigente generada desde esta proforma (si existe). */
   orden_id?: number | null;
+  orden_numero?: string | null;
   cliente?: Cliente | null;
   items?: ProformaItem[];
   aceptador?: User | null;
@@ -566,6 +567,19 @@ export interface DashboardCobros {
   aging?: Partial<DashboardAging>;
 }
 
+/** Orden activa con fecha programada para hoy (hora de Bolivia). */
+export interface DashboardTrabajoHoy {
+  id: number;
+  numero: string;
+  cliente: {
+    nombre_razon: string | null;
+    nit_ci: string | null;
+  };
+  /** Nombre del operario asignado. */
+  operario: string | null;
+  estado: string;
+}
+
 export interface DashboardServicioSolicitado {
   servicio_id: number;
   nombre: string;
@@ -591,6 +605,144 @@ export interface DashboardData {
   ingresos_mes?: number;
   servicios_mas_solicitados?: DashboardServicioSolicitado[];
   actividad_reciente?: ActividadReciente[];
+  /** Máximo 10; el operario solo recibe las suyas. */
+  trabajos_hoy?: DashboardTrabajoHoy[];
+  /** Total sin el límite de 10. */
+  trabajos_hoy_total?: number;
+}
+
+/* Reportes (solo administrador) ------------------------------------------- */
+
+export interface ReportePeriodo {
+  desde: string;
+  hasta: string;
+}
+
+/** Opción del filtro de cliente: el back no envía datos de contacto. */
+export interface ReporteClienteOpcion {
+  id: number;
+  nombre_razon: string;
+  nit_ci: string | null;
+}
+
+export interface ReporteClienteRef {
+  nombre_razon: string | null;
+  nit_ci: string | null;
+}
+
+export interface ReporteOrdenesOperario {
+  operario_id: number | null;
+  operario: string | null;
+  pendientes: number;
+  asignadas: number;
+  en_proceso: number;
+  finalizadas: number;
+  canceladas: number;
+  total: number;
+}
+
+export interface ReporteOrdenAtrasada {
+  id: number;
+  numero: string;
+  cliente: ReporteClienteRef;
+  operario: string | null;
+  fecha_programada: string;
+  fecha_finalizacion: string;
+  dias_atraso: number;
+}
+
+export interface ReporteOrdenes {
+  periodo: ReportePeriodo;
+  total: number;
+  por_estado: Record<string, number>;
+  por_operario: ReporteOrdenesOperario[];
+  cumplimiento: {
+    a_tiempo: number;
+    con_atraso: number;
+    sin_fecha: number;
+    /** null si no hay órdenes finalizadas con fecha programada. */
+    porcentaje_a_tiempo: number | null;
+  };
+  atrasadas: ReporteOrdenAtrasada[];
+}
+
+export interface ReporteServicio {
+  servicio_id: number;
+  nombre: string | null;
+  categoria: string | null;
+  cantidad: number;
+  monto: number;
+}
+
+export interface ReporteServiciosProformas {
+  periodo: ReportePeriodo;
+  proformas: {
+    /** Enviadas, aceptadas o rechazadas emitidas en el periodo. */
+    cotizado: number;
+    cotizadas: number;
+    /** Aceptadas dentro del periodo. */
+    aceptado: number;
+    aceptadas: number;
+    rechazadas: number;
+    en_espera: number;
+    /** aceptadas / (aceptadas + rechazadas); null sin respuestas. */
+    tasa_aceptacion: number | null;
+  };
+  servicios: ReporteServicio[];
+}
+
+export interface ReporteConsumoProducto {
+  producto_id: number;
+  nombre: string | null;
+  unidad_medida: string | null;
+  cantidad: number;
+  /** cantidad × costo_unitario de cada consumo. */
+  costo: number;
+}
+
+export interface ReporteStockBajo {
+  id: number;
+  nombre: string;
+  unidad_medida: string | null;
+  stock_actual: number;
+  stock_minimo: number;
+  faltante: number;
+}
+
+export interface ReporteInventario {
+  periodo: ReportePeriodo;
+  consumo: {
+    costo_total: number;
+    movimientos: number;
+    productos: number;
+  };
+  productos: ReporteConsumoProducto[];
+  /** Foto de hoy: no depende del periodo ni de los filtros. */
+  stock_bajo: ReporteStockBajo[];
+}
+
+export interface ReporteCuentaSaldo {
+  id: number;
+  numero: string;
+  cliente: ReporteClienteRef;
+  fecha_vencimiento: string | null;
+  dias_vencida: number;
+  saldo: number;
+  franja: keyof DashboardAging;
+}
+
+export interface ReporteCobros {
+  periodo: ReportePeriodo;
+  /** Pagos no anulados con fecha de pago en el periodo. */
+  cobrado: number;
+  pagos: number;
+  /** Desde aquí, foto de hoy: no depende del periodo. */
+  saldo_pendiente: number;
+  cuentas_con_saldo: number;
+  vencidas: number;
+  monto_vencido: number;
+  aging: DashboardAging;
+  cuentas: ReporteCuentaSaldo[];
 }
 
 export interface PaginationMeta {
