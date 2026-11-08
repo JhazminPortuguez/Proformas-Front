@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Orden, OrdenEvento, OrdenItem } from "@/lib/api/types";
 import {
+  ordenDescripcion,
   accionesOrden,
   eventoFecha,
   eventoOrdenMeta,
@@ -321,5 +322,19 @@ describe("query del listado de órdenes", () => {
     });
 
     expect(href).toBe("/ordenes?vista=tabla");
+  });
+});
+
+describe("ordenDescripcion", () => {
+  it("una finalizada cerrada ya no dice que falta el cierre", () => {
+    expect(ordenDescripcion({ estado: "FINALIZADA", cerrada_at: null })).toBe(
+      "El trabajo terminó; falta el cierre administrativo.",
+    );
+    expect(
+      ordenDescripcion({ estado: "FINALIZADA", cerrada_at: "2026-11-08T04:22:00Z" }),
+    ).toBe("Trabajo terminado y cierre administrativo hecho; ya no admite más acciones.");
+    expect(ordenDescripcion({ estado: "EN_PROCESO", cerrada_at: null })).toBe(
+      "El trabajo está en ejecución.",
+    );
   });
 });

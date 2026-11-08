@@ -209,6 +209,7 @@ export default async function ProformasPage({
           clientes={clientes}
           canDelete={can(user, "proformas.eliminar")}
           hoy={todayDateOnly()}
+          usuario={{ id: user.id, rol: user.rol }}
         />
       ) : null}
 

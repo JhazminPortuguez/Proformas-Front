@@ -23,6 +23,7 @@ import {
   ordenActualizadaEn,
   ordenClienteNombre,
   ordenCreadaEn,
+  ordenDescripcion,
   ordenFechaProgramadaTexto,
   ordenItemsCount,
   ordenMontoCierre,
@@ -230,7 +231,7 @@ export default async function OrdenDetallePage({
             </span>
           </span>
         ) : null}
-        <span className="text-sm text-muted">{estadoMeta.description}</span>
+        <span className="text-sm text-muted">{ordenDescripcion(orden)}</span>
       </div>
 
       {orden.estado === "CANCELADA" ? (

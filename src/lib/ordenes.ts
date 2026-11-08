@@ -173,6 +173,19 @@ export function ordenEstadoDescripcion(estado: string): string {
   return ordenEstadoMeta(estado).description;
 }
 
+/**
+ * Descripción para el encabezado de la orden. Una Finalizada que ya recibió
+ * el cierre no dice "falta el cierre administrativo" (Cerrada no es un estado:
+ * la orden sigue Finalizada).
+ */
+export function ordenDescripcion(orden: Pick<Orden, "estado" | "cerrada_at">): string {
+  if (orden.estado === "FINALIZADA" && ordenEstaCerrada(orden)) {
+    return "Trabajo terminado y cierre administrativo hecho; ya no admite más acciones.";
+  }
+
+  return ordenEstadoDescripcion(orden.estado);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Fechas                                                                      */
 /* -------------------------------------------------------------------------- */

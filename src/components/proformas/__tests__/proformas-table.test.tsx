@@ -60,7 +60,11 @@ const META = {
   last_page: 1,
 };
 
-function renderTable(proforma: Proforma = PROFORMA, hoy = "2026-10-28") {
+function renderTable(
+  proforma: Proforma = PROFORMA,
+  hoy = "2026-10-28",
+  usuario: { id: number; rol: string } = { id: 1, rol: "admin" },
+) {
   return render(
     <ProformasTable
       hoy={hoy}
@@ -76,6 +80,7 @@ function renderTable(proforma: Proforma = PROFORMA, hoy = "2026-10-28") {
       }}
       clientes={[CLIENTE]}
       canDelete
+      usuario={usuario}
     />,
   );
 }
@@ -156,6 +161,29 @@ describe("ProformasTable", () => {
     expect(orden.closest("p")).toHaveTextContent("Orden OS-2026-000004");
 
     // También en la tarjeta del celular.
+    expect(screen.getAllByRole("link", { name: "OS-2026-000004" })).toHaveLength(2);
+  });
+
+  it("un operario solo ve como enlace la orden que tiene asignada", () => {
+    const aceptada: Proforma = {
+      ...PROFORMA,
+      estado: "ACEPTADA",
+      orden_id: 4,
+      orden_numero: "OS-2026-000004",
+      acciones_disponibles: ["ver", "pdf"],
+    };
+
+    const { unmount } = renderTable({ ...aceptada, orden_operario_id: null }, undefined, { id: 2, rol: "operario" });
+    expect(screen.queryByRole("link", { name: "OS-2026-000004" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(/sin asignar/).length).toBeGreaterThan(0);
+    unmount();
+
+    const otro = renderTable({ ...aceptada, orden_operario_id: 7 }, undefined, { id: 2, rol: "operario" });
+    expect(screen.queryByRole("link", { name: "OS-2026-000004" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(/asignada a otro operario/).length).toBeGreaterThan(0);
+    otro.unmount();
+
+    renderTable({ ...aceptada, orden_operario_id: 2 }, undefined, { id: 2, rol: "operario" });
     expect(screen.getAllByRole("link", { name: "OS-2026-000004" })).toHaveLength(2);
   });
 

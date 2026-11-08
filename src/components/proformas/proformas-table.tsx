@@ -25,7 +25,9 @@ import type {
 import {
   accionesProforma,
   formatDiaMes,
+  ordenNoVisibleNota,
   proformaExpirada,
+  puedeAbrirOrden,
 } from "@/lib/proformas";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatDateNumeric, formatMoney } from "@/lib/utils";
@@ -53,6 +55,8 @@ interface ProformasTableProps {
   canDelete: boolean;
   /** Hoy (`YYYY-MM-DD`) calculado en el servidor, para el aviso de validez. */
   hoy: string;
+  /** Usuario de la sesión: decide si el código de la orden es un enlace. */
+  usuario: { id: number; rol: string };
 }
 
 /** Nombre o razón social con su NIT/CI debajo. */
@@ -87,14 +91,33 @@ function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
   );
 }
 
-/** Proforma aceptada que ya tiene orden: enlace a la orden. */
-function OrdenDeProforma({ proforma }: { proforma: Proforma }) {
+/**
+ * Proforma aceptada que ya tiene orden: enlace a la orden si el usuario puede
+ * abrirla (un operario solo abre las que tiene asignadas).
+ */
+function OrdenDeProforma({
+  proforma,
+  usuario,
+}: {
+  proforma: Proforma;
+  usuario: { id: number; rol: string };
+}) {
   if (
     proforma.estado !== "ACEPTADA" ||
     !proforma.orden_id ||
     !proforma.orden_numero
   ) {
     return null;
+  }
+
+  if (!puedeAbrirOrden(usuario, proforma.orden_operario_id)) {
+    return (
+      <p className="whitespace-nowrap text-xs text-muted">
+        Orden <span className="numeric font-medium text-foreground">{proforma.orden_numero}</span>
+        {" · "}
+        {ordenNoVisibleNota(proforma.orden_operario_id)}
+      </p>
+    );
   }
 
   return (
@@ -130,6 +153,7 @@ export function ProformasTable({
   clientes,
   canDelete,
   hoy,
+  usuario,
 }: ProformasTableProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -262,7 +286,7 @@ export function ProformasTable({
           >
             {proforma.numero}
           </Link>
-          <OrdenDeProforma proforma={proforma} />
+          <OrdenDeProforma proforma={proforma} usuario={usuario} />
           {proforma.solicitud_id ? (
             <p className="whitespace-nowrap text-xs text-muted">
               Desde solicitud #{proforma.solicitud_id}
@@ -509,7 +533,7 @@ export function ProformasTable({
                     >
                       {proforma.numero}
                     </Link>
-                    <OrdenDeProforma proforma={proforma} />
+                    <OrdenDeProforma proforma={proforma} usuario={usuario} />
                     <p className="truncate text-sm text-muted">
                       {proforma.cliente?.nombre_razon ??
                         `Cliente #${proforma.cliente_id}`}

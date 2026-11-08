@@ -342,3 +342,21 @@ export function proformaItemUnidad(item: ProformaItem): string {
 export function estadoProformaEsEditable(estado: EstadoProforma | string): boolean {
   return estado === "BORRADOR";
 }
+
+/**
+ * Un operario solo puede abrir las órdenes que tiene asignadas; el admin,
+ * todas. Así no se enlaza a una orden que respondería "sin permisos".
+ */
+export function puedeAbrirOrden(
+  usuario: { id: number; rol: string },
+  operarioId: number | null | undefined,
+): boolean {
+  if (usuario.rol === "admin") return true;
+
+  return usuario.rol === "operario" && operarioId != null && operarioId === usuario.id;
+}
+
+/** Texto para una orden que el usuario no puede abrir. */
+export function ordenNoVisibleNota(operarioId: number | null | undefined): string {
+  return operarioId == null ? "sin asignar" : "asignada a otro operario";
+}
