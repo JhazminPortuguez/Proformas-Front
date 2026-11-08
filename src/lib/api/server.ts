@@ -16,6 +16,7 @@ import type {
   CxCResumen,
   CuentaPorCobrar,
   DashboardData,
+  Empresa,
   EstadoCobro,
   EstadoOrden,
   EstadoProforma,
@@ -627,4 +628,9 @@ export function getPortalProformas({
 
 export function getPortalProforma(id: number): Promise<PortalProforma | null> {
   return requestOr404<PortalProforma>(`/portal/proformas/${id}`);
+}
+
+/** Datos de la empresa para la pantalla de configuración (solo admin). */
+export function getEmpresa(): Promise<Empresa> {
+  return request<Empresa>("/empresa");
 }

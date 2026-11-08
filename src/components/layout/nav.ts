@@ -96,7 +96,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Configuración",
         href: "/configuracion",
         icon: Settings,
-        ready: false,
+        ready: true,
         roles: ["admin"],
       },
     ],

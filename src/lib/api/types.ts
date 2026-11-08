@@ -221,6 +221,8 @@ export interface Proforma {
   /** Orden vigente generada desde esta proforma (si existe). */
   orden_id?: number | null;
   orden_numero?: string | null;
+  /** Operario asignado a esa orden: un operario solo abre las suyas. */
+  orden_operario_id?: number | null;
   cliente?: Cliente | null;
   items?: ProformaItem[];
   aceptador?: User | null;
@@ -911,4 +913,30 @@ export interface PortalProforma {
   impuesto?: number;
   observaciones?: string | null;
   items?: PortalProformaItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Configuración de la empresa (/api/v1/empresa, solo administrador).
+// ---------------------------------------------------------------------------
+
+export interface Empresa {
+  id: number;
+  nombre: string;
+  nit: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+  condiciones: string | null;
+  /** Endpoint que sirve el logo; null si la empresa no tiene. */
+  logo_url: string | null;
+  updated_at: string | null;
+}
+
+export interface EmpresaInput {
+  nombre: string;
+  nit: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+  condiciones: string | null;
 }

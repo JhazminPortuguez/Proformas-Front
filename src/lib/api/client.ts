@@ -12,6 +12,8 @@ import type {
   ClienteInput,
   ConsumoOrdenItemInput,
   CuentaPorCobrar,
+  Empresa,
+  EmpresaInput,
   EntradaInventarioInput,
   MovimientoInventario,
   Orden,
@@ -80,7 +82,9 @@ async function request<T>(
   const xsrfToken = readCookie("XSRF-TOKEN");
   if (xsrfToken) headers.set("X-XSRF-TOKEN", xsrfToken);
 
-  if (init.body && !headers.has("Content-Type")) {
+  // Con FormData (subida de archivos) el navegador pone el Content-Type con
+  // su boundary; no hay que fijarlo.
+  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -402,5 +406,23 @@ export { ensureCsrfCookie };
 export const portal = {
   crearSolicitud(payload: PortalSolicitudInput): Promise<PortalSolicitud> {
     return request<PortalSolicitud>("/portal/solicitudes", jsonBody(payload));
+  },
+};
+
+/** Configuración de la empresa (solo administrador). */
+export const empresa = {
+  update(payload: EmpresaInput): Promise<Empresa> {
+    return request<Empresa>("/empresa", { method: "PUT", body: JSON.stringify(payload) });
+  },
+
+  subirLogo(archivo: File): Promise<Empresa> {
+    const datos = new FormData();
+    datos.append("logo", archivo);
+
+    return request<Empresa>("/empresa/logo", { method: "POST", body: datos });
+  },
+
+  eliminarLogo(): Promise<Empresa> {
+    return request<Empresa>("/empresa/logo", { method: "DELETE" });
   },
 };
