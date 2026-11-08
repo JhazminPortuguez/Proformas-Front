@@ -81,12 +81,6 @@ export function TextFieldControl({
     >
       <Label>
         {label}
-        {isRequired ? (
-          <span aria-hidden className="text-danger">
-            {" "}
-            *
-          </span>
-        ) : null}
       </Label>
 
       <Input
@@ -140,12 +134,6 @@ export function TextAreaControl({
     >
       <Label>
         {label}
-        {isRequired ? (
-          <span aria-hidden className="text-danger">
-            {" "}
-            *
-          </span>
-        ) : null}
       </Label>
 
       <TextArea aria-label={label} fullWidth rows={rows} placeholder={placeholder} />
@@ -195,12 +183,6 @@ export function SelectControl<T extends string>({
     >
       <Label>
         {label}
-        {isRequired ? (
-          <span aria-hidden className="text-danger">
-            {" "}
-            *
-          </span>
-        ) : null}
       </Label>
 
       <Select.Trigger aria-label={label}>

@@ -114,10 +114,6 @@ export function ConfirmDialog({
                 >
                   <Label>
                     {reasonLabel}
-                    <span aria-hidden className="text-danger">
-                      {" "}
-                      *
-                    </span>
                   </Label>
                   <TextArea
                     aria-label={reasonLabel}

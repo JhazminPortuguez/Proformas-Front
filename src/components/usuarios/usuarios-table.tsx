@@ -2,7 +2,7 @@
 
 import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ShieldAlert, Trash2, UserRound } from "lucide-react";
+import { Plus, Search, ShieldAlert, Trash2, UserRound } from "lucide-react";
 import {
   Alert,
   Button,
@@ -17,11 +17,12 @@ import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
+import { UsuarioFormDrawer } from "@/components/usuarios/usuario-form-drawer";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { usuarios as usuariosApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { PaginationMeta, Rol, User } from "@/lib/api/types";
+import type { PaginationMeta, ReporteClienteOpcion, Rol, User } from "@/lib/api/types";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery } from "@/lib/utils";
@@ -38,6 +39,8 @@ interface UsuariosTableProps {
   meta: PaginationMeta;
   query: Query;
   currentUserId: number;
+  /** Clientes existentes, para crear el acceso al portal de uno de ellos. */
+  clientes?: ReporteClienteOpcion[];
 }
 
 const ROLES: Rol[] = ["admin", "operario", "cliente"];
@@ -52,6 +55,7 @@ export function UsuariosTable({
   meta,
   query,
   currentUserId,
+  clientes = [],
 }: UsuariosTableProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -69,6 +73,7 @@ export function UsuariosTable({
   const [toDelete, setToDelete] = useState<User | null>(null);
   const [deletePending, setDeletePending] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
   function refresh() {
     startTransition(() => router.refresh());
@@ -155,6 +160,11 @@ export function UsuariosTable({
             ) : null}
           </p>
           <p className="truncate text-xs text-muted">{usuario.email}</p>
+          {usuario.rol === "cliente" && usuario.cliente ? (
+            <p className="truncate text-xs text-muted">
+              Cliente: <span className="text-foreground">{usuario.cliente.nombre_razon}</span>
+            </p>
+          ) : null}
         </div>
       ),
     },
@@ -331,16 +341,33 @@ export function UsuariosTable({
           ) : null}
         </form>
 
-        <p className="flex items-center gap-1.5 text-xs text-muted">
-          <ShieldAlert aria-hidden className="size-3.5" />
-          Los cambios de rol se aplican de inmediato.
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <ShieldAlert aria-hidden className="size-3.5" />
+            Los cambios de rol se aplican de inmediato.
+          </p>
+          <Button variant="primary" size="md" onPress={() => setFormOpen(true)}>
+            <Plus aria-hidden className="size-4" />
+            Nuevo usuario
+          </Button>
+        </div>
       </div>
 
       <div className="mb-3 text-xs text-muted" role="note">
-        Los usuarios se registran desde la pantalla pública de registro. Aquí
-        asignas el rol de operario o desactivas cuentas.
+        Los clientes nuevos pueden registrarse solos desde la pantalla pública.
+        Si el correo ya pertenece a un cliente, crea aquí su acceso con el rol
+        Cliente y elige ese cliente.
       </div>
+
+      <UsuarioFormDrawer
+        isOpen={formOpen}
+        onOpenChange={setFormOpen}
+        clientes={clientes}
+        onSaved={() => {
+          setFormOpen(false);
+          refresh();
+        }}
+      />
 
       {rowError ? (
         <Alert status="danger" className="mb-3" role="alert">

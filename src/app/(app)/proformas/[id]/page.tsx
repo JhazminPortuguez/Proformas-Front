@@ -19,7 +19,7 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Proforma, User } from "@/lib/api/types";
 import { proformaEstadoMeta } from "@/lib/estados";
-import { accionesProforma } from "@/lib/proformas";
+import { accionesProforma, ordenNoVisibleNota, puedeAbrirOrden } from "@/lib/proformas";
 import { can } from "@/lib/permissions";
 import { formatDateOnly, formatDateTime } from "@/lib/utils";
 
@@ -153,7 +153,7 @@ export default async function ProformaDetallePage({
               </Link>
             ) : null}
 
-            {proforma.orden_id ? (
+            {proforma.orden_id && puedeAbrirOrden(user, proforma.orden_operario_id) ? (
               <Link
                 href={`/ordenes/${proforma.orden_id}`}
                 className={ACTION_LINK}
@@ -161,10 +161,20 @@ export default async function ProformaDetallePage({
                 <ClipboardList aria-hidden className="size-4" />
                 Ver orden
               </Link>
+            ) : proforma.orden_id ? (
+              <span className="inline-flex h-9 items-center gap-1.5 text-sm text-muted">
+                <ClipboardList aria-hidden className="size-4" />
+                Orden{" "}
+                <span className="numeric font-medium text-foreground">
+                  {proforma.orden_numero}
+                </span>
+                · {ordenNoVisibleNota(proforma.orden_operario_id)}
+              </span>
             ) : acciones.has("crear_orden") ? (
               <CrearOrdenDialog
                 proformaId={proforma.id}
                 proformaNumero={proforma.numero}
+                usuario={{ id: user.id, rol: user.rol }}
                 operarios={operarios}
                 autoOpen={first(query.crear_orden) === "1"}
               />

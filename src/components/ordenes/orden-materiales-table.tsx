@@ -7,7 +7,7 @@ import {
   ordenMateriales,
 } from "@/lib/inventario";
 import { ordenItemTitle, ordenItemUnidad } from "@/lib/ordenes";
-import { formatDateOnly, formatNumber } from "@/lib/utils";
+import { formatDateTimeNumeric, formatNumber } from "@/lib/utils";
 
 /** El back solo fija `consumido_at` cuando la línea se consumió por completo. */
 function FechaConsumo({ item }: { item: OrdenItem }) {
@@ -15,7 +15,7 @@ function FechaConsumo({ item }: { item: OrdenItem }) {
 
   return (
     <time dateTime={item.consumido_at} className="numeric">
-      {formatDateOnly(item.consumido_at)}
+      {formatDateTimeNumeric(item.consumido_at)}
     </time>
   );
 }

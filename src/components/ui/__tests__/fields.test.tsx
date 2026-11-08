@@ -31,6 +31,24 @@ describe("campos de formulario", () => {
     );
   });
 
+  it("un campo obligatorio no repite el asterisco: lo pone HeroUI por CSS", () => {
+    render(
+      <TextFieldControl
+        name="nombre_razon"
+        label="Nombre o razón social"
+        value=""
+        onChange={() => {}}
+        isRequired
+      />,
+    );
+
+    const input = screen.getByLabelText("Nombre o razón social");
+
+    expect(input).toBeRequired();
+    // La etiqueta no trae un "*" propio; HeroUI agrega uno con ::after.
+    expect(document.querySelector("label")?.textContent).toBe("Nombre o razón social");
+  });
+
   it("expone el nombre del campo con data-field para el foco automático", () => {
     const { container } = render(
       <TextFieldControl

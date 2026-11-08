@@ -2,7 +2,6 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { OrdenMaterialesTable } from "@/components/ordenes/orden-materiales-table";
 import type { Orden, OrdenItem, Producto } from "@/lib/api/types";
-import { formatDateOnly } from "@/lib/utils";
 
 const PRODUCTO: Producto = {
   id: 5,
@@ -105,10 +104,8 @@ describe("OrdenMaterialesTable", () => {
     });
     const [, consumido, parcial] = within(table).getAllByRole("row");
 
-    // 01:47 UTC del 29/10 todavía es 28/10 en America/La_Paz.
-    expect(
-      within(consumido).getByText(formatDateOnly("2026-10-28")),
-    ).toBeInTheDocument();
+    // 01:47 UTC del 29/10 todavía es 28/10 a las 21:47 en America/La_Paz.
+    expect(within(consumido).getByText("28/10/2026 21:47")).toBeInTheDocument();
     expect(within(parcial).getByText("—")).toBeInTheDocument();
     expect(within(parcial).getByText("4")).toBeInTheDocument();
   });

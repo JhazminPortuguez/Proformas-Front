@@ -8,6 +8,8 @@ export interface User {
   activo: boolean;
   cliente_id: number | null;
   empresa_id: number | null;
+  /** Cliente vinculado (usuarios con rol cliente), cuando la API lo incluye. */
+  cliente?: Pick<Cliente, "id" | "nombre_razon" | "nit_ci"> | null;
 }
 
 export type ClienteEstado = "prospecto" | "activo" | "inactivo";
@@ -219,6 +221,8 @@ export interface Proforma {
   /** Orden vigente generada desde esta proforma (si existe). */
   orden_id?: number | null;
   orden_numero?: string | null;
+  /** Operario asignado a esa orden: un operario solo abre las suyas. */
+  orden_operario_id?: number | null;
   cliente?: Cliente | null;
   items?: ProformaItem[];
   aceptador?: User | null;
@@ -809,6 +813,8 @@ export interface UsuarioInput {
   activo?: boolean;
   password?: string;
   password_confirmation?: string;
+  /** Obligatorio cuando el rol es cliente. */
+  cliente_id?: number | null;
 }
 
 export interface RegistroInput {
@@ -817,4 +823,120 @@ export interface RegistroInput {
   password: string;
   password_confirmation: string;
   telefono?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Portal del cliente (/api/v1/portal/*). Solo datos que el cliente puede ver.
+// ---------------------------------------------------------------------------
+
+/** Estados de proforma que el cliente ve (nunca BORRADOR). */
+export type PortalProformaEstado = "ENVIADA" | "ACEPTADA" | "RECHAZADA";
+
+export interface PortalUltimo {
+  tipo: "solicitud" | "proforma";
+  id: number;
+  numero: string | null;
+  descripcion: string | null;
+  estado: string;
+  fecha: string | null;
+}
+
+export interface PortalResumen {
+  solicitudes: Record<string, number>;
+  proformas: Record<PortalProformaEstado, number>;
+  ultimo: PortalUltimo | null;
+}
+
+export interface PortalEmpresa {
+  nombre: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+}
+
+export interface PortalServicio {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  categoria: string | null;
+  precio_base: number;
+  duracion_estimada_min: number | null;
+}
+
+export interface PortalSolicitud {
+  id: number;
+  descripcion: string;
+  estado: string;
+  fecha: string | null;
+  items_count: number | null;
+  items?: SolicitudItem[];
+  /** Solo cuando la proforma asociada ya fue enviada. */
+  proforma: { id: number; numero: string; estado: string } | null;
+}
+
+export interface PortalSolicitudInput {
+  descripcion: string;
+  items: {
+    descripcion: string;
+    cantidad: number;
+    unidad_medida?: string | null;
+    observaciones?: string | null;
+  }[];
+}
+
+export interface PortalProformaItem {
+  id: number;
+  nombre: string | null;
+  descripcion: string | null;
+  unidad_medida: string | null;
+  cantidad: number;
+  precio_unitario: number;
+  total_linea: number;
+}
+
+export interface PortalProforma {
+  id: number;
+  numero: string;
+  estado: string;
+  fecha_emision: string | null;
+  fecha_validez: string | null;
+  vencida: boolean;
+  moneda: string | null;
+  total: number;
+  items_count: number | null;
+  primer_item: string | null;
+  solicitud_id: number | null;
+  // Solo en el detalle:
+  subtotal?: number;
+  descuento?: number;
+  impuesto_tasa?: number;
+  impuesto?: number;
+  observaciones?: string | null;
+  items?: PortalProformaItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Configuración de la empresa (/api/v1/empresa, solo administrador).
+// ---------------------------------------------------------------------------
+
+export interface Empresa {
+  id: number;
+  nombre: string;
+  nit: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+  condiciones: string | null;
+  /** Endpoint que sirve el logo; null si la empresa no tiene. */
+  logo_url: string | null;
+  updated_at: string | null;
+}
+
+export interface EmpresaInput {
+  nombre: string;
+  nit: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+  condiciones: string | null;
 }

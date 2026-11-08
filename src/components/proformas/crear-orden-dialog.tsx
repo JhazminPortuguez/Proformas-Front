@@ -16,11 +16,13 @@ import { ordenes as ordenesApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { OrdenInput, User } from "@/lib/api/types";
-import { isValidDateOnly } from "@/lib/proformas";
+import { isValidDateOnly, puedeAbrirOrden } from "@/lib/proformas";
 
 interface CrearOrdenDialogProps {
   proformaId: number;
   proformaNumero: string;
+  /** Usuario de la sesión: decide si después de crear se abre la orden. */
+  usuario: { id: number; rol: string };
   /** Solo admin recibe la lista; sin ella el formulario no muestra operario. */
   operarios?: readonly User[];
   /** Abre el formulario al entrar (por ejemplo desde el listado de proformas). */
@@ -30,6 +32,7 @@ interface CrearOrdenDialogProps {
 export function CrearOrdenDialog({
   proformaId,
   proformaNumero,
+  usuario,
   operarios = [],
   autoOpen = false,
 }: CrearOrdenDialogProps) {
@@ -94,7 +97,11 @@ export function CrearOrdenDialog({
       setFecha("");
       setObservaciones("");
       setOperarioId("");
-      router.push(`/ordenes/${orden.id}`);
+      // Un operario no puede abrir una orden que no tiene asignada: en ese
+      // caso se queda en la proforma, que muestra el número de la orden.
+      if (puedeAbrirOrden(usuario, orden.operario_id)) {
+        router.push(`/ordenes/${orden.id}`);
+      }
       startTransition(() => router.refresh());
     } catch (caught) {
       if (

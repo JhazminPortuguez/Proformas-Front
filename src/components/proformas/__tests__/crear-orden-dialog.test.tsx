@@ -34,12 +34,16 @@ describe("CrearOrdenDialog", () => {
   });
 
   it("crea la orden con fecha y observaciones y navega al detalle", async () => {
-    mocks.create.mockResolvedValue({ id: 9, numero: "ORD-000009" });
+    mocks.create.mockResolvedValue({ id: 9, numero: "ORD-000009", operario_id: null });
 
     const user = userEvent.setup();
 
     render(
-      <CrearOrdenDialog proformaId={12} proformaNumero="PRF-000012" />,
+      <CrearOrdenDialog
+        proformaId={12}
+        proformaNumero="PRF-000012"
+        usuario={{ id: 1, rol: "admin" }}
+      />,
     );
 
     await user.click(screen.getByRole("button", { name: "Crear orden" }));
@@ -68,5 +72,29 @@ describe("CrearOrdenDialog", () => {
     });
 
     expect(mocks.push).toHaveBeenCalledWith("/ordenes/9");
+  });
+
+  it("un operario que crea una orden sin asignar se queda en la proforma", async () => {
+    mocks.push.mockClear();
+    mocks.create.mockResolvedValue({ id: 10, numero: "OS-2026-000010", operario_id: null });
+
+    const user = userEvent.setup();
+
+    render(
+      <CrearOrdenDialog
+        proformaId={12}
+        proformaNumero="PRF-000012"
+        usuario={{ id: 2, rol: "operario" }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Crear orden" }));
+    const dialog = screen.getByRole("dialog", { name: "Crear orden de servicio" });
+    await user.click(within(dialog).getByRole("button", { name: "Crear orden" }));
+
+    await waitFor(() => expect(mocks.create).toHaveBeenCalled());
+    // No navega a una orden que respondería "sin permisos".
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(mocks.refresh).toHaveBeenCalled();
   });
 });
