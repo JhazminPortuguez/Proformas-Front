@@ -279,11 +279,13 @@ export type TipoOrdenEvento =
   | "FINALIZACION"
   | "CANCELACION"
   | "CIERRE"
-  | "CONSUMO";
+  | "CONSUMO"
+  | "REPROGRAMACION";
 
 export type OrdenAccion =
   | "ver"
   | "asignar"
+  | "reprogramar"
   | "iniciar"
   | "finalizar"
   | "cancelar"

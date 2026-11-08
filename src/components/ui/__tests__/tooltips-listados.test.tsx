@@ -60,7 +60,7 @@ async function tooltipDe(element: HTMLElement): Promise<string | null> {
   return texto;
 }
 
-const PROFORMA = { id: 4, numero: "PR-2026-000004" } as Proforma;
+const PROFORMA = { id: 4, numero: "PR-2026-000004", total: 120 } as Proforma;
 
 describe("tooltips en las acciones de proformas", () => {
   it("cada icono de la tabla explica lo que hace en pocas palabras", async () => {

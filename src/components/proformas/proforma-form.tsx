@@ -12,7 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Alert, Button } from "@heroui/react";
-import { ActionTooltip } from "@/components/ui/action-tooltip";
+import { ActionTooltip, BOTON_BLOQUEADO } from "@/components/ui/action-tooltip";
 import { CatalogSelect } from "@/components/ui/catalog-select";
 import type { CatalogOption } from "@/components/ui/catalog-select";
 import { TextAreaControl, TextFieldControl } from "@/components/ui/fields";
@@ -39,6 +39,7 @@ import {
   compareDateOnly,
   computeProformaTotals,
   isValidDateOnly,
+  motivoNoEnviar,
   parseCantidad,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
@@ -637,6 +638,8 @@ export function ProformaForm({
     }
   }
 
+  const bloqueoEnvio = motivoNoEnviar(totals.total);
+
   function setIntent(intent: "draft" | "send") {
     intentRef.current = intent;
   }
@@ -678,15 +681,30 @@ export function ProformaForm({
             >
               {pending ? "Guardando…" : "Guardar borrador"}
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isDisabled={pending}
-              onPress={() => setIntent("send")}
-            >
-              {pending ? "Guardando…" : "Guardar y enviar"}
-            </Button>
+            {bloqueoEnvio ? (
+              // Se puede guardar el borrador, pero no enviarlo con total Bs 0.
+              <ActionTooltip label={bloqueoEnvio}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  aria-disabled="true"
+                  className={BOTON_BLOQUEADO}
+                >
+                  Guardar y enviar
+                </Button>
+              </ActionTooltip>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isDisabled={pending}
+                onPress={() => setIntent("send")}
+              >
+                {pending ? "Guardando…" : "Guardar y enviar"}
+              </Button>
+            )}
           </>
         }
       />

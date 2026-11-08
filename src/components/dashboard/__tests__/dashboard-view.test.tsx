@@ -165,7 +165,7 @@ describe("DashboardView", () => {
       within(pulso).getByRole("link", { name: /Stock bajo/ }),
     ).toHaveAttribute("href", "/inventario?tab=existencias&bajo_stock=1");
     expect(
-      within(pulso).getByRole("link", { name: /Cotizado del mes/ }),
+      within(pulso).getByRole("link", { name: /En espera de respuesta/ }),
     ).toHaveAttribute("href", "/proformas");
   });
 

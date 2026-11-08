@@ -356,6 +356,17 @@ export function puedeAbrirOrden(
   return usuario.rol === "operario" && operarioId != null && operarioId === usuario.id;
 }
 
+/** Mismo mensaje que devuelve el back al rechazar el envío. */
+export const MOTIVO_TOTAL_CERO =
+  "La proforma debe tener un total mayor a Bs 0 para enviarse.";
+
+/** Por qué no se puede enviar una proforma con ese total, o `null` si se puede. */
+export function motivoNoEnviar(total: number | string | null | undefined): string | null {
+  const valor = typeof total === "string" ? Number(total) : (total ?? 0);
+
+  return Number.isFinite(valor) && valor > 0 ? null : MOTIVO_TOTAL_CERO;
+}
+
 /** Texto para una orden que el usuario no puede abrir. */
 export function ordenNoVisibleNota(operarioId: number | null | undefined): string {
   return operarioId == null ? "sin asignar" : "asignada a otro operario";

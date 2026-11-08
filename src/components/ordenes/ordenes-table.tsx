@@ -139,6 +139,7 @@ export function OrdenesTable({
           acciones={Array.from(accionesOrden(orden, permisos))}
           operarios={operarios}
           montoCierre={ordenMontoCierre(orden)}
+          fechaProgramada={orden.fecha_programada}
           display="icons"
         />
       ),
@@ -262,6 +263,7 @@ export function OrdenesTable({
                     acciones={Array.from(accionesOrden(orden, permisos))}
                     operarios={operarios}
                     montoCierre={ordenMontoCierre(orden)}
+                    fechaProgramada={orden.fecha_programada}
                     display="labels"
                   />
                 </div>

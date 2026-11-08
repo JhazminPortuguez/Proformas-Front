@@ -262,7 +262,7 @@ export function dashboardKpis(data: DashboardData): DashboardKpi[] {
     },
     {
       key: "cotizado",
-      label: "Cotizado del mes",
+      label: "En espera de respuesta",
       value: dashboardCotizadoMes(data),
       hint: cotizadoHint(data),
       href: "/proformas",

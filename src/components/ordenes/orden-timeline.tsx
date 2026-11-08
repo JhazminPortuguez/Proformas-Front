@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   Check,
   Clock,
   FileText,
@@ -34,6 +35,7 @@ const ICONS: Record<TipoOrdenEvento, LucideIcon> = {
   CANCELACION: X,
   CIERRE: Lock,
   CONSUMO: Package,
+  REPROGRAMACION: CalendarClock,
 };
 
 function ordenarEventos(eventos: readonly OrdenEvento[]): OrdenEvento[] {

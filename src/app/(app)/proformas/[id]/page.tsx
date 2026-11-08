@@ -208,6 +208,7 @@ export default async function ProformaDetallePage({
               numero={proforma.numero}
               acciones={Array.from(acciones)}
               canDelete={canDelete}
+              total={proforma.total}
             />
           </>
         }

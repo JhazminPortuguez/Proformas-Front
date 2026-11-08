@@ -10,6 +10,17 @@ import { Tooltip } from "@heroui/react";
  */
 const DELAY_MS = 400;
 
+/** HeroUI corta en cualquier letra (`break-all`); un motivo largo se parte por palabras. */
+const CONTENIDO = "break-normal!";
+
+/**
+ * Botón deshabilitado que explica el motivo en un tooltip. Se marca con
+ * `aria-disabled` (no `disabled`) y se reactivan los eventos del puntero,
+ * porque HeroUI pone `pointer-events: none` a `.button[aria-disabled=true]` y
+ * el tooltip no se abriría al pasar el mouse.
+ */
+export const BOTON_BLOQUEADO = "pointer-events-auto! cursor-not-allowed opacity-50";
+
 interface ActionTooltipProps {
   label: string;
   /** Un `Button` de HeroUI: hace de disparador por sí mismo. */
@@ -20,7 +31,7 @@ export function ActionTooltip({ label, children }: ActionTooltipProps) {
   return (
     <Tooltip delay={DELAY_MS} closeDelay={0}>
       {children}
-      <Tooltip.Content>{label}</Tooltip.Content>
+      <Tooltip.Content className={CONTENIDO}>{label}</Tooltip.Content>
     </Tooltip>
   );
 }
@@ -48,7 +59,7 @@ export function LinkTooltip({ label, children }: LinkTooltipProps) {
           })
         }
       />
-      <Tooltip.Content>{label}</Tooltip.Content>
+      <Tooltip.Content className={CONTENIDO}>{label}</Tooltip.Content>
     </Tooltip>
   );
 }

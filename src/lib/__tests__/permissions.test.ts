@@ -21,6 +21,12 @@ describe("permissions", () => {
     expect(can(user("admin"), "ordenes.cerrar")).toBe(true);
   });
 
+  it("solo el admin reprograma órdenes", () => {
+    expect(can(user("admin"), "ordenes.reprogramar")).toBe(true);
+    expect(can(user("operario"), "ordenes.reprogramar")).toBe(false);
+    expect(can(user("cliente"), "ordenes.reprogramar")).toBe(false);
+  });
+
   it("el operario opera pero no elimina ni administra", () => {
     expect(can(user("operario"), "clientes.crear")).toBe(true);
     expect(can(user("operario"), "proformas.enviar")).toBe(true);

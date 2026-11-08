@@ -23,6 +23,7 @@ import {
   parseTipoEventoOrden,
   puedeAccionOrden,
   tipoOrdenItemLabel,
+  validarReprogramacion,
 } from "@/lib/ordenes";
 
 function buildOrden(overrides: Partial<Orden> = {}): Orden {
@@ -123,12 +124,13 @@ describe("acciones de una orden", () => {
     expect([...accionesOrden(buildOrden())]).toEqual([
       "ver",
       "asignar",
+      "reprogramar",
       "cancelar",
     ]);
 
     expect(
       [...accionesOrden(buildOrden({ estado: "ASIGNADA" }))],
-    ).toEqual(["ver", "iniciar", "cancelar"]);
+    ).toEqual(["ver", "reprogramar", "iniciar", "cancelar"]);
 
     expect(
       [...accionesOrden(buildOrden({ estado: "EN_PROCESO" }))],
@@ -152,6 +154,48 @@ describe("acciones de una orden", () => {
     expect([...accionesOrden(buildOrden({ estado: "CANCELADA" }))]).toEqual([
       "ver",
     ]);
+  });
+
+  it("reprogramar solo se ofrece a quien puede (el admin)", () => {
+    const pendiente = buildOrden({
+      estado: "PENDIENTE",
+      acciones_disponibles: ["ver", "asignar", "reprogramar", "cancelar"],
+    });
+
+    expect(accionesOrden(pendiente).has("reprogramar")).toBe(true);
+    expect(
+      accionesOrden(pendiente, { canReschedule: false }).has("reprogramar"),
+    ).toBe(false);
+    expect(normalizarAccionOrden("reschedule")).toBe("reprogramar");
+
+    // Sin el campo del back, el fallback no lo ofrece en proceso ni a un operario.
+    expect(
+      accionesOrden(buildOrden({ estado: "EN_PROCESO" })).has("reprogramar"),
+    ).toBe(false);
+    expect(
+      accionesOrden(buildOrden({ estado: "ASIGNADA" }), {
+        canReschedule: false,
+      }).has("reprogramar"),
+    ).toBe(false);
+  });
+
+  it("valida la nueva fecha antes de reprogramar", () => {
+    expect(validarReprogramacion("", "2026-11-05")).toBe(
+      "Elige la nueva fecha programada.",
+    );
+    expect(validarReprogramacion("2026-02-30", null)).toBe(
+      "Usa una fecha válida (AAAA-MM-DD).",
+    );
+    expect(validarReprogramacion("2026-11-05", "2026-11-05")).toBe(
+      "La fecha nueva es igual a la fecha programada actual.",
+    );
+    expect(validarReprogramacion("2026-11-12", "2026-11-05")).toBeNull();
+    expect(validarReprogramacion("2026-11-12", null)).toBeNull();
+  });
+
+  it("el historial nombra la reprogramación", () => {
+    expect(parseTipoEventoOrden("REPROGRAMACION")).toBe("REPROGRAMACION");
+    expect(eventoOrdenMeta("REPROGRAMACION").label).toBe("Fecha reprogramada");
   });
 
   it("puedeAccionOrden consulta el mismo set", () => {
