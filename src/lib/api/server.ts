@@ -24,6 +24,12 @@ import type {
   MovimientoInventario,
   Orden,
   Paginated,
+  PortalEmpresa,
+  PortalProforma,
+  PortalProformaEstado,
+  PortalResumen,
+  PortalServicio,
+  PortalSolicitud,
   Producto,
   Proforma,
   ReporteClienteOpcion,
@@ -544,4 +550,81 @@ export async function getCuentaPorCobrar(id: number): Promise<CuentaPorCobrar> {
   }
 
   return body as CuentaPorCobrar;
+}
+
+// ---------------------------------------------------------------------------
+// Portal del cliente. El back filtra por el cliente de la sesión; un registro
+// de otro cliente (o una proforma en borrador) responde 404.
+// ---------------------------------------------------------------------------
+
+/** Detalle del portal: `null` cuando no existe o no es del cliente (404). */
+async function requestOr404<T>(path: string): Promise<T | null> {
+  try {
+    return await request<T>(path);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+
+    throw error;
+  }
+}
+
+export function getPortalResumen(): Promise<PortalResumen> {
+  return request<PortalResumen>("/portal/resumen");
+}
+
+export function getPortalEmpresa(): Promise<PortalEmpresa> {
+  return request<PortalEmpresa>("/portal/empresa");
+}
+
+export function getPortalServicios({
+  search = "",
+  page = 1,
+}: { search?: string; page?: number } = {}): Promise<Paginated<PortalServicio>> {
+  return request<Paginated<PortalServicio>>(
+    `/portal/servicios${buildQuery({ search, page: page > 1 ? page : undefined })}`,
+  );
+}
+
+export function getPortalServicio(id: number): Promise<PortalServicio | null> {
+  return requestOr404<PortalServicio>(`/portal/servicios/${id}`);
+}
+
+export function getPortalSolicitudes({
+  estado = "",
+  page = 1,
+  perPage,
+}: { estado?: string; page?: number; perPage?: number } = {}): Promise<Paginated<PortalSolicitud>> {
+  return request<Paginated<PortalSolicitud>>(
+    `/portal/solicitudes${buildQuery({
+      estado,
+      page: page > 1 ? page : undefined,
+      per_page: perPage,
+    })}`,
+  );
+}
+
+export function getPortalSolicitud(id: number): Promise<PortalSolicitud | null> {
+  return requestOr404<PortalSolicitud>(`/portal/solicitudes/${id}`);
+}
+
+export function getPortalProformas({
+  estado = "",
+  page = 1,
+  perPage,
+}: {
+  estado?: PortalProformaEstado | "";
+  page?: number;
+  perPage?: number;
+} = {}): Promise<Paginated<PortalProforma>> {
+  return request<Paginated<PortalProforma>>(
+    `/portal/proformas${buildQuery({
+      estado,
+      page: page > 1 ? page : undefined,
+      per_page: perPage,
+    })}`,
+  );
+}
+
+export function getPortalProforma(id: number): Promise<PortalProforma | null> {
+  return requestOr404<PortalProforma>(`/portal/proformas/${id}`);
 }

@@ -17,6 +17,8 @@ import type {
   Orden,
   OrdenInput,
   PagoCuentaInput,
+  PortalSolicitud,
+  PortalSolicitudInput,
   Proforma,
   ProformaInput,
   RegistroInput,
@@ -395,3 +397,10 @@ export const inventario = {
 
 /** Pide la cookie CSRF antes de un formulario de login/registro. */
 export { ensureCsrfCookie };
+
+/** Portal del cliente: el cliente de la solicitud sale de la sesión. */
+export const portal = {
+  crearSolicitud(payload: PortalSolicitudInput): Promise<PortalSolicitud> {
+    return request<PortalSolicitud>("/portal/solicitudes", jsonBody(payload));
+  },
+};

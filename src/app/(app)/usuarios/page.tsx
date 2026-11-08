@@ -4,11 +4,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { UsuariosTable } from "@/components/usuarios/usuarios-table";
-import { getUsuarios, requireUser } from "@/lib/api/server";
+import { getReporteClientes, getUsuarios, requireUser } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import { parseFilasPorPagina } from "@/lib/paginacion";
-import type { Paginated, User } from "@/lib/api/types";
+import type { Paginated, ReporteClienteOpcion, User } from "@/lib/api/types";
 
 export const metadata: Metadata = {
   title: "Usuarios",
@@ -32,9 +32,13 @@ export default async function UsuariosPage({
   const perPage = parseFilasPorPagina(first(params.per_page));
 
   let result: Paginated<User>;
+  let clientes: ReporteClienteOpcion[];
 
   try {
-    result = await getUsuarios({ search, page, perPage });
+    [result, clientes] = await Promise.all([
+      getUsuarios({ search, page, perPage }),
+      getReporteClientes(),
+    ]);
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {
       redirect("/login");
@@ -55,7 +59,7 @@ export default async function UsuariosPage({
     <>
       <PageHeader
         title="Usuarios"
-        description="Administra quién entra al backoffice. Solo un administrador puede cambiar roles o desactivar cuentas."
+        description="Administra quién entra al sistema y al portal de clientes. Solo un administrador puede crear usuarios, cambiar roles o desactivar cuentas."
       />
 
       <UsuariosTable
@@ -63,6 +67,7 @@ export default async function UsuariosPage({
         meta={result.meta}
         query={{ search, page, perPage }}
         currentUserId={user.id}
+        clientes={clientes}
       />
     </>
   );

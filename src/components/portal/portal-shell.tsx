@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FileStack, LogOut } from "lucide-react";
 import { Alert, Avatar, Button, Chip } from "@heroui/react";
@@ -9,6 +9,8 @@ import type { User } from "@/lib/api/types";
 import { isApiError } from "@/lib/api/types";
 import { auth } from "@/lib/api/client";
 import { ThemeToggle, useSystemThemeSync } from "@/components/layout/theme-toggle";
+import { PORTAL_NAV, portalNavActivo } from "@/lib/portal";
+import { cn } from "@/lib/utils";
 
 function initials(name: string): string {
   return (
@@ -29,6 +31,7 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +116,32 @@ export function PortalShell({
             </Button>
           </div>
         </div>
+
+        <nav aria-label="Menú del portal" className="border-t border-border">
+          <ul className="mx-auto flex w-full max-w-5xl gap-1 overflow-x-auto px-2 sm:px-4">
+            {PORTAL_NAV.map((item) => {
+              const activo = portalNavActivo(pathname, item);
+
+              return (
+                <li key={item.href} className="shrink-0">
+                  <Link
+                    href={item.href}
+                    aria-current={activo ? "page" : undefined}
+                    className={cn(
+                      "-mb-px inline-flex items-center whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+                      activo
+                        ? "border-accent text-foreground"
+                        : "border-transparent text-muted hover:border-border hover:text-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       </header>
 
       <main
