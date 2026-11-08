@@ -48,7 +48,13 @@ const TAB_KEYS = ["resumen", "items", "materiales", "historial"] as const;
 
 type TabKey = (typeof TAB_KEYS)[number];
 
-const ACCIONES_BARRA = ["iniciar", "finalizar", "cancelar", "cerrar"] as const;
+const ACCIONES_BARRA = [
+  "reprogramar",
+  "iniciar",
+  "finalizar",
+  "cancelar",
+  "cerrar",
+] as const;
 
 const ACTION_LINK =
   "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -109,6 +115,7 @@ export default async function OrdenDetallePage({
     canAssign: can(user, "ordenes.asignar"),
     canCancel: can(user, "ordenes.cancelar"),
     canClose: can(user, "ordenes.cerrar"),
+    canReschedule: can(user, "ordenes.reprogramar"),
   };
   const acciones = accionesOrden(orden, permisos);
 
@@ -209,6 +216,7 @@ export default async function OrdenDetallePage({
                   acciones={Array.from(acciones)}
                   operarios={operarios}
                   montoCierre={ordenMontoCierre(orden)}
+                  fechaProgramada={orden.fecha_programada}
                   display="detail"
                   hideVer
                 />

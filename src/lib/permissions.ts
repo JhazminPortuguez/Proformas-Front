@@ -27,6 +27,7 @@ export type Permission =
   | "ordenes.ver"
   | "ordenes.crear"
   | "ordenes.asignar"
+  | "ordenes.reprogramar"
   | "ordenes.avanzar"
   | "ordenes.cancelar"
   | "ordenes.cerrar"
@@ -62,6 +63,7 @@ const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
   "ordenes.ver": ["admin", "operario"],
   "ordenes.crear": ["admin", "operario"],
   "ordenes.asignar": ["admin", "operario"],
+  "ordenes.reprogramar": ["admin"],
   "ordenes.avanzar": ["admin", "operario"],
   "ordenes.cancelar": ["admin"],
   "ordenes.cerrar": ["admin"],
@@ -124,6 +126,7 @@ export function rolesFor(permission: Permission): readonly Rol[] {
 export const PERMISO_ACCION_ORDEN: Record<OrdenAccion, Permission> = {
   ver: "ordenes.ver",
   asignar: "ordenes.asignar",
+  reprogramar: "ordenes.reprogramar",
   iniciar: "ordenes.avanzar",
   finalizar: "ordenes.avanzar",
   cancelar: "ordenes.cancelar",

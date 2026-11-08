@@ -294,6 +294,15 @@ export const ordenes = {
     return unwrapResource(body);
   },
 
+  async reprogramar(id: number, fechaProgramada: string): Promise<Orden> {
+    const body = await request<Orden | { data: Orden }>(
+      `/ordenes/${id}/reprogramar`,
+      jsonBody({ fecha_programada: fechaProgramada }),
+    );
+
+    return unwrapResource(body);
+  },
+
   async iniciar(id: number, observaciones?: string): Promise<Orden> {
     const body = await request<Orden | { data: Orden }>(
       `/ordenes/${id}/iniciar`,

@@ -102,6 +102,7 @@ export default async function OrdenesPage({
     canAssign: can(user, "ordenes.asignar"),
     canCancel: can(user, "ordenes.cancelar"),
     canClose: can(user, "ordenes.cerrar"),
+    canReschedule: can(user, "ordenes.reprogramar"),
   };
 
   let ordenes: Paginated<Orden>;

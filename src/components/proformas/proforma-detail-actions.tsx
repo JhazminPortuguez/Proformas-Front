@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Send, Trash2, X } from "lucide-react";
 import { Button } from "@heroui/react";
+import { ActionTooltip, BOTON_BLOQUEADO } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { proformas as proformasApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { AccionProforma } from "@/lib/proformas";
+import { motivoNoEnviar, type AccionProforma } from "@/lib/proformas";
 
 type DetailAction = Extract<
   AccionProforma,
@@ -21,6 +22,8 @@ interface ProformaDetailActionsProps {
   numero: string;
   acciones: readonly AccionProforma[];
   canDelete: boolean;
+  /** Con total Bs 0 el botón Enviar queda deshabilitado y explica por qué. */
+  total: number;
 }
 
 export function ProformaDetailActions({
@@ -28,6 +31,7 @@ export function ProformaDetailActions({
   numero,
   acciones,
   canDelete,
+  total,
 }: ProformaDetailActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -37,6 +41,7 @@ export function ProformaDetailActions({
   const [error, setError] = useState<string | null>(null);
 
   const available = new Set(acciones);
+  const bloqueoEnvio = motivoNoEnviar(total);
 
   function request(action: DetailAction) {
     setError(null);
@@ -115,10 +120,24 @@ export function ProformaDetailActions({
     <>
       <div className="flex flex-wrap items-center gap-2">
         {available.has("enviar") ? (
-          <Button variant="primary" size="sm" onPress={() => request("enviar")}>
-            <Send aria-hidden className="size-4" />
-            Enviar
-          </Button>
+          bloqueoEnvio ? (
+            <ActionTooltip label={bloqueoEnvio}>
+              <Button
+                variant="primary"
+                size="sm"
+                aria-disabled="true"
+                className={BOTON_BLOQUEADO}
+              >
+                <Send aria-hidden className="size-4" />
+                Enviar
+              </Button>
+            </ActionTooltip>
+          ) : (
+            <Button variant="primary" size="sm" onPress={() => request("enviar")}>
+              <Send aria-hidden className="size-4" />
+              Enviar
+            </Button>
+          )
         ) : null}
 
         {available.has("aceptar") ? (

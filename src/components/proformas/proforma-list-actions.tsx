@@ -13,10 +13,14 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@heroui/react";
-import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
+import {
+  ActionTooltip,
+  BOTON_BLOQUEADO,
+  LinkTooltip,
+} from "@/components/ui/action-tooltip";
 import { proformaPdfUrl } from "@/lib/api/client";
 import type { Proforma } from "@/lib/api/types";
-import type { AccionProforma } from "@/lib/proformas";
+import { motivoNoEnviar, type AccionProforma } from "@/lib/proformas";
 import { cn } from "@/lib/utils";
 
 export type ProformaActionRequest = Extract<
@@ -56,6 +60,7 @@ export function ProformaListActions({
   const numero = proforma.numero;
   const href = `/proformas/${proforma.id}`;
   const editHref = `/proformas/${proforma.id}/editar`;
+  const bloqueoEnvio = motivoNoEnviar(proforma.total);
 
   /** En la tabla, el icono muestra un tooltip con lo que hace. */
   function conTooltip(tooltip: string, element: ReactElement) {
@@ -140,7 +145,26 @@ export function ProformaListActions({
         : null}
 
       {acciones.has("enviar")
-        ? actionButton("enviar", "Enviar", Send, "Enviar al cliente")
+        ? bloqueoEnvio
+          ? (
+              <ActionTooltip label={bloqueoEnvio}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isIconOnly={icon}
+                  aria-disabled="true"
+                  className={cn(
+                    icon ? ICON_BUTTON : "h-9 text-foreground",
+                    BOTON_BLOQUEADO,
+                  )}
+                  aria-label={`Enviar ${numero}`}
+                >
+                  <Send aria-hidden className="size-4" />
+                  {icon ? <span className="sr-only">Enviar</span> : "Enviar"}
+                </Button>
+              </ActionTooltip>
+            )
+          : actionButton("enviar", "Enviar", Send, "Enviar al cliente")
         : null}
 
       {acciones.has("aceptar")

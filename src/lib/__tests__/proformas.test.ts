@@ -5,6 +5,8 @@ import {
   computeProformaTotals,
   formatDiaMes,
   isValidDateOnly,
+  MOTIVO_TOTAL_CERO,
+  motivoNoEnviar,
   normalizarAccionProforma,
   normalizarBusqueda,
   parseCantidad,
@@ -260,5 +262,22 @@ describe("formatMoney con moneda", () => {
     expect(formatMoney(565, "USD")).toMatch(/USD\s?565,00/);
     expect(formatMoney(565, "EUR")).toMatch(/EUR\s?565,00/);
     expect(formatMoney(565, "XX")).toMatch(/Bs\s?565,00/);
+  });
+});
+
+describe("envío de una proforma en Bs 0", () => {
+  it("explica por qué no se puede enviar con total cero o sin total", () => {
+    expect(MOTIVO_TOTAL_CERO).toBe(
+      "La proforma debe tener un total mayor a Bs 0 para enviarse.",
+    );
+    expect(motivoNoEnviar(0)).toBe(MOTIVO_TOTAL_CERO);
+    expect(motivoNoEnviar("0.00")).toBe(MOTIVO_TOTAL_CERO);
+    expect(motivoNoEnviar(null)).toBe(MOTIVO_TOTAL_CERO);
+    expect(motivoNoEnviar(-5)).toBe(MOTIVO_TOTAL_CERO);
+  });
+
+  it("con un total positivo no hay motivo", () => {
+    expect(motivoNoEnviar(0.01)).toBeNull();
+    expect(motivoNoEnviar("410.00")).toBeNull();
   });
 });

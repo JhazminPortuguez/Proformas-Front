@@ -7,7 +7,7 @@ import type {
   TipoOrdenEvento,
 } from "@/lib/api/types";
 import { ordenEstadoMeta } from "@/lib/estados";
-import { TIPO_ITEM_LABEL, roundMoney } from "@/lib/proformas";
+import { TIPO_ITEM_LABEL, isValidDateOnly, roundMoney } from "@/lib/proformas";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatDateOnly } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export type { OrdenAccion };
 export const ACCIONES_ORDEN: readonly OrdenAccion[] = [
   "ver",
   "asignar",
+  "reprogramar",
   "iniciar",
   "finalizar",
   "cancelar",
@@ -38,6 +39,9 @@ const ALIAS_ACCIONES: Record<string, OrdenAccion> = {
   asignar: "asignar",
   asignar_operario: "asignar",
   assign: "asignar",
+  reprogramar: "reprogramar",
+  reprogramacion: "reprogramar",
+  reschedule: "reprogramar",
   iniciar: "iniciar",
   comenzar: "iniciar",
   start: "iniciar",
@@ -75,6 +79,8 @@ export interface AccionesOrdenOpciones {
   canAssign?: boolean;
   canCancel?: boolean;
   canClose?: boolean;
+  /** Solo el admin cambia la fecha programada. */
+  canReschedule?: boolean;
 }
 
 /**
@@ -91,12 +97,14 @@ export function accionesOrden(
     canAssign = true,
     canCancel = true,
     canClose = true,
+    canReschedule = true,
   }: AccionesOrdenOpciones = {},
 ): Set<OrdenAccion> {
   const permitida = (accion: OrdenAccion): boolean => {
     if (accion === "asignar") return canAssign;
     if (accion === "cancelar") return canCancel;
     if (accion === "cerrar") return canClose && !orden.cerrada_at;
+    if (accion === "reprogramar") return canReschedule;
 
     return true;
   };
@@ -120,9 +128,11 @@ export function accionesOrden(
   switch (orden.estado) {
     case "PENDIENTE":
       if (canAssign) acciones.add("asignar");
+      if (canReschedule) acciones.add("reprogramar");
       if (canCancel) acciones.add("cancelar");
       break;
     case "ASIGNADA":
+      if (canReschedule) acciones.add("reprogramar");
       acciones.add("iniciar");
       if (canCancel) acciones.add("cancelar");
       break;
@@ -332,7 +342,31 @@ export const ORDEN_EVENTO_META: Record<TipoOrdenEvento, OrdenEventoMeta> = {
     tone: "accent",
     description: "Se descontaron materiales del inventario para esta orden.",
   },
+  REPROGRAMACION: {
+    label: "Fecha reprogramada",
+    tone: "neutral",
+    description: "Se cambió la fecha programada de la orden.",
+  },
 };
+
+/**
+ * Fecha nueva para reprogramar: mensaje de error, o `null` si se puede enviar.
+ * El back valida lo mismo; esto evita un viaje con un dato que va a rechazar.
+ */
+export function validarReprogramacion(
+  fechaNueva: string,
+  fechaActual: string | null | undefined,
+): string | null {
+  const fecha = fechaNueva.trim();
+
+  if (!fecha) return "Elige la nueva fecha programada.";
+  if (!isValidDateOnly(fecha)) return "Usa una fecha válida (AAAA-MM-DD).";
+  if (fechaActual && fecha === fechaActual.slice(0, 10)) {
+    return "La fecha nueva es igual a la fecha programada actual.";
+  }
+
+  return null;
+}
 
 export function parseTipoEventoOrden(value: string): TipoOrdenEvento | null {
   const key = value.trim().toUpperCase().replaceAll(/[\s-]+/g, "_");

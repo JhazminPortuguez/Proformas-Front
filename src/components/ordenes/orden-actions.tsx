@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
+  CalendarClock,
   Check,
   Eye,
   Lock,
@@ -20,13 +21,14 @@ import {
 import { Alert, Button, Modal } from "@heroui/react";
 import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { SelectControl } from "@/components/ui/fields";
+import { SelectControl, TextFieldControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { ordenes as ordenesApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { OrdenAccion, User } from "@/lib/api/types";
-import { cn, firstError, formatMoney } from "@/lib/utils";
+import { validarReprogramacion } from "@/lib/ordenes";
+import { cn, firstError, formatDateOnly, formatMoney } from "@/lib/utils";
 
 type DialogAction = Extract<
   OrdenAccion,
@@ -48,6 +50,8 @@ interface OrdenActionsProps {
    * genera el cierre. Sin dato, la confirmación no muestra monto.
    */
   montoCierre?: { total: number; moneda?: string | null } | null;
+  /** Fecha programada actual (AAAA-MM-DD), para reprogramar. */
+  fechaProgramada?: string | null;
 }
 
 const ICON_LINK = cn(
@@ -119,6 +123,7 @@ export function OrdenActions({
   display = "icons",
   hideVer = false,
   montoCierre = null,
+  fechaProgramada = null,
 }: OrdenActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -132,6 +137,12 @@ export function OrdenActions({
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignFieldError, setAssignFieldError] = useState<string | null>(null);
   const [operarioId, setOperarioId] = useState("");
+
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [reschedulePending, setReschedulePending] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [rescheduleFieldError, setRescheduleFieldError] = useState<string | null>(null);
+  const [fechaNueva, setFechaNueva] = useState("");
 
   const icon = display === "icons";
   const available = new Set(acciones);
@@ -170,6 +181,54 @@ export function OrdenActions({
     setAssignFieldError(null);
     setOperarioId("");
     setAssignOpen(true);
+  }
+
+  function openReschedule() {
+    setRescheduleError(null);
+    setRescheduleFieldError(null);
+    setFechaNueva(fechaProgramada?.slice(0, 10) ?? "");
+    setRescheduleOpen(true);
+  }
+
+  async function submitReschedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const invalida = validarReprogramacion(fechaNueva, fechaProgramada);
+
+    if (invalida) {
+      setRescheduleFieldError(invalida);
+
+      return;
+    }
+
+    setReschedulePending(true);
+    setRescheduleError(null);
+    setRescheduleFieldError(null);
+
+    try {
+      await ordenesApi.reprogramar(ordenId, fechaNueva.trim());
+      announce(`Orden ${numero} reprogramada para el ${formatDateOnly(fechaNueva.trim())}.`);
+      setRescheduleOpen(false);
+      refresh();
+    } catch (caught) {
+      if (handleUnauthorized(caught)) return;
+
+      const campo = isApiError(caught) && caught.errors
+        ? firstError(caught.errors, "fecha_programada")
+        : undefined;
+
+      if (campo) {
+        setRescheduleFieldError(campo);
+      } else if (isApiError(caught) && caught.status === 403) {
+        setRescheduleError("No tienes permisos para reprogramar órdenes.");
+      } else {
+        setRescheduleError(
+          apiErrorMessage(caught, "No pudimos reprogramar la orden."),
+        );
+      }
+    } finally {
+      setReschedulePending(false);
+    }
   }
 
   async function confirm(reason?: string) {
@@ -343,6 +402,24 @@ export function OrdenActions({
             )
           : null}
 
+        {available.has("reprogramar")
+          ? conTooltip(
+              "Reprogramar fecha",
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly={icon}
+                className={cn(icon ? "size-9 text-muted" : "h-9 text-foreground")}
+                aria-label={`Reprogramar ${numero}`}
+                onPress={openReschedule}
+              >
+                <CalendarClock aria-hidden className="size-4" />
+                {icon ? <span className="sr-only">Reprogramar</span> : "Reprogramar"}
+              </Button>,
+            )
+          : null}
+
         {available.has("iniciar")
           ? actionButton("iniciar", "Iniciar", Play, "Iniciar")
           : null}
@@ -387,6 +464,85 @@ export function OrdenActions({
         isPending={pending}
         error={error}
       />
+
+      <Modal
+        isOpen={rescheduleOpen}
+        onOpenChange={(open) => {
+          if (!open && !reschedulePending) {
+            setRescheduleOpen(false);
+            setRescheduleError(null);
+            setRescheduleFieldError(null);
+          }
+        }}
+      >
+        <Modal.Trigger className="hidden" tabIndex={0}>
+          Abrir diálogo
+        </Modal.Trigger>
+        <Modal.Backdrop isDismissable={!reschedulePending}>
+          <Modal.Container placement="center" size="sm">
+            <Modal.Dialog aria-busy={reschedulePending}>
+              <form
+                onSubmit={submitReschedule}
+                noValidate
+                className="flex flex-col"
+              >
+                <Modal.Header>
+                  <Modal.Heading>Reprogramar orden</Modal.Heading>
+                  <p className="text-sm text-muted">
+                    {fechaProgramada
+                      ? `La orden ${numero} está programada para el ${formatDateOnly(fechaProgramada)}.`
+                      : `La orden ${numero} todavía no tiene fecha programada.`}{" "}
+                    El cambio queda en el historial con la fecha anterior y la nueva.
+                  </p>
+                </Modal.Header>
+
+                <Modal.Body className="mt-4 flex flex-col gap-3">
+                  {rescheduleError ? (
+                    <Alert status="danger" role="alert">
+                      <Alert.Indicator />
+                      <Alert.Content>
+                        <Alert.Description>{rescheduleError}</Alert.Description>
+                      </Alert.Content>
+                    </Alert>
+                  ) : null}
+
+                  <TextFieldControl
+                    name="fecha_programada"
+                    label="Nueva fecha programada"
+                    type="date"
+                    value={fechaNueva}
+                    onChange={(value) => {
+                      setFechaNueva(value);
+                      setRescheduleFieldError(null);
+                    }}
+                    error={rescheduleFieldError ?? undefined}
+                    isRequired
+                    isDisabled={reschedulePending}
+                  />
+                </Modal.Body>
+
+                <Modal.Footer className="mt-5 justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    onPress={() => setRescheduleOpen(false)}
+                    isDisabled={reschedulePending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    isDisabled={reschedulePending}
+                  >
+                    {reschedulePending ? "Guardando…" : "Reprogramar"}
+                  </Button>
+                </Modal.Footer>
+              </form>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
 
       <Modal
         isOpen={assignOpen}
