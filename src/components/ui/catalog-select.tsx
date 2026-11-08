@@ -66,12 +66,6 @@ export function CatalogSelect({
     >
       <Label>
         {label}
-        {isRequired ? (
-          <span aria-hidden className="text-danger">
-            {" "}
-            *
-          </span>
-        ) : null}
       </Label>
 
       <ComboBox.InputGroup>
