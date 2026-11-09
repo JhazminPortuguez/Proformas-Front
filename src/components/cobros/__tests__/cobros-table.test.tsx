@@ -97,6 +97,27 @@ describe("CobrosTable", () => {
     expect(within(table).getByText("Vencida 12 d")).toBeInTheDocument();
   });
 
+  it("marca con «Cancelación» los cobros por cancelación y no los de servicio", () => {
+    render(
+      <CobrosTable
+        cuentas={[
+          CUENTA,
+          { ...CUENTA, id: 8, numero: "CXC-000008", concepto: "CANCELACION" },
+        ]}
+        meta={{ ...META, total: 2 }}
+        query={{ ...COBROS_QUERY_VACIA }}
+        canPay
+        onPagar={vi.fn()}
+      />,
+    );
+
+    const table = screen.getByRole("grid", { name: "Cuentas por cobrar" });
+    const filas = within(table).getAllByRole("row").slice(1);
+
+    expect(within(filas[0]).queryByText("Cancelación")).not.toBeInTheDocument();
+    expect(within(filas[1]).getByText("Cancelación")).toBeInTheDocument();
+  });
+
   it("pide registrar el pago de la fila", async () => {
     const user = userEvent.setup();
     const { onPagar } = renderTable();

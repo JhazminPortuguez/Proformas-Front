@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  useCallback,
   useState,
   useTransition,
   type FormEvent,
@@ -21,12 +22,13 @@ import {
 import { Alert, Button, Modal } from "@heroui/react";
 import { ActionTooltip, LinkTooltip } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { CancelarOrdenDialog } from "@/components/ordenes/cancelar-orden-dialog";
 import { SelectControl, TextFieldControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { ordenes as ordenesApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { apiErrorMessage, mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { OrdenAccion, User } from "@/lib/api/types";
+import type { OrdenAccion, OrdenItem, User } from "@/lib/api/types";
 import { validarReprogramacion } from "@/lib/ordenes";
 import { cn, firstError, formatDateOnly, formatMoney } from "@/lib/utils";
 
@@ -52,6 +54,11 @@ interface OrdenActionsProps {
   montoCierre?: { total: number; moneda?: string | null } | null;
   /** Fecha programada actual (AAAA-MM-DD), para reprogramar. */
   fechaProgramada?: string | null;
+  /**
+   * Ítems de la orden (en el detalle), para listar los materiales consumidos
+   * al cancelar. Sin ellos, el diálogo de cancelar los pide.
+   */
+  items?: readonly OrdenItem[];
 }
 
 const ICON_LINK = cn(
@@ -124,6 +131,7 @@ export function OrdenActions({
   hideVer = false,
   montoCierre = null,
   fechaProgramada = null,
+  items,
 }: OrdenActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -143,6 +151,8 @@ export function OrdenActions({
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [rescheduleFieldError, setRescheduleFieldError] = useState<string | null>(null);
   const [fechaNueva, setFechaNueva] = useState("");
+
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const icon = display === "icons";
   const available = new Set(acciones);
@@ -171,7 +181,19 @@ export function OrdenActions({
     startTransition(() => router.refresh());
   }
 
+  const irAlLogin = useCallback(() => {
+    router.replace("/login");
+    router.refresh();
+  }, [router]);
+
   function request(action: DialogAction) {
+    // Cancelar tiene su propio diálogo: materiales consumidos y cobro.
+    if (action === "cancelar") {
+      setCancelOpen(true);
+
+      return;
+    }
+
     setError(null);
     setDialog(action);
   }
@@ -267,7 +289,7 @@ export function OrdenActions({
       if (isApiError(caught) && caught.status === 403) {
         setError("No tienes permisos para realizar esta acción.");
       } else {
-        setError(apiErrorMessage(caught, "No pudimos completar la acción."));
+        setError(mensajeDeError(caught, "No pudimos completar la acción."));
       }
     } finally {
       setPending(false);
@@ -463,6 +485,21 @@ export function OrdenActions({
         onConfirm={confirm}
         isPending={pending}
         error={error}
+      />
+
+      <CancelarOrdenDialog
+        isOpen={cancelOpen}
+        onOpenChange={setCancelOpen}
+        ordenId={ordenId}
+        numero={numero}
+        items={items}
+        moneda={montoCierre?.moneda ?? null}
+        onCancelled={(mensaje) => {
+          announce(mensaje);
+          setCancelOpen(false);
+          refresh();
+        }}
+        onUnauthorized={irAlLogin}
       />
 
       <Modal

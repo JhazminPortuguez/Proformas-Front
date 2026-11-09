@@ -39,6 +39,8 @@ interface ConfirmDialogProps {
   tone?: ConfirmDialogTone;
   /** Exige un motivo escrito para habilitar la confirmación. */
   requireReason?: boolean;
+  /** Aviso que no impide confirmar (por ejemplo, una proforma vencida). */
+  notice?: string | null;
   reasonLabel?: string;
   reasonPlaceholder?: string;
 }
@@ -57,6 +59,7 @@ export function ConfirmDialog({
   requireReason = false,
   reasonLabel = "Motivo",
   reasonPlaceholder = "Explica brevemente por qué…",
+  notice = null,
 }: ConfirmDialogProps) {
   const { announce } = useAnnouncer();
   const [reason, setReason] = useState("");
@@ -99,6 +102,15 @@ export function ConfirmDialog({
 
             <AlertDialog.Body className="space-y-3 text-sm text-muted">
               <p>{description}</p>
+
+              {notice ? (
+                <Alert status="warning">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>{notice}</Alert.Description>
+                  </Alert.Content>
+                </Alert>
+              ) : null}
 
               {requireReason ? (
                 <TextField

@@ -11,7 +11,7 @@ import { useAnnouncer } from "@/components/ui/announcer";
 import { ActivoChip, CatalogoChip } from "@/components/ui/status-chip";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { servicios as serviciosApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, Servicio } from "@/lib/api/types";
 import { filasParam } from "@/lib/paginacion";
@@ -130,7 +130,7 @@ export function ServiciosTable({
         );
       } else {
         setDeleteError(
-          apiErrorMessage(error, "No pudimos eliminar el servicio."),
+          mensajeDeError(error, "No pudimos eliminar el servicio."),
         );
       }
     } finally {

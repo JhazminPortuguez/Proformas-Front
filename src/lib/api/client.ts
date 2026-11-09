@@ -321,10 +321,27 @@ export const ordenes = {
     return unwrapResource(body);
   },
 
-  async cancelar(id: number, motivo: string): Promise<Orden> {
+  async get(id: number): Promise<Orden> {
+    const body = await request<Orden | { data: Orden }>(`/ordenes/${id}`);
+
+    return unwrapResource(body);
+  },
+
+  /**
+   * Cancela la orden. Con materiales consumidos se indica cuánto vuelve al
+   * stock por línea y si se cobra al cliente lo que no se devolvió.
+   */
+  async cancelar(
+    id: number,
+    motivo: string,
+    opciones: {
+      devoluciones?: { orden_item_id: number; cantidad: number }[];
+      cobrar_materiales?: boolean;
+    } = {},
+  ): Promise<Orden> {
     const body = await request<Orden | { data: Orden }>(
       `/ordenes/${id}/cancelar`,
-      jsonBody({ motivo }),
+      jsonBody({ motivo, ...opciones }),
     );
 
     return unwrapResource(body);

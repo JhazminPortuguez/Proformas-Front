@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Building2, FileText, Lock, Wallet } from "lucide-react";
 import { Alert } from "@heroui/react";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusChip } from "@/components/ui/status-chip";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { NavTabs } from "@/components/ui/nav-tabs";
@@ -217,6 +218,7 @@ export default async function OrdenDetallePage({
                   operarios={operarios}
                   montoCierre={ordenMontoCierre(orden)}
                   fechaProgramada={orden.fecha_programada}
+                  items={orden.items}
                   display="detail"
                   hideVer
                 />
@@ -254,6 +256,25 @@ export default async function OrdenDetallePage({
                 ? ` · ${formatDateTime(orden.cancelada_at)}`
                 : ""}
             </Alert.Description>
+            {orden.cuenta?.concepto === "CANCELACION" ? (
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-foreground">
+                <StatusChip tone="warning">Cancelación</StatusChip>
+                <span>
+                  Se cobran al cliente los materiales usados:{" "}
+                  {puedeVerCobro ? (
+                    <Link href={`/cobros/${orden.cuenta.id}`} className="font-medium underline underline-offset-4">
+                      {orden.cuenta.numero}
+                    </Link>
+                  ) : (
+                    orden.cuenta.numero
+                  )}
+                  {typeof orden.cuenta.monto_total === "number"
+                    ? ` por ${formatMoney(orden.cuenta.monto_total, orden.cuenta.moneda)}`
+                    : ""}
+                  .
+                </span>
+              </p>
+            ) : null}
           </Alert.Content>
         </Alert>
       ) : null}

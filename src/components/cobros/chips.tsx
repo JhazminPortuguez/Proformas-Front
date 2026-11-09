@@ -1,6 +1,11 @@
 import type { CuentaPorCobrar, PagoCuenta } from "@/lib/api/types";
 import { StatusChip } from "@/components/ui/status-chip";
-import { cuentaDiasVencida, cuentaEstaVencida, estadoCobroMeta } from "@/lib/cobros";
+import {
+  cuentaDiasVencida,
+  cuentaEstaVencida,
+  esCobroCancelacion,
+  estadoCobroMeta,
+} from "@/lib/cobros";
 
 export function EstadoCobroChip({ estado }: { estado: string }) {
   const meta = estadoCobroMeta(estado);
@@ -35,6 +40,22 @@ export function VencidaChip({
     <StatusChip tone={dias > 60 ? "danger" : "warning"}>
       {dias > 0 ? `Vencida ${dias} d` : "Vencida"}
     </StatusChip>
+  );
+}
+
+/**
+ * Marca los cobros por cancelación. Las cuentas de servicio (las de siempre)
+ * no llevan etiqueta para no recargar los listados.
+ */
+export function ConceptoCuentaChip({
+  cuenta,
+}: {
+  cuenta: { concepto?: string | null } | null | undefined;
+}) {
+  if (!esCobroCancelacion(cuenta)) return null;
+
+  return (
+    <StatusChip tone="warning">Cancelación</StatusChip>
   );
 }
 

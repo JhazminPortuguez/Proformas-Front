@@ -14,7 +14,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { proformas as proformasApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type {
   Cliente,
@@ -24,6 +24,7 @@ import type {
 } from "@/lib/api/types";
 import {
   accionesProforma,
+  avisoAceptarVencida,
   formatDiaMes,
   ordenNoVisibleNota,
   proformaExpirada,
@@ -246,7 +247,7 @@ export function ProformasTable({
         setActionError("No tienes permisos para realizar esta acción.");
       } else {
         setActionError(
-          apiErrorMessage(error, "No pudimos completar la acción."),
+          mensajeDeError(error, "No pudimos completar la acción."),
         );
       }
     } finally {
@@ -605,6 +606,11 @@ export function ProformasTable({
         pendingLabel={dialogConfig?.pendingLabel}
         tone={dialogConfig?.tone}
         requireReason={target?.action === "rechazar"}
+        notice={
+          target?.action === "aceptar"
+            ? avisoAceptarVencida(target.proforma, hoy)
+            : null
+        }
         reasonLabel="Motivo del rechazo"
         reasonPlaceholder="Explica por qué el cliente rechazó la propuesta…"
         onConfirm={confirmAction}

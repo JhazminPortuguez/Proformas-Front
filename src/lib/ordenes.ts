@@ -7,7 +7,12 @@ import type {
   TipoOrdenEvento,
 } from "@/lib/api/types";
 import { ordenEstadoMeta } from "@/lib/estados";
-import { TIPO_ITEM_LABEL, isValidDateOnly, roundMoney } from "@/lib/proformas";
+import {
+  TIPO_ITEM_LABEL,
+  isValidDateOnly,
+  parseCantidad,
+  roundMoney,
+} from "@/lib/proformas";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatDateOnly } from "@/lib/utils";
 
@@ -528,4 +533,91 @@ export function ordenesPestanas(
     label,
     href: ordenesHref({ ...query, estado, page: 1 }),
   }));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cancelar con materiales consumidos                                          */
+/* -------------------------------------------------------------------------- */
+
+/** Línea de material con algo consumido: la que el diálogo de cancelar lista. */
+export interface MaterialConsumido {
+  ordenItemId: number;
+  nombre: string;
+  unidad: string;
+  consumida: number;
+  precioUnitario: number;
+}
+
+export const MOTIVO_NADA_QUE_COBRAR =
+  "Se devolvieron al stock todos los materiales consumidos: no queda nada por cobrar.";
+
+/** Materiales de la orden que ya se consumieron (aunque sea en parte). */
+export function materialesConsumidos(
+  items: readonly OrdenItem[] | undefined,
+): MaterialConsumido[] {
+  return (items ?? [])
+    .filter(
+      (item) =>
+        item.tipo === "MATERIAL" &&
+        item.producto_id !== null &&
+        (item.cantidad_consumida ?? 0) > 0,
+    )
+    .map((item) => ({
+      ordenItemId: item.id,
+      nombre: item.producto?.nombre ?? item.descripcion ?? `Material #${item.id}`,
+      unidad: item.unidad_medida || item.producto?.unidad_medida || "unid.",
+      consumida: item.cantidad_consumida ?? 0,
+      precioUnitario: item.precio_unitario,
+    }));
+}
+
+/** Error de la cantidad a devolver de una línea, o `null` si es válida. */
+export function errorDevolucion(valor: string, consumida: number): string | null {
+  const texto = valor.trim();
+
+  if (texto === "") return null;
+
+  const cantidad = parseCantidad(texto);
+
+  if (!Number.isFinite(cantidad)) return "Escribe un número.";
+  if (cantidad < 0) return "No puede ser negativa.";
+  if (cantidad > consumida + 1e-9) {
+    return `No puede superar lo consumido (${consumida.toLocaleString("es-BO")}).`;
+  }
+
+  return null;
+}
+
+/** Cantidad devuelta de una línea: vacío o inválido cuenta como 0. */
+export function cantidadDevuelta(valor: string, consumida: number): number {
+  if (errorDevolucion(valor, consumida) !== null) return 0;
+
+  const cantidad = parseCantidad(valor.trim() || "0");
+
+  return Number.isFinite(cantidad) ? cantidad : 0;
+}
+
+/**
+ * Lo que se cobraría por cancelación: precio unitario de la línea × lo que no
+ * vuelve al stock, sin el descuento ni el impuesto de la proforma.
+ */
+export function cobroCancelacion(
+  materiales: readonly MaterialConsumido[],
+  devoluciones: Readonly<Record<number, string>>,
+): { total: number; lineas: { material: MaterialConsumido; noDevuelta: number; subtotal: number }[] } {
+  const lineas = materiales.map((material) => {
+    const devuelta = cantidadDevuelta(devoluciones[material.ordenItemId] ?? "", material.consumida);
+    const noDevuelta = Math.max(material.consumida - devuelta, 0);
+
+    return {
+      material,
+      noDevuelta,
+      subtotal: roundMoney(noDevuelta * material.precioUnitario),
+    };
+  });
+
+  return {
+    total: roundMoney(lineas.reduce((suma, linea) => suma + linea.subtotal, 0)),
+    lineas,
+  };
 }

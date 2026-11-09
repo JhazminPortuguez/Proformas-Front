@@ -8,9 +8,15 @@ import { ActionTooltip, BOTON_BLOQUEADO } from "@/components/ui/action-tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { proformas as proformasApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import { motivoNoEnviar, type AccionProforma } from "@/lib/proformas";
+import {
+  avisoAceptarVencida,
+  motivoNoEnviar,
+  todayDateOnly,
+  type AccionProforma,
+} from "@/lib/proformas";
+import type { EstadoProforma } from "@/lib/api/types";
 
 type DetailAction = Extract<
   AccionProforma,
@@ -24,6 +30,9 @@ interface ProformaDetailActionsProps {
   canDelete: boolean;
   /** Con total Bs 0 el botón Enviar queda deshabilitado y explica por qué. */
   total: number;
+  /** Para avisar al aceptar una proforma ya vencida. */
+  estado?: EstadoProforma;
+  fechaValidez?: string | null;
 }
 
 export function ProformaDetailActions({
@@ -32,6 +41,8 @@ export function ProformaDetailActions({
   acciones,
   canDelete,
   total,
+  estado = "ENVIADA",
+  fechaValidez = null,
 }: ProformaDetailActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -98,7 +109,7 @@ export function ProformaDetailActions({
       if (isApiError(caught) && caught.status === 403) {
         setError("No tienes permisos para realizar esta acción.");
       } else {
-        setError(apiErrorMessage(caught, "No pudimos completar la acción."));
+        setError(mensajeDeError(caught, "No pudimos completar la acción."));
       }
     } finally {
       setPending(false);
@@ -185,6 +196,14 @@ export function ProformaDetailActions({
         pendingLabel={config?.pendingLabel}
         tone={config?.tone}
         requireReason={target === "rechazar"}
+        notice={
+          target === "aceptar"
+            ? avisoAceptarVencida(
+                { estado, fecha_validez: fechaValidez },
+                todayDateOnly(),
+              )
+            : null
+        }
         reasonLabel="Motivo del rechazo"
         reasonPlaceholder="Explica por qué el cliente rechazó la propuesta…"
         onConfirm={confirm}

@@ -43,7 +43,9 @@ interface TextFieldControlProps extends BaseFieldProps {
   autoComplete?: string;
   placeholder?: string;
   inputMode?: "text" | "email" | "tel" | "numeric" | "decimal";
-  min?: number;
+  /** Número, o fecha `YYYY-MM-DD` en campos `type="date"`. */
+  min?: number | string;
+  max?: number | string;
   step?: number;
   autoFocus?: boolean;
 }
@@ -62,6 +64,7 @@ export function TextFieldControl({
   placeholder,
   inputMode,
   min,
+  max,
   step,
   autoFocus,
 }: TextFieldControlProps) {
@@ -90,6 +93,7 @@ export function TextFieldControl({
         placeholder={placeholder}
         inputMode={inputMode}
         min={min}
+        max={max}
         step={step}
         autoFocus={autoFocus}
       />

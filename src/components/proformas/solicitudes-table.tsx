@@ -13,7 +13,7 @@ import { SelectControl } from "@/components/ui/fields";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { solicitudes as solicitudesApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, PaginationMeta, Solicitud } from "@/lib/api/types";
 import { parseSolicitudEstado } from "@/lib/estados";
@@ -174,7 +174,7 @@ export function SolicitudesTable({
         );
       } else {
         setConvertError(
-          apiErrorMessage(error, "No pudimos convertir la solicitud."),
+          mensajeDeError(error, "No pudimos convertir la solicitud."),
         );
       }
     } finally {
