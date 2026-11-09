@@ -194,7 +194,8 @@ function cobradoHint(data: DashboardData): string {
 function cotizadoHint(data: DashboardData): string {
   const aceptado = dashboardAceptadoMes(data);
 
-  if (aceptado === null) return "Borradores y enviadas del mes";
+  // El monto son solo las proformas enviadas: los borradores no cuentan.
+  if (aceptado === null) return "Proformas enviadas del mes";
 
   return `Aceptado: ${formatMoney(aceptado)}`;
 }

@@ -208,6 +208,19 @@ describe("KPIs del dashboard", () => {
     ).toBe(90);
   });
 
+  it("sin monto aceptado, la ayuda de \"En espera de respuesta\" habla solo de enviadas", () => {
+    const kpis = Object.fromEntries(
+      dashboardKpis({ ...DATA, monto_aceptado_mes: undefined }).map((kpi) => [
+        kpi.key,
+        kpi,
+      ]),
+    );
+
+    expect(kpis.cotizado.label).toBe("En espera de respuesta");
+    expect(kpis.cotizado.hint).toBe("Proformas enviadas del mes");
+    expect(kpis.cotizado.hint).not.toMatch(/borrador/i);
+  });
+
   it("cae al monto histórico de proformas si falta `monto_cotizado_mes`", () => {
     expect(
       dashboardCotizadoMes({ ...LEGACY, monto_cotizado_mes: undefined }),
