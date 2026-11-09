@@ -38,7 +38,9 @@ test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", asy
   await expect(pulso).toBeVisible();
 
   const clientes = pulso.getByRole("link", { name: /Clientes/ });
-  const cotizado = pulso.getByRole("link", { name: /Cotizado del mes/ });
+  const cotizado = pulso.getByRole("link", {
+    name: /En espera de respuesta/,
+  });
   const stock = pulso.getByRole("link", { name: /Stock bajo/ });
 
   await expect(clientes).toBeVisible();
@@ -80,7 +82,7 @@ test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", asy
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/proformas");
   await expect(
-    page.getByRole("heading", { name: "Proformas", exact: true }),
+    page.getByRole("heading", { name: "Proformas y Solicitudes" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Nueva proforma" }),
