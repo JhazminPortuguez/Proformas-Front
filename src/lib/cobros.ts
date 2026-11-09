@@ -7,7 +7,7 @@ import type {
 import type { EstadoTone } from "@/lib/estados";
 import { roundMoney } from "@/lib/proformas";
 import { filasParam } from "@/lib/paginacion";
-import { buildQuery } from "@/lib/utils";
+import { buildQuery, formatDateNumeric } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /* Estado de cobro                                                             */
@@ -165,6 +165,41 @@ function dateOnlyMs(value: string | null | undefined): number | null {
   }
 
   return date.getTime();
+}
+
+/** Cobro generado al cancelar una orden con materiales usados. */
+export function esCobroCancelacion(
+  cuenta: { concepto?: string | null } | null | undefined,
+): boolean {
+  return cuenta?.concepto === "CANCELACION";
+}
+
+/**
+ * Error de la fecha de un pago, o `null` si es válida. Igual que el back: no
+ * puede ser futura (hora de Bolivia) ni anterior a la emisión de la cuenta.
+ */
+export function errorFechaPago(
+  fecha: string,
+  fechaEmision: string | null | undefined,
+  hoy: string = fechaHoyDateOnly(),
+): string | null {
+  const valor = fecha.trim();
+
+  if (!valor) return null;
+
+  if (dateOnlyMs(valor) === null) {
+    return "Escribe una fecha válida.";
+  }
+
+  if (valor > hoy) {
+    return `La fecha de pago no puede ser futura (hoy es ${formatDateNumeric(hoy)}).`;
+  }
+
+  if (fechaEmision && valor < fechaEmision.slice(0, 10)) {
+    return `La fecha de pago no puede ser anterior a la emisión de la cuenta (${formatDateNumeric(fechaEmision)}).`;
+  }
+
+  return null;
 }
 
 /** Diferencia en días calendario entre dos fechas date-only. */

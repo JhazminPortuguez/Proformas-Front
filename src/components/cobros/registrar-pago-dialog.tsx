@@ -15,6 +15,7 @@ import type { CuentaPorCobrar, ErroresValidacion, MetodoPago } from "@/lib/api/t
 import {
   METODO_PAGO_OPTIONS,
   cuentaSaldo,
+  errorFechaPago,
   fechaHoyDateOnly,
 } from "@/lib/cobros";
 import { formatMoney, parseDecimal } from "@/lib/utils";
@@ -22,7 +23,8 @@ import { formatMoney, parseDecimal } from "@/lib/utils";
 export type CuentaPagoResumen = Pick<
   CuentaPorCobrar,
   "id" | "numero" | "saldo" | "monto_total" | "total_pagado" | "moneda"
->;
+> &
+  Partial<Pick<CuentaPorCobrar, "fecha_emision">>;
 
 interface RegistrarPagoDialogProps {
   isOpen: boolean;
@@ -96,6 +98,10 @@ export function RegistrarPagoDialog({
         `El monto no puede superar el saldo pendiente (${formatMoney(saldo)}).`,
       ];
     }
+
+    const errorFecha = errorFechaPago(fechaPago, cuenta.fecha_emision);
+
+    if (errorFecha) errors.fecha_pago = [errorFecha];
 
     if (!METODO_PAGO_OPTIONS.some((option) => option.value === metodo)) {
       errors.metodo = ["Selecciona el método con el que se recibió el pago."];
@@ -239,6 +245,9 @@ export function RegistrarPagoDialog({
                     type="date"
                     value={fechaPago}
                     onChange={setFechaPago}
+                    min={cuenta?.fecha_emision ?? undefined}
+                    max={fechaHoyDateOnly()}
+                    description="No puede ser futura ni anterior a la emisión de la cuenta."
                     error={fieldErrors.fecha_pago?.[0]}
                     isDisabled={pending}
                   />

@@ -12,7 +12,7 @@ import { useAnnouncer } from "@/components/ui/announcer";
 import { ClienteEstadoChip } from "@/components/ui/status-chip";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { clientes as clientesApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Cliente, ClienteEstado, PaginationMeta } from "@/lib/api/types";
 import { filasParam } from "@/lib/paginacion";
@@ -119,7 +119,7 @@ export function ClientesTable({
         );
       } else {
         setDeleteError(
-          apiErrorMessage(error, "No pudimos eliminar el cliente."),
+          mensajeDeError(error, "No pudimos eliminar el cliente."),
         );
       }
     } finally {

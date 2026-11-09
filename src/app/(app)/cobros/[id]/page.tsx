@@ -8,7 +8,11 @@ import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { CuentaMontos } from "@/components/cobros/cuenta-montos";
-import { EstadoCobroChip, VencidaChip } from "@/components/cobros/chips";
+import {
+  ConceptoCuentaChip,
+  EstadoCobroChip,
+  VencidaChip,
+} from "@/components/cobros/chips";
 import { PagosTable } from "@/components/cobros/pagos-table";
 import { RegistrarPagoAction } from "@/components/cobros/registrar-pago-dialog";
 import { getCuentaPorCobrar, requireUser } from "@/lib/api/server";
@@ -132,6 +136,7 @@ export default async function CobroDetallePage({
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
+        <ConceptoCuentaChip cuenta={cuenta} />
         <EstadoCobroChip estado={cuenta.estado_cobro} />
         <VencidaChip cuenta={cuenta} />
         <span className="text-sm text-muted">{estadoMeta.description}</span>
@@ -155,6 +160,25 @@ export default async function CobroDetallePage({
               Antigüedad {aging.label}: {aging.description} Saldo pendiente:{" "}
               {formatMoney(saldo)}.
             </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
+      {cuenta.concepto === "CANCELACION" ? (
+        <Alert status="warning" className="mb-6 items-start">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Cobro por cancelación</Alert.Title>
+            <Alert.Description>
+              La orden se canceló después de usar materiales. Se cobra lo que no
+              se devolvió al stock, a precio de la orden y sin el descuento ni el
+              impuesto de la proforma.
+            </Alert.Description>
+            {cuenta.observaciones ? (
+              <p className="mt-2 whitespace-pre-line text-sm text-foreground">
+                {cuenta.observaciones}
+              </p>
+            ) : null}
           </Alert.Content>
         </Alert>
       ) : null}
@@ -208,6 +232,15 @@ export default async function CobroDetallePage({
                       · {ordenEstadoMeta(orden.estado).label}
                     </span>
                   ) : null}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-xs text-muted">Concepto</dt>
+                <dd className="mt-0.5 text-foreground">
+                  {cuenta.concepto === "CANCELACION"
+                    ? "Cobro por cancelación"
+                    : "Servicio (orden cerrada)"}
                 </dd>
               </div>
 

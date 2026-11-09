@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FOCUS_RING } from "@/components/dashboard/dashboard-ui";
 import { StatusChip } from "@/components/ui/status-chip";
+import { ConceptoCuentaChip } from "@/components/cobros/chips";
 import { BarChart } from "@/components/reportes/bar-chart";
 import {
   ClienteConNit,
@@ -26,15 +27,18 @@ const COLUMNAS = [
   {
     header: "Número",
     cell: (cuenta: ReporteCuentaSaldo) => (
-      <Link
-        href={`/cobros/${cuenta.id}`}
-        className={cn(
-          "whitespace-nowrap font-medium text-accent-soft-foreground underline-offset-4 hover:underline",
-          FOCUS_RING,
-        )}
-      >
-        {cuenta.numero}
-      </Link>
+      <span className="inline-flex flex-wrap items-center gap-1.5">
+        <Link
+          href={`/cobros/${cuenta.id}`}
+          className={cn(
+            "whitespace-nowrap font-medium text-accent-soft-foreground underline-offset-4 hover:underline",
+            FOCUS_RING,
+          )}
+        >
+          {cuenta.numero}
+        </Link>
+        <ConceptoCuentaChip cuenta={cuenta} />
+      </span>
     ),
   },
   {

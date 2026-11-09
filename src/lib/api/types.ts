@@ -121,7 +121,9 @@ export type TipoMovimientoInventario =
   | "ENTRADA"
   | "SALIDA"
   | "AJUSTE"
-  | "CONSUMO";
+  | "CONSUMO"
+  /** Material consumido que vuelve al stock al cancelar una orden. */
+  | "DEVOLUCION";
 
 /** Referencia mínima de la orden embebida en un movimiento de inventario. */
 export interface MovimientoOrdenRef {
@@ -338,9 +340,17 @@ export interface OrdenEvento {
 }
 
 /** Resumen de la cuenta por cobrar embebido en una orden cerrada. */
+/**
+ * Por qué se le cobra al cliente: SERVICIO (orden cerrada) o CANCELACION
+ * (materiales usados de una orden cancelada).
+ */
+export type ConceptoCuenta = "SERVICIO" | "CANCELACION";
+
 export interface OrdenCuentaRef {
   id: number;
   numero: string;
+  concepto?: ConceptoCuenta;
+  monto_total?: number;
   /** Moneda de la proforma de origen (BOB, USD, EUR). */
   moneda?: string;
   saldo: number;
@@ -427,6 +437,11 @@ export interface PagoCuenta {
 export interface CuentaPorCobrar {
   id: number;
   numero: string;
+  /** Sin dato (API anterior), SERVICIO. */
+  concepto?: ConceptoCuenta;
+  concepto_etiqueta?: string;
+  /** En un cobro por cancelación, el desglose por material. */
+  observaciones?: string | null;
   orden_id: number;
   cliente_id: number;
   /** Fecha date-only (`YYYY-MM-DD`). */
@@ -730,6 +745,8 @@ export interface ReporteInventario {
 export interface ReporteCuentaSaldo {
   id: number;
   numero: string;
+  concepto?: ConceptoCuenta;
+  concepto_etiqueta?: string;
   cliente: ReporteClienteRef;
   fecha_vencimiento: string | null;
   dias_vencida: number;

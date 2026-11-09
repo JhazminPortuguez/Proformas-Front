@@ -209,6 +209,8 @@ export default async function ProformaDetallePage({
               acciones={Array.from(acciones)}
               canDelete={canDelete}
               total={proforma.total}
+              estado={proforma.estado}
+              fechaValidez={proforma.fecha_validez}
             />
           </>
         }

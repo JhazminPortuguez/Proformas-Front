@@ -204,6 +204,31 @@ describe("MovimientosTable", () => {
     expect(within(table).getByText("25/10/2026 10:30")).toBeInTheDocument();
   });
 
+  it("muestra la devolución de una orden cancelada como «Devolución» y suma", () => {
+    render(
+      <MovimientosTable
+        movimientos={[
+          {
+            ...MOVIMIENTO,
+            id: 99,
+            tipo: "DEVOLUCION",
+            cantidad: 1,
+            stock_anterior: 8,
+            stock_nuevo: 9,
+          },
+        ]}
+        meta={{ ...META, total: 1 }}
+        query={QUERY_MOVIMIENTOS}
+      />,
+    );
+
+    const table = screen.getByRole("grid", { name: "Movimientos de inventario" });
+
+    expect(within(table).getByText("Devolución")).toBeInTheDocument();
+    expect(within(table).getByText("+1")).toBeInTheDocument();
+    expect(within(table).getByText(/8 → 9/)).toBeInTheDocument();
+  });
+
   it("muestra el estado vacío según los filtros", () => {
     render(
       <MovimientosTable

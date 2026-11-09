@@ -42,6 +42,11 @@ export const MOVIMIENTO_META: Record<TipoMovimientoInventario, MovimientoMeta> =
       tone: "danger",
       description: "Materiales consumidos por una orden de servicio.",
     },
+    DEVOLUCION: {
+      label: "Devolución",
+      tone: "success",
+      description: "Material consumido que volvió al stock al cancelar una orden.",
+    },
   };
 
 /** El backend documenta mayúsculas, pero se toleran variantes heredadas. */
@@ -54,6 +59,8 @@ const ALIAS_MOVIMIENTO: Record<string, TipoMovimientoInventario> = {
   correccion: "AJUSTE",
   consumo: "CONSUMO",
   consumido: "CONSUMO",
+  devolucion: "DEVOLUCION",
+  "devolución": "DEVOLUCION",
 };
 
 export function parseTipoMovimiento(
@@ -91,7 +98,7 @@ export function movimientoSigno(
 ): "+" | "−" | "" {
   const parsed = parseTipoMovimiento(tipo);
 
-  if (parsed === "ENTRADA") return "+";
+  if (parsed === "ENTRADA" || parsed === "DEVOLUCION") return "+";
   if (parsed === "SALIDA" || parsed === "CONSUMO") return "−";
 
   if (!Number.isFinite(cantidad) || cantidad === 0) return "";

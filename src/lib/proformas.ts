@@ -1,5 +1,10 @@
-import type { EstadoProforma, Proforma, ProformaItem } from "@/lib/api/types";
-import { parseDecimal } from "@/lib/utils";
+import type {
+  Cliente,
+  EstadoProforma,
+  Proforma,
+  ProformaItem,
+} from "@/lib/api/types";
+import { formatDateNumeric, parseDecimal } from "@/lib/utils";
 
 /**
  * Normaliza texto para búsquedas locales: minúsculas, sin acentos y sin
@@ -277,6 +282,32 @@ export function proformaExpirada(
     proforma.estado === "ENVIADA" &&
     isValidDateOnly(validez) &&
     compareDateOnly(validez, hoy) < 0
+  );
+}
+
+/**
+ * Aviso del diálogo de aceptar. Una proforma vencida se puede aceptar igual
+ * (el cliente puede dar su conformidad tarde), pero quien acepta debe saberlo.
+ */
+export function avisoAceptarVencida(
+  proforma: Pick<Proforma, "estado" | "fecha_validez">,
+  hoy: string,
+): string | null {
+  if (!proformaExpirada(proforma, hoy) || !proforma.fecha_validez) return null;
+
+  return `Esta proforma venció el ${formatDateNumeric(proforma.fecha_validez)}.`;
+}
+
+/**
+ * Clientes que se pueden elegir en una proforma: prospectos y activos. El
+ * cliente actual de la proforma se conserva aunque se haya desactivado.
+ */
+export function clientesParaProforma<T extends Pick<Cliente, "id" | "estado">>(
+  clientes: readonly T[],
+  clienteActualId: number | null = null,
+): T[] {
+  return clientes.filter(
+    (cliente) => cliente.estado !== "inactivo" || cliente.id === clienteActualId,
   );
 }
 

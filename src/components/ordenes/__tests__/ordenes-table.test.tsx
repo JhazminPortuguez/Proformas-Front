@@ -5,6 +5,11 @@ import { OrdenesTable } from "@/components/ordenes/ordenes-table";
 import type { Orden } from "@/lib/api/types";
 
 const push = vi.fn();
+const obtenerOrden = vi.fn();
+
+vi.mock("@/lib/api/client", () => ({
+  ordenes: { get: (...args: unknown[]) => obtenerOrden(...args) },
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -193,6 +198,7 @@ describe("OrdenesTable", () => {
 
   it("exige motivo al cancelar", async () => {
     const user = userEvent.setup();
+    obtenerOrden.mockResolvedValue({ ...ORDEN, items: [] });
     renderTable();
 
     const table = screen.getByRole("grid", { name: "Órdenes de servicio" });
@@ -202,9 +208,11 @@ describe("OrdenesTable", () => {
     );
 
     expect(
-      screen.getByRole("alertdialog", { name: "Cancelar orden" }),
+      screen.getByRole("dialog", { name: "Cancelar orden" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/Motivo de la cancelación/)).toBeInTheDocument();
+    // Sin ítems cargados en la tabla, el diálogo los pide para ver los consumos.
+    expect(obtenerOrden).toHaveBeenCalledWith(9);
   });
 
   it("abre el selector de operario al asignar", async () => {

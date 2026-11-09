@@ -3,6 +3,7 @@ import {
   apiErrorFromResponse,
   apiErrorMessage,
   isTechnicalMessage,
+  mensajeDeError,
   NETWORK_ERROR_MESSAGE,
   normalizeFieldErrors,
   statusFallback,
@@ -80,6 +81,24 @@ describe("mapeo de errores de API", () => {
     expect(
       apiErrorMessage(new Error("TypeError: x is not a function"), "Fallback."),
     ).toBe("Fallback.");
+  });
+
+  it("mensajeDeError: en un 422 muestra el primer error por campo del back, no el genérico", () => {
+    const error = apiErrorFromResponse(422, {
+      message: "No se puede desactivar a Rosa porque tiene una orden asignada o en proceso: OS-2026-000020.",
+      errors: {
+        activo: ["No se puede desactivar a Rosa porque tiene una orden asignada o en proceso: OS-2026-000020."],
+      },
+    });
+
+    expect(mensajeDeError(error, "No pudimos actualizar el usuario.")).toBe(
+      "No se puede desactivar a Rosa porque tiene una orden asignada o en proceso: OS-2026-000020.",
+    );
+    // Sin errores por campo, sigue el genérico; y apiErrorMessage (formularios) no cambia.
+    expect(mensajeDeError(apiErrorFromResponse(422, { message: "x" }))).toBe(
+      "Revisa los datos ingresados.",
+    );
+    expect(apiErrorMessage(error)).toBe("Revisa los datos ingresados.");
   });
 
   it("normaliza y deduplica errores por campo", () => {

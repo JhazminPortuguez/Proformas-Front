@@ -20,7 +20,7 @@ import { useAnnouncer } from "@/components/ui/announcer";
 import { UsuarioFormDrawer } from "@/components/usuarios/usuario-form-drawer";
 import { useSyncedDraft } from "@/lib/hooks/use-synced-draft";
 import { usuarios as usuariosApi } from "@/lib/api/client";
-import { apiErrorMessage } from "@/lib/api/errors";
+import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, ReporteClienteOpcion, Rol, User } from "@/lib/api/types";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
@@ -107,7 +107,7 @@ export function UsuariosTable({
           setRowError("Solo un administrador puede modificar usuarios.");
         } else {
           setRowError(
-            apiErrorMessage(error, "No pudimos actualizar el usuario."),
+            mensajeDeError(error, "No pudimos actualizar el usuario."),
           );
         }
       } finally {
@@ -138,7 +138,7 @@ export function UsuariosTable({
         );
       } else {
         setDeleteError(
-          apiErrorMessage(error, "No pudimos eliminar el usuario."),
+          mensajeDeError(error, "No pudimos eliminar el usuario."),
         );
       }
     } finally {

@@ -124,7 +124,7 @@ export default async function CobrosPage({
     <>
       <PageHeader
         title="Cuentas por cobrar"
-        description="Cartera emitida al cerrar órdenes: saldos, mora y pagos parciales."
+        description="Cartera emitida al cerrar órdenes y al cancelar órdenes con materiales usados: saldos, mora y pagos parciales."
         actions={
           <Link href="/ordenes?estado=FINALIZADA" className={ACTION_LINK}>
             <ClipboardList aria-hidden className="size-4" />

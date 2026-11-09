@@ -41,6 +41,7 @@ import {
   isValidDateOnly,
   motivoNoEnviar,
   parseCantidad,
+  clientesParaProforma,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
 import { TotalsSummary } from "./totals-summary";
@@ -153,10 +154,15 @@ function safeNumber(value: string): number {
 export function ProformaForm({
   proforma,
   clientes,
-  servicios,
-  productos,
+  servicios: serviciosCatalogo,
+  productos: productosCatalogo,
   today,
 }: ProformaFormProps) {
+  // Ítems nuevos: solo catálogo activo. Las páginas ya piden `activo: true`;
+  // se filtra igual por si llega uno inactivo. Los ítems guardados con un
+  // servicio o producto desactivado se muestran aparte ("Fuera del catálogo activo").
+  const servicios = serviciosCatalogo.filter((servicio) => servicio.activo !== false);
+  const productos = productosCatalogo.filter((producto) => producto.activo !== false);
   const router = useRouter();
   const { announce } = useAnnouncer();
   const {
@@ -174,10 +180,20 @@ export function ProformaForm({
   const [pending, setPending] = useState(false);
   const intentRef = useRef<"draft" | "send">("draft");
 
-  const clienteOptions: CatalogOption[] = clientes.map((cliente) => ({
+  // Los clientes inactivos no reciben proformas nuevas. Si se edita una que
+  // ya es de un cliente inactivo, se mantiene para no vaciar el selector.
+  const clienteOptions: CatalogOption[] = clientesParaProforma(
+    clientes,
+    proforma?.cliente_id ?? null,
+  ).map((cliente) => ({
     id: cliente.id,
     label: cliente.nombre_razon,
-    description: cliente.nit_ci ? `NIT/CI ${cliente.nit_ci}` : undefined,
+    description:
+      cliente.estado === "inactivo"
+        ? "Cliente inactivo"
+        : cliente.nit_ci
+          ? `NIT/CI ${cliente.nit_ci}`
+          : undefined,
   }));
 
   // Si un ítem guardado apunta a un catálogo ya desactivado, se agrega igual
@@ -721,11 +737,11 @@ export function ProformaForm({
         </Alert>
       ) : null}
 
-      {clientes.length === 0 ? (
+      {clienteOptions.length === 0 ? (
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
-            <Alert.Title>No hay clientes registrados</Alert.Title>
+            <Alert.Title>No hay clientes activos ni prospectos</Alert.Title>
             <Alert.Description>
               Necesitas un cliente para emitir una proforma.{" "}
               <Link

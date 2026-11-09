@@ -155,3 +155,23 @@ export function apiErrorMessage(
 
   return safeDomainMessage(error.message, fallback);
 }
+
+/**
+ * Para avisos que no tienen campos donde mostrar los errores (acciones de una
+ * fila, confirmaciones): un 422 del back explica el motivo en sus errores por
+ * campo, ya normalizados, y se muestra el primero en vez del genérico
+ * "Revisa los datos ingresados.". Los formularios siguen usando
+ * `apiErrorMessage` y muestran cada error junto a su campo.
+ */
+export function mensajeDeError(
+  error: unknown,
+  fallback = DEFAULT_ERROR_MESSAGE,
+): string {
+  if (error instanceof ApiError && error.status === 422) {
+    const primero = Object.values(error.errors ?? {}).flat()[0];
+
+    if (primero) return primero;
+  }
+
+  return apiErrorMessage(error, fallback);
+}

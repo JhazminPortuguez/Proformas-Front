@@ -27,7 +27,7 @@ import {
   type CobrosQuery,
 } from "@/lib/cobros";
 import { cn, formatDateNumeric, formatMoney, formatNumber } from "@/lib/utils";
-import { EstadoCobroChip, VencidaChip } from "./chips";
+import { ConceptoCuentaChip, EstadoCobroChip, VencidaChip } from "./chips";
 
 interface CobrosTableProps {
   cuentas: CuentaPorCobrar[];
@@ -88,12 +88,15 @@ export function CobrosTable({
       isRowHeader: true,
       cell: (cuenta) => (
         <div className="min-w-0">
-          <Link
-            href={cobroDetalleHref(cuenta.id)}
-            className={cn(LINK, "whitespace-nowrap")}
-          >
-            {cuenta.numero}
-          </Link>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Link
+              href={cobroDetalleHref(cuenta.id)}
+              className={cn(LINK, "whitespace-nowrap")}
+            >
+              {cuenta.numero}
+            </Link>
+            <ConceptoCuentaChip cuenta={cuenta} />
+          </div>
           <p className="numeric text-xs text-muted">
             {cuentaPagosCount(cuenta)}{" "}
             {cuentaPagosCount(cuenta) === 1 ? "pago" : "pagos"}
