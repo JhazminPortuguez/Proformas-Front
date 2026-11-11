@@ -130,30 +130,27 @@ export function CobrosTable({
       ),
     },
     {
-      id: "emision",
-      header: "Emisión",
-      className: "hidden xl:table-cell",
-      cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatDateNumeric(cuenta.fecha_emision)}
-        </span>
-      ),
-    },
-    {
+      // Vencimiento y, debajo, la emisión: una columna menos para que la
+      // tabla quepa sin desplazamiento desde 1280 px.
       id: "vencimiento",
       header: "Vencimiento",
       cell: (cuenta) => {
         const vencida = cuentaEstaVencida(cuenta);
 
         return (
-          <span
-            className={cn(
-              "numeric text-sm whitespace-nowrap",
-              vencida ? "font-medium text-danger" : "text-muted",
-            )}
-          >
-            {formatDateNumeric(cuenta.fecha_vencimiento)}
-          </span>
+          <div className="numeric whitespace-nowrap">
+            <span
+              className={cn(
+                "block text-sm",
+                vencida ? "font-medium text-danger" : "text-muted",
+              )}
+            >
+              {formatDateNumeric(cuenta.fecha_vencimiento)}
+            </span>
+            <span className="block text-xs text-muted">
+              Emitida {formatDateNumeric(cuenta.fecha_emision)}
+            </span>
+          </div>
         );
       },
     },
@@ -162,19 +159,14 @@ export function CobrosTable({
       header: "Total",
       className: "hidden lg:table-cell text-end",
       cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatMoney(cuenta.monto_total)}
-        </span>
-      ),
-    },
-    {
-      id: "pagado",
-      header: "Pagado",
-      className: "hidden lg:table-cell text-end",
-      cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatMoney(cuentaTotalPagado(cuenta))}
-        </span>
+        <div className="numeric whitespace-nowrap text-end">
+          <span className="block text-sm text-muted">
+            {formatMoney(cuenta.monto_total)}
+          </span>
+          <span className="block text-xs text-muted">
+            Pagado {formatMoney(cuentaTotalPagado(cuenta))}
+          </span>
+        </div>
       ),
     },
     {
@@ -195,13 +187,12 @@ export function CobrosTable({
     {
       id: "estado",
       header: "Estado",
-      cell: (cuenta) => <EstadoCobroChip estado={cuenta.estado_cobro} />,
-    },
-    {
-      id: "vencida",
-      header: "Mora",
-      className: "hidden sm:table-cell",
-      cell: (cuenta) => <VencidaChip cuenta={cuenta} />,
+      cell: (cuenta) => (
+        <div className="flex flex-col items-start gap-1">
+          <EstadoCobroChip estado={cuenta.estado_cobro} />
+          <VencidaChip cuenta={cuenta} />
+        </div>
+      ),
     },
     {
       id: "acciones",

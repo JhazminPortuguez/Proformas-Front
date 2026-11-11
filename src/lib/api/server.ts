@@ -179,6 +179,8 @@ export interface ListarClientesParams {
   estado?: ClienteEstado | "";
   page?: number;
   perPage?: number;
+  /** Solo prospectos y activos (para documentos nuevos). */
+  activos?: boolean;
 }
 
 export function getClientes({
@@ -186,8 +188,9 @@ export function getClientes({
   estado,
   page = 1,
   perPage = 10,
+  activos = false,
 }: ListarClientesParams = {}): Promise<Paginated<Cliente>> {
-  const query = buildQuery({ search, estado, page, per_page: perPage });
+  const query = buildQuery({ search, estado, page, per_page: perPage, activos: activos ? 1 : "" });
 
   return request<Paginated<Cliente>>(`/clientes${query}`);
 }

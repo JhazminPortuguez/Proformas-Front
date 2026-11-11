@@ -51,9 +51,10 @@ export default async function EditarProformaPage({
     const [proformaData, clientesPage, serviciosPage, productosPage] =
       await Promise.all([
         getProforma(proformaId),
-        getClientes({ perPage: 100 }),
-        getServicios({ activo: true, perPage: 100 }),
-        getProductos({ activo: true, perPage: 100 }),
+        // Primera página: el formulario busca el resto en el servidor.
+        getClientes({ perPage: 20, activos: true }),
+        getServicios({ activo: true, perPage: 20 }),
+        getProductos({ activo: true, perPage: 20 }),
       ]);
 
     proforma = proformaData;

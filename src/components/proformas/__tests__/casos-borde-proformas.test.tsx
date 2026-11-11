@@ -20,6 +20,9 @@ vi.mock("next/navigation", () => ({
 const aceptar = vi.fn();
 
 vi.mock("@/lib/api/client", () => ({
+  clientes: { buscar: vi.fn().mockResolvedValue([]) },
+  servicios: { buscar: vi.fn().mockResolvedValue([]) },
+  productos: { buscar: vi.fn().mockResolvedValue([]) },
   proformas: {
     aceptar: (...args: unknown[]) => aceptar(...args),
     enviar: vi.fn(),

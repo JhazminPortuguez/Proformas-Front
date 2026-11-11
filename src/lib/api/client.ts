@@ -7,6 +7,7 @@ import {
 } from "./errors";
 import { ApiError,
   ClienteEnCurso,
+  Producto,
 } from "./types";
 import type {
   AjusteInventarioInput,
@@ -183,6 +184,15 @@ export const clientes = {
     return request<void>(`/clientes/${id}`, { method: "DELETE" });
   },
 
+  /** Buscador de documentos nuevos: prospectos y activos, sin el límite de 100. */
+  async buscar(termino: string): Promise<Cliente[]> {
+    const body = await request<{ data: Cliente[] }>(
+      `/clientes?activos=1&per_page=20&search=${encodeURIComponent(termino)}`,
+    );
+
+    return body.data;
+  },
+
   /** Proformas enviadas y órdenes activas, para avisar antes de desactivar. */
   enCurso(id: number): Promise<ClienteEnCurso> {
     return request<ClienteEnCurso>(`/clientes/${id}/en-curso`);
@@ -190,6 +200,15 @@ export const clientes = {
 };
 
 export const servicios = {
+  /** Solo servicios activos, buscados en el servidor. */
+  async buscar(termino: string): Promise<Servicio[]> {
+    const body = await request<{ data: Servicio[] }>(
+      `/servicios?activo=1&per_page=20&search=${encodeURIComponent(termino)}`,
+    );
+
+    return body.data;
+  },
+
   create(payload: ServicioInput): Promise<Servicio> {
     return request<Servicio>("/servicios", jsonBody(payload));
   },
@@ -457,5 +476,16 @@ export const empresa = {
 
   eliminarLogo(): Promise<Empresa> {
     return request<Empresa>("/empresa/logo", { method: "DELETE" });
+  },
+};
+
+export const productos = {
+  /** Solo productos activos, buscados en el servidor. */
+  async buscar(termino: string): Promise<Producto[]> {
+    const body = await request<{ data: Producto[] }>(
+      `/productos?activo=1&per_page=20&search=${encodeURIComponent(termino)}`,
+    );
+
+    return body.data;
   },
 };
