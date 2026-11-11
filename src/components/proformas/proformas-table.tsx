@@ -340,6 +340,7 @@ export function ProformasTable({
           acciones={accionesProforma(proforma, { canDelete })}
           display="icons"
           onRequestAction={(action) => requestAction(proforma, action)}
+          hoy={hoy}
         />
       ),
     },
@@ -576,6 +577,7 @@ export function ProformasTable({
                     acciones={accionesProforma(proforma, { canDelete })}
                     display="labels"
                     onRequestAction={(action) => requestAction(proforma, action)}
+          hoy={hoy}
                   />
                 </div>
               </li>

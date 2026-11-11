@@ -26,6 +26,7 @@ import type {
 import {
   REPORTES,
   parseReportesQuery,
+  rangoDemasiadoAmplio,
   rangoInvertido,
   reporteParams,
   type ReportesQuery,
@@ -112,7 +113,10 @@ export default async function ReportesPage({
 
   try {
     // Con el rango al revés la vista muestra el aviso; no se consulta al back.
-    contenido = rangoInvertido(query) ? null : await cargarReporte(query);
+    contenido =
+      rangoInvertido(query) || rangoDemasiadoAmplio(query)
+        ? null
+        : await cargarReporte(query);
   } catch (caught) {
     if (isApiError(caught) && (caught.status === 401 || caught.status === 419)) {
       redirect("/login");

@@ -50,6 +50,7 @@ const TAB_KEYS = ["resumen", "items", "materiales", "historial"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 const ACCIONES_BARRA = [
+  "reasignar",
   "reprogramar",
   "iniciar",
   "finalizar",
@@ -218,6 +219,7 @@ export default async function OrdenDetallePage({
                   operarios={operarios}
                   montoCierre={ordenMontoCierre(orden)}
                   fechaProgramada={orden.fecha_programada}
+                  operarioActual={orden.operario ?? null}
                   items={orden.items}
                   display="detail"
                   hideVer

@@ -10,6 +10,8 @@ import type { ReporteClienteOpcion, User } from "@/lib/api/types";
 import {
   REPORTES,
   mesActualBolivia,
+  MENSAJE_RANGO_AMPLIO,
+  rangoDemasiadoAmplio,
   rangoInvertido,
   reporteCsvHref,
   reportesHref,
@@ -35,6 +37,7 @@ export function ReportesView({
   children,
 }: ReportesViewProps) {
   const invertido = rangoInvertido(query);
+  const amplio = !invertido && rangoDemasiadoAmplio(query);
 
   return (
     <div className="space-y-6">
@@ -57,13 +60,17 @@ export function ReportesView({
           </span>
         </h2>
 
-        {error || invertido ? null : <CsvLink href={reporteCsvHref(query)} />}
+        {error || invertido || amplio ? null : <CsvLink href={reporteCsvHref(query)} />}
       </div>
 
-      {invertido ? (
+      {invertido || amplio ? (
         <ErrorState
           title="Rango de fechas no válido"
-          message="La fecha inicial no puede ser posterior a la final."
+          message={
+            invertido
+              ? "La fecha inicial no puede ser posterior a la final."
+              : MENSAJE_RANGO_AMPLIO
+          }
           action={
             <Link
               href={reportesHref({ ...query, ...mesActualBolivia() })}

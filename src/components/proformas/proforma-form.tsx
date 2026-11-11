@@ -42,6 +42,7 @@ import {
   motivoNoEnviar,
   parseCantidad,
   clientesParaProforma,
+  errorFechaEmision,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
 import { TotalsSummary } from "./totals-summary";
@@ -433,9 +434,13 @@ export function ProformaForm({
       errors.cliente_id = ["Selecciona el cliente de la proforma."];
     }
 
-    if (!isValidDateOnly(form.fecha_emision)) {
-      errors.fecha_emision = ["Ingresa una fecha de emisión válida."];
-    }
+    // Como máximo hoy; un borrador antiguo con fecha futura se edita sin cambiarla.
+    const errorEmision =
+      proforma && form.fecha_emision === proforma.fecha_emision
+        ? null
+        : errorFechaEmision(form.fecha_emision, today);
+
+    if (errorEmision) errors.fecha_emision = [errorEmision];
 
     if (form.fecha_validez) {
       if (!isValidDateOnly(form.fecha_validez)) {
@@ -654,7 +659,7 @@ export function ProformaForm({
     }
   }
 
-  const bloqueoEnvio = motivoNoEnviar(totals.total);
+  const bloqueoEnvio = motivoNoEnviar(totals.total, form.fecha_validez || null, today);
 
   function setIntent(intent: "draft" | "send") {
     intentRef.current = intent;
@@ -791,6 +796,7 @@ export function ProformaForm({
                 type="date"
                 value={form.fecha_emision}
                 onChange={(value) => update("fecha_emision", value)}
+                max={today}
                 error={firstError(fieldErrors, "fecha_emision")}
                 isRequired
               />

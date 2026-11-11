@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Alert } from "@heroui/react";
 import { DrawerActions, FormDrawer } from "@/components/ui/form-drawer";
 import { TextAreaControl, TextFieldControl, SelectControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -10,6 +11,7 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type {
   Cliente,
+  ClienteEnCurso,
   ClienteEstado,
   ErroresValidacion,
 } from "@/lib/api/types";
@@ -75,6 +77,8 @@ export function ClienteFormDrawer({
   const [initial] = useState<FormState>(() => toFormState(cliente));
   const [form, setForm] = useState<FormState>(initial);
   const [pending, setPending] = useState(false);
+  // Trabajo en curso que se mostró al pasar a Inactivo: el siguiente guardar confirma.
+  const [enCurso, setEnCurso] = useState<ClienteEnCurso | null>(null);
   const router = useRouter();
   const { announce } = useAnnouncer();
   const {
@@ -88,7 +92,12 @@ export function ClienteFormDrawer({
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+
+    if (key === "estado") setEnCurso(null);
   }
+
+  const desactiva =
+    Boolean(cliente) && initial.estado !== "inactivo" && form.estado === "inactivo";
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,6 +114,24 @@ export function ClienteFormDrawer({
 
     setPending(true);
     reset();
+
+    // Al desactivar, primero se avisa qué sigue en curso (y se confirma
+    // volviendo a guardar). Lo que está en curso sigue normal.
+    if (cliente && desactiva && enCurso === null) {
+      try {
+        const trabajo = await clientes.enCurso(cliente.id);
+
+        if (trabajo.proformas.length > 0 || trabajo.ordenes.length > 0) {
+          setEnCurso(trabajo);
+          announce("El cliente tiene trabajo en curso. Revisa el aviso y vuelve a guardar para confirmar.");
+          setPending(false);
+
+          return;
+        }
+      } catch {
+        // Si no se puede consultar, se guarda igual: el aviso es informativo.
+      }
+    }
 
     const payload = {
       nombre_razon: form.nombre_razon.trim(),
@@ -167,10 +194,31 @@ export function ClienteFormDrawer({
         <DrawerActions
           isPending={pending}
           onCancel={() => onOpenChange(false)}
-          submitLabel={cliente ? "Guardar cambios" : "Crear cliente"}
+          submitLabel={
+            enCurso ? "Desactivar de todos modos" : cliente ? "Guardar cambios" : "Crear cliente"
+          }
         />
       }
     >
+      {enCurso ? (
+        <Alert status="warning">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Este cliente tiene trabajo en curso</Alert.Title>
+            <Alert.Description>
+              {enCurso.proformas.length > 0
+                ? `Proformas enviadas: ${enCurso.proformas.join(", ")}. `
+                : ""}
+              {enCurso.ordenes.length > 0
+                ? `Órdenes activas: ${enCurso.ordenes.join(", ")}. `
+                : ""}
+              Al desactivarlo no recibirá proformas nuevas; lo que está en
+              curso sigue normal.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
       <TextFieldControl
         name="nombre_razon"
         label="Nombre o razón social"

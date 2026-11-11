@@ -15,6 +15,7 @@ import {
   Eye,
   Lock,
   Play,
+  UserCog,
   UserPlus,
   X,
   type LucideIcon,
@@ -54,6 +55,8 @@ interface OrdenActionsProps {
   montoCierre?: { total: number; moneda?: string | null } | null;
   /** Fecha programada actual (AAAA-MM-DD), para reprogramar. */
   fechaProgramada?: string | null;
+  /** Operario actual, para reasignar una orden Asignada a otro. */
+  operarioActual?: Pick<User, "id" | "name"> | null;
   /**
    * Ítems de la orden (en el detalle), para listar los materiales consumidos
    * al cancelar. Sin ellos, el diálogo de cancelar los pide.
@@ -132,6 +135,7 @@ export function OrdenActions({
   montoCierre = null,
   fechaProgramada = null,
   items,
+  operarioActual = null,
 }: OrdenActionsProps) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -145,6 +149,7 @@ export function OrdenActions({
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignFieldError, setAssignFieldError] = useState<string | null>(null);
   const [operarioId, setOperarioId] = useState("");
+  const [reasignando, setReasignando] = useState(false);
 
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [reschedulePending, setReschedulePending] = useState(false);
@@ -157,10 +162,13 @@ export function OrdenActions({
   const icon = display === "icons";
   const available = new Set(acciones);
   const puedeAsignar = available.has("asignar") && operarios.length > 0;
+  // Reasignar: hace falta al menos otro operario además del actual.
+  const otrosOperarios = operarios.filter((operario) => operario.id !== operarioActual?.id);
+  const puedeReasignar = available.has("reasignar") && otrosOperarios.length > 0;
 
   const operarioOptions = [
     { value: "", label: "Selecciona un operario" },
-    ...operarios.map((operario) => ({
+    ...(reasignando ? otrosOperarios : operarios).map((operario) => ({
       value: String(operario.id),
       label: operario.name,
     })),
@@ -198,10 +206,11 @@ export function OrdenActions({
     setDialog(action);
   }
 
-  function openAssign() {
+  function openAssign(reasignar = false) {
     setAssignError(null);
     setAssignFieldError(null);
     setOperarioId("");
+    setReasignando(reasignar);
     setAssignOpen(true);
   }
 
@@ -311,7 +320,7 @@ export function OrdenActions({
 
     try {
       await ordenesApi.asignar(ordenId, Number(operarioId));
-      announce(`Orden ${numero} asignada.`);
+      announce(reasignando ? `Orden ${numero} reasignada.` : `Orden ${numero} asignada.`);
       setAssignOpen(false);
       refresh();
     } catch (caught) {
@@ -416,10 +425,28 @@ export function OrdenActions({
                 isIconOnly={icon}
                 className={cn(icon ? "size-9 text-muted" : "h-9 text-foreground")}
                 aria-label={`Asignar ${numero}`}
-                onPress={openAssign}
+                onPress={() => openAssign(false)}
               >
                 <UserPlus aria-hidden className="size-4" />
                 {icon ? <span className="sr-only">Asignar</span> : "Asignar"}
+              </Button>,
+            )
+          : null}
+
+        {puedeReasignar
+          ? conTooltip(
+              "Cambiar operario",
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                isIconOnly={icon}
+                className={cn(icon ? "size-9 text-muted" : "h-9 text-foreground")}
+                aria-label={`Reasignar ${numero}`}
+                onPress={() => openAssign(true)}
+              >
+                <UserCog aria-hidden className="size-4" />
+                {icon ? <span className="sr-only">Reasignar</span> : "Reasignar"}
               </Button>,
             )
           : null}
@@ -603,10 +630,13 @@ export function OrdenActions({
                 className="flex flex-col"
               >
                 <Modal.Header>
-                  <Modal.Heading>Asignar operario</Modal.Heading>
+                  <Modal.Heading>
+                    {reasignando ? "Reasignar orden" : "Asignar operario"}
+                  </Modal.Heading>
                   <p className="text-sm text-muted">
-                    La orden {numero} pasará a &ldquo;Asignada&rdquo; y quedará a
-                    cargo de la persona seleccionada.
+                    {reasignando
+                      ? `La orden ${numero} está asignada a ${operarioActual?.name ?? "otro operario"}. Pasará a la persona que elijas; el cambio queda en el historial.`
+                      : `La orden ${numero} pasará a “Asignada” y quedará a cargo de la persona seleccionada.`}
                   </p>
                 </Modal.Header>
 
@@ -649,7 +679,13 @@ export function OrdenActions({
                     variant="primary"
                     isDisabled={assignPending || !operarioId}
                   >
-                    {assignPending ? "Asignando…" : "Asignar"}
+                    {assignPending
+                      ? reasignando
+                        ? "Reasignando…"
+                        : "Asignando…"
+                      : reasignando
+                        ? "Reasignar"
+                        : "Asignar"}
                   </Button>
                 </Modal.Footer>
               </form>

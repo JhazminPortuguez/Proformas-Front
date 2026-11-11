@@ -119,6 +119,27 @@ export function reporteParams(
 }
 
 /** Un rango escrito al revés en la dirección no se pide al back. */
+export const MENSAJE_RANGO_AMPLIO =
+  "El rango del reporte no puede superar 1 año. Elige un periodo de 12 meses o menos.";
+
+/**
+ * Más de 1 año entre las fechas (el 1/1/2026 al 31/12/2026 es el máximo). El
+ * back rechaza lo mismo; acá se evita la consulta.
+ */
+export function rangoDemasiadoAmplio(
+  query: Pick<ReportesQuery, "desde" | "hasta">,
+): boolean {
+  const [anio, mes, dia] = query.desde.split("-").map(Number);
+
+  if (!anio || !mes || !dia) return false;
+
+  const limite = new Date(Date.UTC(anio + 1, mes - 1, dia - 1))
+    .toISOString()
+    .slice(0, 10);
+
+  return query.hasta > limite;
+}
+
 export function rangoInvertido(query: Pick<ReportesQuery, "desde" | "hasta">): boolean {
   return query.desde > query.hasta;
 }

@@ -129,6 +129,50 @@ describe("Aceptar una proforma vencida", () => {
   });
 });
 
+describe("Enviar una proforma vencida (P-15)", () => {
+  beforeEach(() => {
+    // 10/11/2026 a las 21:00 en Bolivia (UTC ya es 11/11).
+    vi.useFakeTimers({ now: new Date("2026-11-11T01:00:00Z"), shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("deshabilita Enviar con el motivo si la validez ya pasó", () => {
+    render(
+      <ProformaDetailActions
+        proformaId={9}
+        numero="PR-2026-000009"
+        acciones={["ver", "enviar"]}
+        canDelete={false}
+        total={500}
+        estado="BORRADOR"
+        fechaValidez="2026-11-09"
+      />,
+    );
+
+    const enviar = screen.getByRole("button", { name: /Enviar/ });
+    expect(enviar).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("si vence hoy en Bolivia, Enviar sigue disponible", () => {
+    render(
+      <ProformaDetailActions
+        proformaId={9}
+        numero="PR-2026-000009"
+        acciones={["ver", "enviar"]}
+        canDelete={false}
+        total={500}
+        estado="BORRADOR"
+        fechaValidez="2026-11-10"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Enviar/ })).not.toHaveAttribute("aria-disabled");
+  });
+});
+
 describe("Selector de clientes de la proforma", () => {
   const SERVICIOS: Servicio[] = [];
   const PRODUCTOS: Producto[] = [];

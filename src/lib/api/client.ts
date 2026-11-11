@@ -5,7 +5,9 @@ import {
   NETWORK_ERROR_MESSAGE,
   type ApiErrorBody,
 } from "./errors";
-import { ApiError } from "./types";
+import { ApiError,
+  ClienteEnCurso,
+} from "./types";
 import type {
   AjusteInventarioInput,
   Cliente,
@@ -179,6 +181,11 @@ export const clientes = {
 
   remove(id: number): Promise<void> {
     return request<void>(`/clientes/${id}`, { method: "DELETE" });
+  },
+
+  /** Proformas enviadas y órdenes activas, para avisar antes de desactivar. */
+  enCurso(id: number): Promise<ClienteEnCurso> {
+    return request<ClienteEnCurso>(`/clientes/${id}/en-curso`);
   },
 };
 
