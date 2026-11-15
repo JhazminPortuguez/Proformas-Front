@@ -25,6 +25,7 @@ export type { OrdenAccion };
 export const ACCIONES_ORDEN: readonly OrdenAccion[] = [
   "ver",
   "asignar",
+  "reasignar",
   "reprogramar",
   "iniciar",
   "finalizar",
@@ -44,6 +45,9 @@ const ALIAS_ACCIONES: Record<string, OrdenAccion> = {
   asignar: "asignar",
   asignar_operario: "asignar",
   assign: "asignar",
+  reasignar: "reasignar",
+  reasignar_operario: "reasignar",
+  reassign: "reasignar",
   reprogramar: "reprogramar",
   reprogramacion: "reprogramar",
   reschedule: "reprogramar",
@@ -106,7 +110,7 @@ export function accionesOrden(
   }: AccionesOrdenOpciones = {},
 ): Set<OrdenAccion> {
   const permitida = (accion: OrdenAccion): boolean => {
-    if (accion === "asignar") return canAssign;
+    if (accion === "asignar" || accion === "reasignar") return canAssign;
     if (accion === "cancelar") return canCancel;
     if (accion === "cerrar") return canClose && !orden.cerrada_at;
     if (accion === "reprogramar") return canReschedule;

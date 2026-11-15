@@ -392,10 +392,37 @@ export const MOTIVO_TOTAL_CERO =
   "La proforma debe tener un total mayor a Bs 0 para enviarse.";
 
 /** Por qué no se puede enviar una proforma con ese total, o `null` si se puede. */
-export function motivoNoEnviar(total: number | string | null | undefined): string | null {
+export const MOTIVO_VALIDEZ_VENCIDA = "Actualiza la fecha de validez antes de enviar.";
+
+/**
+ * Motivo por el que no se puede enviar (o `null`): total en Bs 0 o validez ya
+ * vencida en hora de Bolivia. El back rechaza lo mismo.
+ */
+export function motivoNoEnviar(
+  total: number | string | null | undefined,
+  fechaValidez: string | null | undefined = null,
+  hoy: string = todayDateOnly(),
+): string | null {
   const valor = typeof total === "string" ? Number(total) : (total ?? 0);
 
-  return Number.isFinite(valor) && valor > 0 ? null : MOTIVO_TOTAL_CERO;
+  if (!(Number.isFinite(valor) && valor > 0)) return MOTIVO_TOTAL_CERO;
+
+  if (fechaValidez && isValidDateOnly(fechaValidez) && compareDateOnly(fechaValidez, hoy) < 0) {
+    return MOTIVO_VALIDEZ_VENCIDA;
+  }
+
+  return null;
+}
+
+/** Error de la fecha de emisión, o `null`: como máximo hoy (Bolivia). */
+export function errorFechaEmision(fecha: string, hoy: string): string | null {
+  if (!isValidDateOnly(fecha)) return "Ingresa una fecha de emisión válida.";
+
+  if (compareDateOnly(fecha, hoy) > 0) {
+    return `La fecha de emisión no puede ser futura (hoy es ${formatDateNumeric(hoy)}).`;
+  }
+
+  return null;
 }
 
 /** Texto para una orden que el usuario no puede abrir. */

@@ -27,10 +27,17 @@ interface CatalogSelectProps {
   placeholder?: string;
   isRequired?: boolean;
   isDisabled?: boolean;
+  /**
+   * Búsqueda en el servidor: cada cambio del texto llama aquí y las opciones
+   * ya vienen filtradas (no se filtra de nuevo en el navegador).
+   */
+  onSearch?: (texto: string) => void;
+  isLoading?: boolean;
 }
 
 /**
- * Selector con búsqueda para catálogos de hasta 100 registros.
+ * Selector con búsqueda. Con `onSearch` busca en el servidor mientras se
+ * escribe (sin límite de registros); sin él filtra las opciones recibidas.
  *
  * Es un ComboBox de HeroUI: el input filtra por `textValue`, el teclado navega
  * las opciones y el valor viaja como string en el formulario. El `data-field`
@@ -47,6 +54,8 @@ export function CatalogSelect({
   placeholder = "Buscar…",
   isRequired,
   isDisabled,
+  onSearch,
+  isLoading = false,
 }: CatalogSelectProps) {
   return (
     <ComboBox
@@ -58,9 +67,15 @@ export function CatalogSelect({
       isDisabled={isDisabled}
       isInvalid={Boolean(error)}
       fullWidth
-      menuTrigger="input"
-      defaultFilter={(textValue, inputValue) =>
-        normalizarBusqueda(textValue).includes(normalizarBusqueda(inputValue))
+      menuTrigger={onSearch ? "focus" : "input"}
+      onInputChange={onSearch}
+      // Con búsqueda remota el menú sigue abierto mientras llegan resultados.
+      allowsEmptyCollection={Boolean(onSearch)}
+      defaultFilter={
+        onSearch
+          ? () => true
+          : (textValue, inputValue) =>
+              normalizarBusqueda(textValue).includes(normalizarBusqueda(inputValue))
       }
       className="flex flex-col gap-1.5"
     >
@@ -74,7 +89,13 @@ export function CatalogSelect({
       </ComboBox.InputGroup>
 
       <ComboBox.Popover>
-        <ListBox>
+        <ListBox
+          renderEmptyState={() => (
+            <p className="px-3 py-2 text-sm text-muted">
+              {isLoading ? "Buscando…" : "Sin resultados"}
+            </p>
+          )}
+        >
           {options.map((option) => (
             <ListBox.Item
               key={option.id}

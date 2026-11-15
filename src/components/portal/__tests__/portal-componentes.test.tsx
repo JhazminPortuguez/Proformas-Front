@@ -5,7 +5,7 @@ import { ContactoEmpresa } from "@/components/portal/contacto-empresa";
 import { PortalProformasTable } from "@/components/portal/portal-proformas-table";
 import { PortalSolicitudesTable } from "@/components/portal/portal-solicitudes-table";
 import { PortalShell } from "@/components/portal/portal-shell";
-import { SolicitarForm } from "@/components/portal/solicitar-form";
+import { MENSAJE_CLIENTE_INACTIVO, SolicitarForm } from "@/components/portal/solicitar-form";
 import { ApiError } from "@/lib/api/types";
 import type { PortalProforma, PortalSolicitud, User } from "@/lib/api/types";
 
@@ -207,6 +207,34 @@ describe("ContactoEmpresa", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByText(/todavía no registró/)).toBeInTheDocument();
   });
+});
+
+describe("SolicitarForm · cliente inactivo (punto 3)", () => {
+  it("bloqueado: el botón queda deshabilitado y no envía", async () => {
+    const user = userEvent.setup();
+    mocks.crearSolicitud.mockReset();
+
+    render(<SolicitarForm bloqueado />);
+
+    const boton = screen.getByRole("button", { name: "Enviar solicitud" });
+    expect(boton).toBeDisabled();
+    await user.click(boton);
+    expect(mocks.crearSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("si el back responde 403, explica que la cuenta está inactiva", async () => {
+    const user = userEvent.setup();
+    mocks.crearSolicitud.mockReset();
+    mocks.crearSolicitud.mockRejectedValue(new ApiError("No tienes permisos para realizar esta acción.", 403));
+
+    render(<SolicitarForm />);
+
+    await user.type(screen.getByRole("textbox", { name: /¿Qué necesitas\?/ }), "Necesito pintar");
+    await user.type(screen.getByRole("textbox", { name: /^Descripción/ }), "Pintura de sala");
+    await user.click(screen.getByRole("button", { name: "Enviar solicitud" }));
+
+    expect(await screen.findByText(MENSAJE_CLIENTE_INACTIVO)).toBeInTheDocument();
+  }, 20_000);
 });
 
 describe("SolicitarForm", () => {

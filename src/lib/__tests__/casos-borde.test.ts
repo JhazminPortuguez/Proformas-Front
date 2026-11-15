@@ -6,7 +6,14 @@ import {
   errorDevolucion,
   materialesConsumidos,
 } from "@/lib/ordenes";
-import { avisoAceptarVencida, clientesParaProforma } from "@/lib/proformas";
+import {
+  MOTIVO_TOTAL_CERO,
+  MOTIVO_VALIDEZ_VENCIDA,
+  avisoAceptarVencida,
+  clientesParaProforma,
+  errorFechaEmision,
+  motivoNoEnviar,
+} from "@/lib/proformas";
 
 describe("errorFechaPago", () => {
   const HOY = "2026-11-08";
@@ -115,5 +122,34 @@ describe("cancelar una orden con materiales consumidos", () => {
     expect(esCobroCancelacion({ concepto: "CANCELACION" })).toBe(true);
     expect(esCobroCancelacion({ concepto: "SERVICIO" })).toBe(false);
     expect(esCobroCancelacion({})).toBe(false);
+  });
+});
+
+describe("motivoNoEnviar (P-08, P-15)", () => {
+  const HOY = "2026-11-10";
+
+  it("bloquea Bs 0 y una validez ya vencida", () => {
+    expect(motivoNoEnviar(0, null, HOY)).toBe(MOTIVO_TOTAL_CERO);
+    expect(motivoNoEnviar(120, "2026-11-09", HOY)).toBe(MOTIVO_VALIDEZ_VENCIDA);
+    expect(MOTIVO_VALIDEZ_VENCIDA).toBe("Actualiza la fecha de validez antes de enviar.");
+  });
+
+  it("deja enviar si vence hoy, más adelante o no tiene validez", () => {
+    expect(motivoNoEnviar(120, "2026-11-10", HOY)).toBeNull();
+    expect(motivoNoEnviar(120, "2026-12-01", HOY)).toBeNull();
+    expect(motivoNoEnviar(120, null, HOY)).toBeNull();
+  });
+});
+
+describe("errorFechaEmision (punto 6)", () => {
+  it("como máximo hoy", () => {
+    expect(errorFechaEmision("2026-11-10", "2026-11-10")).toBeNull();
+    expect(errorFechaEmision("2026-10-01", "2026-11-10")).toBeNull();
+    expect(errorFechaEmision("2026-11-11", "2026-11-10")).toBe(
+      "La fecha de emisión no puede ser futura (hoy es 10/11/2026).",
+    );
+    expect(errorFechaEmision("2026-02-30", "2026-11-10")).toBe(
+      "Ingresa una fecha de emisión válida.",
+    );
   });
 });

@@ -28,9 +28,10 @@ export default async function NuevaProformaPage() {
 
   try {
     const [clientesPage, serviciosPage, productosPage] = await Promise.all([
-      getClientes({ perPage: 100 }),
-      getServicios({ activo: true, perPage: 100 }),
-      getProductos({ activo: true, perPage: 100 }),
+      // Primera página: el formulario busca el resto en el servidor.
+        getClientes({ perPage: 20, activos: true }),
+      getServicios({ activo: true, perPage: 20 }),
+      getProductos({ activo: true, perPage: 20 }),
     ]);
 
     clientes = clientesPage.data;

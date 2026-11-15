@@ -97,7 +97,16 @@ export function CobrosTable({
             </Link>
             <ConceptoCuentaChip cuenta={cuenta} />
           </div>
-          <p className="numeric text-xs text-muted">
+          {/* La orden va en la segunda línea (sin columna propia) para que
+              la tabla quepa sin desplazamiento desde 1280 px. */}
+          <p className="numeric text-xs whitespace-nowrap text-muted">
+            <Link
+              href={cuentaOrdenHref(cuenta)}
+              className="whitespace-nowrap text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              {cuentaOrdenNumero(cuenta)}
+            </Link>
+            {" · "}
             {cuentaPagosCount(cuenta)}{" "}
             {cuentaPagosCount(cuenta) === 1 ? "pago" : "pagos"}
           </p>
@@ -110,50 +119,35 @@ export function CobrosTable({
       cell: (cuenta) => (
         <Link
           href={`/clientes/${cuenta.cliente_id}`}
-          className="block max-w-[15rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          title={cuentaClienteNombre(cuenta)}
+          className="block max-w-[11rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {cuentaClienteNombre(cuenta)}
         </Link>
       ),
     },
     {
-      id: "orden",
-      header: "Orden",
-      className: "hidden md:table-cell",
-      cell: (cuenta) => (
-        <Link
-          href={cuentaOrdenHref(cuenta)}
-          className="whitespace-nowrap text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          {cuentaOrdenNumero(cuenta)}
-        </Link>
-      ),
-    },
-    {
-      id: "emision",
-      header: "Emisión",
-      className: "hidden xl:table-cell",
-      cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatDateNumeric(cuenta.fecha_emision)}
-        </span>
-      ),
-    },
-    {
+      // Vencimiento y, debajo, la emisión: una columna menos para que la
+      // tabla quepa sin desplazamiento desde 1280 px.
       id: "vencimiento",
       header: "Vencimiento",
       cell: (cuenta) => {
         const vencida = cuentaEstaVencida(cuenta);
 
         return (
-          <span
-            className={cn(
-              "numeric text-sm whitespace-nowrap",
-              vencida ? "font-medium text-danger" : "text-muted",
-            )}
-          >
-            {formatDateNumeric(cuenta.fecha_vencimiento)}
-          </span>
+          <div className="numeric whitespace-nowrap">
+            <span
+              className={cn(
+                "block text-sm",
+                vencida ? "font-medium text-danger" : "text-muted",
+              )}
+            >
+              {formatDateNumeric(cuenta.fecha_vencimiento)}
+            </span>
+            <span className="block text-xs text-muted">
+              Emitida {formatDateNumeric(cuenta.fecha_emision)}
+            </span>
+          </div>
         );
       },
     },
@@ -162,19 +156,14 @@ export function CobrosTable({
       header: "Total",
       className: "hidden lg:table-cell text-end",
       cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatMoney(cuenta.monto_total)}
-        </span>
-      ),
-    },
-    {
-      id: "pagado",
-      header: "Pagado",
-      className: "hidden lg:table-cell text-end",
-      cell: (cuenta) => (
-        <span className="numeric text-sm whitespace-nowrap text-muted">
-          {formatMoney(cuentaTotalPagado(cuenta))}
-        </span>
+        <div className="numeric whitespace-nowrap text-end">
+          <span className="block text-sm text-muted">
+            {formatMoney(cuenta.monto_total)}
+          </span>
+          <span className="block text-xs text-muted">
+            Pagado {formatMoney(cuentaTotalPagado(cuenta))}
+          </span>
+        </div>
       ),
     },
     {
@@ -195,13 +184,12 @@ export function CobrosTable({
     {
       id: "estado",
       header: "Estado",
-      cell: (cuenta) => <EstadoCobroChip estado={cuenta.estado_cobro} />,
-    },
-    {
-      id: "vencida",
-      header: "Mora",
-      className: "hidden sm:table-cell",
-      cell: (cuenta) => <VencidaChip cuenta={cuenta} />,
+      cell: (cuenta) => (
+        <div className="flex flex-col items-start gap-1">
+          <EstadoCobroChip estado={cuenta.estado_cobro} />
+          <VencidaChip cuenta={cuenta} />
+        </div>
+      ),
     },
     {
       id: "acciones",

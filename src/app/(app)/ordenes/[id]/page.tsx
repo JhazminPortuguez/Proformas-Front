@@ -50,6 +50,7 @@ const TAB_KEYS = ["resumen", "items", "materiales", "historial"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 const ACCIONES_BARRA = [
+  "reasignar",
   "reprogramar",
   "iniciar",
   "finalizar",
@@ -122,7 +123,8 @@ export default async function OrdenDetallePage({
 
   let operarios: User[] = [];
 
-  if (acciones.has("asignar") && can(user, "usuarios.ver")) {
+  // Asignar y reasignar necesitan la lista de operarios.
+  if ((acciones.has("asignar") || acciones.has("reasignar")) && can(user, "usuarios.ver")) {
     try {
       const page = await getUsuarios({
         rol: "operario",
@@ -218,6 +220,7 @@ export default async function OrdenDetallePage({
                   operarios={operarios}
                   montoCierre={ordenMontoCierre(orden)}
                   fechaProgramada={orden.fecha_programada}
+                  operarioActual={orden.operario ?? null}
                   items={orden.items}
                   display="detail"
                   hideVer

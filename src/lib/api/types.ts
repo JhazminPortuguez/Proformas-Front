@@ -14,6 +14,12 @@ export interface User {
 
 export type ClienteEstado = "prospecto" | "activo" | "inactivo";
 
+/** Trabajo en curso de un cliente (números de documento). */
+export interface ClienteEnCurso {
+  proformas: string[];
+  ordenes: string[];
+}
+
 export interface Cliente {
   id: number;
   nombre_razon: string;
@@ -287,6 +293,8 @@ export type TipoOrdenEvento =
 export type OrdenAccion =
   | "ver"
   | "asignar"
+  /** Cambiar el operario de una orden Asignada (solo admin). */
+  | "reasignar"
   | "reprogramar"
   | "iniciar"
   | "finalizar"
@@ -864,6 +872,8 @@ export interface PortalResumen {
   solicitudes: Record<string, number>;
   proformas: Record<PortalProformaEstado, number>;
   ultimo: PortalUltimo | null;
+  /** Falso si el cliente está inactivo: ve lo suyo pero no envía solicitudes. */
+  puede_solicitar?: boolean;
 }
 
 export interface PortalEmpresa {

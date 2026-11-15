@@ -198,6 +198,7 @@ export function OrdenesBoard({
                           operarios={operarios}
                           montoCierre={ordenMontoCierre(orden)}
                           fechaProgramada={orden.fecha_programada}
+                  operarioActual={orden.operario ?? null}
                           display="icons"
                         />
                       </div>

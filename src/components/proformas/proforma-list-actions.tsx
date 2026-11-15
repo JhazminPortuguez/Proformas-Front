@@ -34,6 +34,8 @@ interface ProformaListActionsProps {
   /** "icons" para la tabla densa; "labels" para las cards móviles. */
   display: "icons" | "labels";
   onRequestAction: (accion: ProformaActionRequest) => void;
+  /** Hoy en Bolivia (lo calcula la página): para saber si la validez venció. */
+  hoy?: string;
 }
 
 const ICON_LINK = cn(
@@ -55,12 +57,13 @@ export function ProformaListActions({
   acciones,
   display,
   onRequestAction,
+  hoy,
 }: ProformaListActionsProps) {
   const icon = display === "icons";
   const numero = proforma.numero;
   const href = `/proformas/${proforma.id}`;
   const editHref = `/proformas/${proforma.id}/editar`;
-  const bloqueoEnvio = motivoNoEnviar(proforma.total);
+  const bloqueoEnvio = motivoNoEnviar(proforma.total, proforma.fecha_validez, hoy);
 
   /** En la tabla, el icono muestra un tooltip con lo que hace. */
   function conTooltip(tooltip: string, element: ReactElement) {

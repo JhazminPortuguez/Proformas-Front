@@ -14,20 +14,7 @@ import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
-
-function safeNextPath(next: string | null): string | null {
-  if (!next || next.includes("\\")) return null;
-
-  try {
-    const url = new URL(next, window.location.origin);
-
-    if (url.origin !== window.location.origin) return null;
-
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return null;
-  }
-}
+import { safeNextPath } from "@/lib/redirect";
 
 export function LoginForm() {
   const router = useRouter();
@@ -53,7 +40,8 @@ export function LoginForm() {
     try {
       const user = await auth.login(email, password);
       const next = new URLSearchParams(window.location.search).get("next");
-      const safeNext = safeNextPath(next) ?? homePathFor(user.rol);
+      const safeNext =
+        safeNextPath(next, window.location.origin) ?? homePathFor(user.rol);
 
       announce("Sesión iniciada.");
       router.replace(safeNext);

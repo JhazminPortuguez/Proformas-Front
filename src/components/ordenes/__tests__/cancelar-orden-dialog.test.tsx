@@ -73,7 +73,8 @@ function casillaCobro(): HTMLInputElement {
   return screen.getByRole("checkbox", { name: "Cobrar al cliente los materiales utilizados" }) as HTMLInputElement;
 }
 
-describe("CancelarOrdenDialog · materiales consumidos", () => {
+// El primer render del modal con varios materiales tarda en máquinas cargadas.
+describe("CancelarOrdenDialog · materiales consumidos", { timeout: 15_000 }, () => {
   beforeEach(() => {
     mocks.cancelar.mockReset();
     mocks.get.mockReset();

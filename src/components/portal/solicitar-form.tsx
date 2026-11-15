@@ -53,7 +53,17 @@ const LINK_SECUNDARIO =
  * modelo real. Si llega desde el catálogo, el servicio entra como primer ítem
  * con su nombre.
  */
-export function SolicitarForm({ servicio }: { servicio?: PortalServicio | null }) {
+export const MENSAJE_CLIENTE_INACTIVO =
+  "Tu cuenta de cliente está inactiva. Puedes ver tus solicitudes y proformas, pero para enviar una solicitud nueva comunícate con la empresa.";
+
+export function SolicitarForm({
+  servicio,
+  bloqueado = false,
+}: {
+  servicio?: PortalServicio | null;
+  /** Cliente inactivo: el formulario se muestra deshabilitado. */
+  bloqueado?: boolean;
+}) {
   const router = useRouter();
   const { announce } = useAnnouncer();
   const [descripcion, setDescripcion] = useState("");
@@ -112,7 +122,7 @@ export function SolicitarForm({ servicio }: { servicio?: PortalServicio | null }
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (pending) return;
+    if (pending || bloqueado) return;
 
     const localErrors = validate();
 
@@ -140,9 +150,12 @@ export function SolicitarForm({ servicio }: { servicio?: PortalServicio | null }
         return;
       }
 
+      // 403: el cliente se desactivó mientras escribía.
       applyFieldErrors(
         isApiError(caught) ? (caught.errors ?? {}) : {},
-        apiErrorMessage(caught, "No pudimos enviar tu solicitud. Intenta nuevamente."),
+        isApiError(caught) && caught.status === 403
+          ? MENSAJE_CLIENTE_INACTIVO
+          : apiErrorMessage(caught, "No pudimos enviar tu solicitud. Intenta nuevamente."),
       );
     } finally {
       setPending(false);
@@ -329,7 +342,7 @@ export function SolicitarForm({ servicio }: { servicio?: PortalServicio | null }
         <Link href="/portal" className={LINK_SECUNDARIO}>
           Cancelar
         </Link>
-        <Button type="submit" variant="primary" isDisabled={pending}>
+        <Button type="submit" variant="primary" isDisabled={pending || bloqueado}>
           {pending ? "Enviando…" : "Enviar solicitud"}
         </Button>
       </div>

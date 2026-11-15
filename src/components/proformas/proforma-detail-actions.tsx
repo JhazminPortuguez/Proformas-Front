@@ -52,7 +52,7 @@ export function ProformaDetailActions({
   const [error, setError] = useState<string | null>(null);
 
   const available = new Set(acciones);
-  const bloqueoEnvio = motivoNoEnviar(total);
+  const bloqueoEnvio = motivoNoEnviar(total, fechaValidez);
 
   function request(action: DetailAction) {
     setError(null);

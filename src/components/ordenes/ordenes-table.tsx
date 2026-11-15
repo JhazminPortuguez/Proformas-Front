@@ -140,6 +140,7 @@ export function OrdenesTable({
           operarios={operarios}
           montoCierre={ordenMontoCierre(orden)}
           fechaProgramada={orden.fecha_programada}
+                  operarioActual={orden.operario ?? null}
           display="icons"
         />
       ),
@@ -264,6 +265,7 @@ export function OrdenesTable({
                     operarios={operarios}
                     montoCierre={ordenMontoCierre(orden)}
                     fechaProgramada={orden.fecha_programada}
+                  operarioActual={orden.operario ?? null}
                     display="labels"
                   />
                 </div>

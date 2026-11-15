@@ -20,7 +20,13 @@ import { FormErrorSummary } from "@/components/ui/form-errors";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { useFormErrors } from "@/lib/hooks/use-form-errors";
-import { proformas as proformasApi } from "@/lib/api/client";
+import {
+  clientes as clientesApi,
+  productos as productosApi,
+  proformas as proformasApi,
+  servicios as serviciosApi,
+} from "@/lib/api/client";
+import { opcionesVisibles, useCatalogoRemoto } from "@/lib/hooks/use-catalogo-remoto";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type {
@@ -42,6 +48,7 @@ import {
   motivoNoEnviar,
   parseCantidad,
   clientesParaProforma,
+  errorFechaEmision,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
 import { TotalsSummary } from "./totals-summary";
@@ -158,11 +165,21 @@ export function ProformaForm({
   productos: productosCatalogo,
   today,
 }: ProformaFormProps) {
-  // Ítems nuevos: solo catálogo activo. Las páginas ya piden `activo: true`;
-  // se filtra igual por si llega uno inactivo. Los ítems guardados con un
-  // servicio o producto desactivado se muestran aparte ("Fuera del catálogo activo").
-  const servicios = serviciosCatalogo.filter((servicio) => servicio.activo !== false);
-  const productos = productosCatalogo.filter((producto) => producto.activo !== false);
+  // Clientes, servicios y productos se buscan en el servidor mientras se
+  // escribe (sin el límite de 100). Las páginas pasan solo la primera página.
+  // Ítems nuevos: solo catálogo activo; se filtra igual por si llega uno
+  // inactivo. Los ítems guardados con un servicio o producto desactivado se
+  // muestran aparte ("Fuera del catálogo activo").
+  const catalogoClientes = useCatalogoRemoto(
+    proforma?.cliente && !clientes.some((cliente) => cliente.id === proforma.cliente_id)
+      ? [...clientes, proforma.cliente]
+      : clientes,
+    clientesApi.buscar,
+  );
+  const catalogoServicios = useCatalogoRemoto(serviciosCatalogo, serviciosApi.buscar);
+  const catalogoProductos = useCatalogoRemoto(productosCatalogo, productosApi.buscar);
+  const servicios = catalogoServicios.conocidos.filter((servicio) => servicio.activo !== false);
+  const productos = catalogoProductos.conocidos.filter((producto) => producto.activo !== false);
   const router = useRouter();
   const { announce } = useAnnouncer();
   const {
@@ -183,7 +200,7 @@ export function ProformaForm({
   // Los clientes inactivos no reciben proformas nuevas. Si se edita una que
   // ya es de un cliente inactivo, se mantiene para no vaciar el selector.
   const clienteOptions: CatalogOption[] = clientesParaProforma(
-    clientes,
+    opcionesVisibles(catalogoClientes.conocidos, catalogoClientes.resultado, form.clienteId),
     proforma?.cliente_id ?? null,
   ).map((cliente) => ({
     id: cliente.id,
@@ -240,8 +257,8 @@ export function ProformaForm({
     },
   );
 
-  const servicioOptions: CatalogOption[] = [
-    ...servicios.map((servicio) => ({
+  const servicioOptions = (seleccionado: string): CatalogOption[] => [
+    ...opcionesVisibles(servicios, catalogoServicios.resultado, seleccionado).map((servicio) => ({
       id: servicio.id,
       label: servicio.nombre,
       description: [formatMoney(servicio.precio_base), servicio.categoria]
@@ -251,8 +268,8 @@ export function ProformaForm({
     ...serviciosGuardados,
   ];
 
-  const productoOptions: CatalogOption[] = [
-    ...productos.map((producto) => ({
+  const productoOptions = (seleccionado: string): CatalogOption[] => [
+    ...opcionesVisibles(productos, catalogoProductos.resultado, seleccionado).map((producto) => ({
       id: producto.id,
       label: producto.nombre,
       description: `${formatMoney(producto.precio_unitario)} · ${
@@ -433,9 +450,13 @@ export function ProformaForm({
       errors.cliente_id = ["Selecciona el cliente de la proforma."];
     }
 
-    if (!isValidDateOnly(form.fecha_emision)) {
-      errors.fecha_emision = ["Ingresa una fecha de emisión válida."];
-    }
+    // Como máximo hoy; un borrador antiguo con fecha futura se edita sin cambiarla.
+    const errorEmision =
+      proforma && form.fecha_emision === proforma.fecha_emision
+        ? null
+        : errorFechaEmision(form.fecha_emision, today);
+
+    if (errorEmision) errors.fecha_emision = [errorEmision];
 
     if (form.fecha_validez) {
       if (!isValidDateOnly(form.fecha_validez)) {
@@ -654,7 +675,7 @@ export function ProformaForm({
     }
   }
 
-  const bloqueoEnvio = motivoNoEnviar(totals.total);
+  const bloqueoEnvio = motivoNoEnviar(totals.total, form.fecha_validez || null, today);
 
   function setIntent(intent: "draft" | "send") {
     intentRef.current = intent;
@@ -737,7 +758,7 @@ export function ProformaForm({
         </Alert>
       ) : null}
 
-      {clienteOptions.length === 0 ? (
+      {clientesParaProforma(clientes, proforma?.cliente_id ?? null).length === 0 ? (
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
@@ -778,6 +799,8 @@ export function ProformaForm({
                 value={form.clienteId}
                 onChange={(value) => update("clienteId", value)}
                 options={clienteOptions}
+                onSearch={catalogoClientes.buscar}
+                isLoading={catalogoClientes.cargando}
                 error={firstError(fieldErrors, "cliente_id")}
                 placeholder="Buscar por nombre o NIT…"
                 isRequired
@@ -791,6 +814,7 @@ export function ProformaForm({
                 type="date"
                 value={form.fecha_emision}
                 onChange={(value) => update("fecha_emision", value)}
+                max={today}
                 error={firstError(fieldErrors, "fecha_emision")}
                 isRequired
               />
@@ -987,7 +1011,9 @@ export function ProformaForm({
                             label="Servicio"
                             value={item.catalogoId}
                             onChange={(value) => changeCatalog(item, value)}
-                            options={servicioOptions}
+                            options={servicioOptions(item.catalogoId)}
+                            onSearch={catalogoServicios.buscar}
+                            isLoading={catalogoServicios.cargando}
                             error={firstError(
                               fieldErrors,
                               `${prefix}.servicio_id`,
@@ -1001,7 +1027,9 @@ export function ProformaForm({
                             label="Material"
                             value={item.catalogoId}
                             onChange={(value) => changeCatalog(item, value)}
-                            options={productoOptions}
+                            options={productoOptions(item.catalogoId)}
+                            onSearch={catalogoProductos.buscar}
+                            isLoading={catalogoProductos.cargando}
                             error={firstError(
                               fieldErrors,
                               `${prefix}.producto_id`,

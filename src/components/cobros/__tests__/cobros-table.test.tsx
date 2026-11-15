@@ -91,7 +91,12 @@ describe("CobrosTable", () => {
       within(table).getByRole("link", { name: "ORD-000009" }),
     ).toBeInTheDocument();
     expect(within(table).getByText(moneyText(1000))).toBeInTheDocument();
-    expect(within(table).getByText(moneyText(600))).toBeInTheDocument();
+    // Total y pagado en la misma columna; emisión bajo el vencimiento (punto 13).
+    expect(within(table).getByText(`Pagado ${moneyText(600)}`)).toBeInTheDocument();
+    expect(within(table).getByText(/^Emitida \d{2}\/\d{2}\/\d{4}$/)).toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Mora" })).not.toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Pagado" })).not.toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Orden" })).not.toBeInTheDocument();
     expect(within(table).getByText(moneyText(400))).toBeInTheDocument();
     expect(within(table).getByText("Parcial")).toBeInTheDocument();
     expect(within(table).getByText("Vencida 12 d")).toBeInTheDocument();
