@@ -287,6 +287,20 @@ export function ProformaForm({
     ...productosGuardados,
   ]);
 
+  // P-04: el nombre sale de la descripción o, si no tiene, del catálogo.
+  const repetidos = itemsRepetidos(
+    form.items.map((item) => ({
+      ...item,
+      descripcion:
+        item.descripcion ||
+        (item.tipo === "SERVICIO"
+          ? servicioOptions(item.catalogoId)
+          : productoOptions(item.catalogoId)
+        ).find((opcion) => String(opcion.id) === item.catalogoId)?.label ||
+        "",
+    })),
+  );
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -949,14 +963,14 @@ export function ProformaForm({
             </p>
           ) : null}
 
-          {itemsRepetidos(form.items).length > 0 ? (
+          {repetidos.length > 0 ? (
             // P-04: se permite repetir; solo se avisa.
             <Alert status="warning" className="mb-3">
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>Hay ítems repetidos</Alert.Title>
                 <Alert.Description>
-                  {itemsRepetidos(form.items)
+                  {repetidos
                     .map((repetido) => `${repetido.nombre} (${repetido.veces} veces)`)
                     .join(", ")}
                   . Se puede guardar igual; revisa si fue a propósito.

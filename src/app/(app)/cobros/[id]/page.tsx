@@ -178,9 +178,11 @@ export default async function CobroDetallePage({
             <Alert.Description>
               {cuenta.motivo_anulacion || "Sin motivo registrado."}
               {cuenta.anulador ? ` · ${cuenta.anulador.name}` : ""}
-              {cuenta.anulada_at ? ` · ${formatDateTime(cuenta.anulada_at)}` : ""}. No
-              se cobra ni suma en el dashboard ni en los reportes.
+              {cuenta.anulada_at ? ` · ${formatDateTime(cuenta.anulada_at)}` : ""}
             </Alert.Description>
+            <p className="mt-1 text-sm text-muted">
+              No se cobra ni suma en el dashboard ni en los reportes.
+            </p>
           </Alert.Content>
         </Alert>
       ) : null}

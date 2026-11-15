@@ -312,16 +312,18 @@ test("cobros carga el listado y abre el diálogo de pago", async ({ page }) => {
 
 test("los diálogos de clientes no emiten warnings", async ({ page }) => {
   await page.goto("/clientes");
-  await page.waitForTimeout(1000);
-
-  await page
-    .getByRole("button", { name: /^Editar / })
-    .first()
-    .click();
 
   const editar = page.getByRole("dialog");
 
-  await expect(editar).toBeVisible();
+  // Con el servidor de desarrollo lento, un clic antes de que la página
+  // termine de hidratarse se pierde: se reintenta hasta que abre el panel.
+  await expect(async () => {
+    await page
+      .getByRole("button", { name: /^Editar / })
+      .first()
+      .click();
+    await expect(editar).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
   await expect(editar).toContainText("Editar cliente");
   await editar.getByRole("button", { name: "Cancelar" }).click();
 
