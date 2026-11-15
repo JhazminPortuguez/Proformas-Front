@@ -25,6 +25,10 @@ test.afterEach(() => {
 test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", async ({
   page,
 }) => {
+  // Es la primera en recorrer varias páginas: con el servidor de desarrollo
+  // en frío las compila y puede pasar los 45 s. Triplica su tiempo límite.
+  test.slow();
+
   await page.goto("/dashboard");
 
   // Validamos los KPIs reales y que la pantalla no emita el warning de labels
@@ -389,6 +393,16 @@ test("casos borde: buscador remoto, cobros a 1280 px y rango de reportes", async
     return contenedor.scrollWidth - contenedor.clientWidth;
   });
   expect(desborde).toBeLessThanOrEqual(1);
+
+  // Punto 11: el listado de proformas tampoco se desplaza a 1280 px.
+  await page.goto("/proformas");
+  const proformas = page.getByRole("grid", { name: "Proformas" });
+  await expect(proformas).toBeVisible();
+  const desbordeProformas = await proformas.evaluate((el) => {
+    const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
+    return contenedor.scrollWidth - contenedor.clientWidth;
+  });
+  expect(desbordeProformas).toBeLessThanOrEqual(1);
 
   // R-03: un rango de más de 1 año avisa y no consulta el reporte.
   await page.goto("/reportes?tab=ordenes&desde=2024-01-01&hasta=2026-11-10");

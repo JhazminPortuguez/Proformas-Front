@@ -429,3 +429,28 @@ export function errorFechaEmision(fecha: string, hoy: string): string | null {
 export function ordenNoVisibleNota(operarioId: number | null | undefined): string {
   return operarioId == null ? "sin asignar" : "asignada a otro operario";
 }
+
+/**
+ * P-04: servicios o materiales del catálogo que aparecen en más de una línea.
+ * Se permite repetirlos (por ejemplo, en dos ubicaciones), pero el formulario
+ * avisa por si fue sin querer. Devuelve el nombre y cuántas veces aparece.
+ */
+export function itemsRepetidos(
+  items: readonly { tipo: string; catalogoId: string; descripcion: string }[],
+): { nombre: string; veces: number }[] {
+  const porClave = new Map<string, { nombre: string; veces: number }>();
+
+  for (const item of items) {
+    if ((item.tipo !== "SERVICIO" && item.tipo !== "MATERIAL") || !item.catalogoId) continue;
+
+    const clave = `${item.tipo}:${item.catalogoId}`;
+    const actual = porClave.get(clave);
+
+    porClave.set(clave, {
+      nombre: actual?.nombre || item.descripcion || "Ítem del catálogo",
+      veces: (actual?.veces ?? 0) + 1,
+    });
+  }
+
+  return [...porClave.values()].filter((entrada) => entrada.veces > 1);
+}

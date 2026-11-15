@@ -140,7 +140,8 @@ export function productoStockBajo(
 ): boolean {
   if (typeof producto.stock_bajo === "boolean") return producto.stock_bajo;
 
-  return producto.stock_actual <= producto.stock_minimo;
+  // Mínimo 0 = sin alerta (I-07), igual que el back.
+  return producto.stock_minimo > 0 && producto.stock_actual <= producto.stock_minimo;
 }
 
 /** El backend manda `valor_stock`; si falta, se estima con el costo promedio. */

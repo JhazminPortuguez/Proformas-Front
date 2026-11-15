@@ -49,6 +49,7 @@ import {
   parseCantidad,
   clientesParaProforma,
   errorFechaEmision,
+  itemsRepetidos,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
 import { TotalsSummary } from "./totals-summary";
@@ -257,7 +258,14 @@ export function ProformaForm({
     },
   );
 
-  const servicioOptions = (seleccionado: string): CatalogOption[] => [
+  // Una opción por id: dos líneas con el mismo servicio o producto (P-04) no
+  // deben repetir la clave en el selector.
+  const sinRepetir = (opciones: CatalogOption[]): CatalogOption[] =>
+    opciones.filter(
+      (opcion, indice) => opciones.findIndex((otra) => otra.id === opcion.id) === indice,
+    );
+
+  const servicioOptions = (seleccionado: string): CatalogOption[] => sinRepetir([
     ...opcionesVisibles(servicios, catalogoServicios.resultado, seleccionado).map((servicio) => ({
       id: servicio.id,
       label: servicio.nombre,
@@ -266,9 +274,9 @@ export function ProformaForm({
         .join(" · "),
     })),
     ...serviciosGuardados,
-  ];
+  ]);
 
-  const productoOptions = (seleccionado: string): CatalogOption[] => [
+  const productoOptions = (seleccionado: string): CatalogOption[] => sinRepetir([
     ...opcionesVisibles(productos, catalogoProductos.resultado, seleccionado).map((producto) => ({
       id: producto.id,
       label: producto.nombre,
@@ -277,7 +285,7 @@ export function ProformaForm({
       } · Stock ${formatNumber(producto.stock_actual)}`,
     })),
     ...productosGuardados,
-  ];
+  ]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -939,6 +947,22 @@ export function ProformaForm({
             <p role="alert" className="text-sm text-danger">
               {firstError(fieldErrors, "items")}
             </p>
+          ) : null}
+
+          {itemsRepetidos(form.items).length > 0 ? (
+            // P-04: se permite repetir; solo se avisa.
+            <Alert status="warning" className="mb-3">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>Hay ítems repetidos</Alert.Title>
+                <Alert.Description>
+                  {itemsRepetidos(form.items)
+                    .map((repetido) => `${repetido.nombre} (${repetido.veces} veces)`)
+                    .join(", ")}
+                  . Se puede guardar igual; revisa si fue a propósito.
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
           ) : null}
 
           {form.items.length === 0 ? (

@@ -413,6 +413,16 @@ export const cuentas = {
 
     return unwrapResource(body);
   },
+
+  /** X-11: anula la cuenta (solo admin, sin pagos vigentes, con motivo). */
+  async anular(id: number, motivo: string): Promise<CuentaPorCobrar> {
+    const body = await request<CuentaPorCobrar | { data: CuentaPorCobrar }>(
+      `/cuentas-por-cobrar/${id}/anular`,
+      jsonBody({ motivo }),
+    );
+
+    return unwrapResource(body);
+  },
 };
 
 export const pagos = {

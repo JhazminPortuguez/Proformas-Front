@@ -24,6 +24,8 @@ const ESTADO_OPTIONS: { value: string; label: string }[] = [
   { value: "PENDIENTE", label: "Pendiente" },
   { value: "PARCIAL", label: "Parcial" },
   { value: "PAGADA", label: "Pagada" },
+  // Las anuladas solo se listan con este filtro (X-11).
+  { value: "ANULADA", label: "Anulada" },
   { value: "VENCIDA", label: "Solo vencidas" },
 ];
 

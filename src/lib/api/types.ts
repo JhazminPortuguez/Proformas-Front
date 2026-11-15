@@ -414,7 +414,8 @@ export interface OrdenInput {
 /* Cuentas por cobrar                                                         */
 /* -------------------------------------------------------------------------- */
 
-export type EstadoCobro = "PENDIENTE" | "PARCIAL" | "PAGADA";
+/** ANULADA: el admin la anuló sin pagos vigentes (X-11); no se cobra. */
+export type EstadoCobro = "PENDIENTE" | "PARCIAL" | "PAGADA" | "ANULADA";
 
 export type MetodoPago =
   | "EFECTIVO"
@@ -450,6 +451,11 @@ export interface CuentaPorCobrar {
   concepto_etiqueta?: string;
   /** En un cobro por cancelación, el desglose por material. */
   observaciones?: string | null;
+  /** X-11: datos de la anulación de la cuenta. */
+  anulada?: boolean;
+  anulada_at?: string | null;
+  motivo_anulacion?: string | null;
+  anulador?: { id: number; name: string } | null;
   orden_id: number;
   cliente_id: number;
   /** Fecha date-only (`YYYY-MM-DD`). */
