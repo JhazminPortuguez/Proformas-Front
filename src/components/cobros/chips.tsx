@@ -28,8 +28,11 @@ export function VencidaChip({
     | "monto_total"
     | "total_pagado"
     | "fecha_vencimiento"
-  >;
+  > & { estado_cobro?: string };
 }) {
+  // Una cuenta anulada no tiene mora ni está "al día": no se cobra.
+  if (cuenta.estado_cobro === "ANULADA") return null;
+
   if (!cuentaEstaVencida(cuenta)) {
     return <StatusChip tone="neutral">Al día</StatusChip>;
   }

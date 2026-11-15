@@ -202,7 +202,9 @@ describe("ProformasTable", () => {
     expect(within(table).getByRole("link", { name: "PRF-000012" })).toHaveClass(
       "whitespace-nowrap",
     );
-    expect(within(table).getByText("25/10/2026")).toHaveClass("whitespace-nowrap");
+    // La emisión va bajo la validez (sin columna propia) para caber a 1280 px.
+    expect(within(table).getByText("Emitida 25/10/2026")).toHaveClass("whitespace-nowrap");
     expect(within(table).getByText("10/11/2026")).toHaveClass("whitespace-nowrap");
+    expect(within(table).queryByRole("columnheader", { name: "Emisión" })).not.toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ import {
 } from "@/components/cobros/chips";
 import { PagosTable } from "@/components/cobros/pagos-table";
 import { RegistrarPagoAction } from "@/components/cobros/registrar-pago-dialog";
+import { AnularCuentaAction } from "@/components/cobros/anular-cuenta-action";
 import { getCuentaPorCobrar, requireUser } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
@@ -32,7 +33,7 @@ import {
 } from "@/lib/cobros";
 import { ordenEstadoMeta } from "@/lib/estados";
 import { can } from "@/lib/permissions";
-import { formatDateOnly, formatMoney, formatNumber } from "@/lib/utils";
+import { formatDateOnly, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Detalle de cuenta por cobrar",
@@ -98,6 +99,8 @@ export default async function CobroDetallePage({
   const orden = cuenta.orden;
   const puedePagar =
     can(user, "pagos.registrar") && puedeRegistrarPago(cuenta, true);
+  // X-11: el back ofrece "anular" solo al admin y sin pagos vigentes.
+  const puedeAnularCuenta = (cuenta.acciones_disponibles ?? []).includes("anular");
   const puedeAnular = can(user, "pagos.anular");
   const pagos = cuenta.pagos ?? [];
 
@@ -131,6 +134,9 @@ export default async function CobroDetallePage({
             </Link>
 
             {puedePagar ? <RegistrarPagoAction cuenta={cuenta} /> : null}
+            {puedeAnularCuenta ? (
+              <AnularCuentaAction cuentaId={cuenta.id} numero={cuenta.numero} />
+            ) : null}
           </>
         }
       />
@@ -160,6 +166,23 @@ export default async function CobroDetallePage({
               Antigüedad {aging.label}: {aging.description} Saldo pendiente:{" "}
               {formatMoney(saldo)}.
             </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
+      {cuenta.estado_cobro === "ANULADA" ? (
+        <Alert status="default" className="mb-6 items-start">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Cuenta anulada</Alert.Title>
+            <Alert.Description>
+              {cuenta.motivo_anulacion || "Sin motivo registrado."}
+              {cuenta.anulador ? ` · ${cuenta.anulador.name}` : ""}
+              {cuenta.anulada_at ? ` · ${formatDateTime(cuenta.anulada_at)}` : ""}
+            </Alert.Description>
+            <p className="mt-1 text-sm text-muted">
+              No se cobra ni suma en el dashboard ni en los reportes.
+            </p>
           </Alert.Content>
         </Alert>
       ) : null}

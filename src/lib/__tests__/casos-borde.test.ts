@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { errorFechaPago, esCobroCancelacion } from "@/lib/cobros";
-import { movimientoMeta, movimientoSigno } from "@/lib/inventario";
+import { movimientoMeta, movimientoSigno, productoStockBajo } from "@/lib/inventario";
 import {
   cobroCancelacion,
   errorDevolucion,
@@ -12,6 +12,7 @@ import {
   avisoAceptarVencida,
   clientesParaProforma,
   errorFechaEmision,
+  itemsRepetidos,
   motivoNoEnviar,
 } from "@/lib/proformas";
 
@@ -151,5 +152,39 @@ describe("errorFechaEmision (punto 6)", () => {
     expect(errorFechaEmision("2026-02-30", "2026-11-10")).toBe(
       "Ingresa una fecha de emisión válida.",
     );
+  });
+});
+
+describe("itemsRepetidos (P-04: se permite, con aviso)", () => {
+  it("detecta el mismo servicio o material en varias líneas", () => {
+    expect(
+      itemsRepetidos([
+        { tipo: "SERVICIO", catalogoId: "10", descripcion: "Armado de PC" },
+        { tipo: "MATERIAL", catalogoId: "3", descripcion: "Pasta térmica" },
+        { tipo: "SERVICIO", catalogoId: "10", descripcion: "Armado de PC" },
+        { tipo: "SERVICIO", catalogoId: "10", descripcion: "Armado de PC" },
+      ]),
+    ).toEqual([{ nombre: "Armado de PC", veces: 3 }]);
+  });
+
+  it("no cuenta líneas libres ni líneas sin elegir, ni el mismo id en otro tipo", () => {
+    expect(
+      itemsRepetidos([
+        { tipo: "LIBRE", catalogoId: "", descripcion: "Traslado" },
+        { tipo: "LIBRE", catalogoId: "", descripcion: "Traslado" },
+        { tipo: "SERVICIO", catalogoId: "", descripcion: "" },
+        { tipo: "SERVICIO", catalogoId: "", descripcion: "" },
+        { tipo: "SERVICIO", catalogoId: "5", descripcion: "Soporte" },
+        { tipo: "MATERIAL", catalogoId: "5", descripcion: "Cable" },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe("productoStockBajo (I-07: mínimo 0 = sin alerta)", () => {
+  it("con mínimo 0 no alerta aunque el stock sea 0", () => {
+    expect(productoStockBajo({ stock_actual: 0, stock_minimo: 0 })).toBe(false);
+    expect(productoStockBajo({ stock_actual: 5, stock_minimo: 5 })).toBe(true);
+    expect(productoStockBajo({ stock_actual: 6, stock_minimo: 5 })).toBe(false);
   });
 });

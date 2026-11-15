@@ -83,6 +83,9 @@ function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
       <p className="numeric whitespace-nowrap text-sm text-muted">
         {formatDateNumeric(proforma.fecha_validez)}
       </p>
+      <p className="numeric whitespace-nowrap text-xs text-muted">
+        Emitida {formatDateNumeric(proforma.fecha_emision)}
+      </p>
       {proformaExpirada(proforma, hoy) && proforma.fecha_validez ? (
         <p className="text-xs text-warning">
           Aviso: Expiró {formatDiaMes(proforma.fecha_validez)}
@@ -302,15 +305,8 @@ export function ProformasTable({
       cell: (proforma) => <ClienteCell proforma={proforma} />,
     },
     {
-      id: "emision",
-      header: "Emisión",
-      cell: (proforma) => (
-        <span className="numeric whitespace-nowrap text-sm text-muted">
-          {formatDateNumeric(proforma.fecha_emision)}
-        </span>
-      ),
-    },
-    {
+      // Validez y, debajo, la emisión: una columna menos para que la tabla
+      // quepa sin desplazamiento desde 1280 px.
       id: "validez",
       header: "Validez",
       cell: (proforma) => <ValidezCell proforma={proforma} hoy={hoy} />,

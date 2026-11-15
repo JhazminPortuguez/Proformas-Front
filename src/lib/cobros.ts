@@ -35,12 +35,18 @@ export const ESTADO_COBRO_META: Record<EstadoCobro, CobroEstadoMeta> = {
     tone: "success",
     description: "El saldo quedó en cero.",
   },
+  ANULADA: {
+    label: "Anulada",
+    tone: "neutral",
+    description: "La anuló un administrador: no se cobra ni suma en la cobranza.",
+  },
 };
 
 const ESTADO_COBRO_ALIAS: Record<string, EstadoCobro> = {
   pendiente: "PENDIENTE",
   parcial: "PARCIAL",
   pagada: "PAGADA",
+  anulada: "ANULADA",
   pagado: "PAGADA",
   cancelada: "PAGADA",
   cancelado: "PAGADA",

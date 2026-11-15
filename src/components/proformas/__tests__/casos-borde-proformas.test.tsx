@@ -270,3 +270,49 @@ describe("Catálogo de la proforma", () => {
     expect(opciones.some((texto) => texto.includes("Servicio retirado"))).toBe(false);
   });
 });
+
+describe("Ítems repetidos en el formulario (P-04)", () => {
+  it("avisa sin bloquear cuando el mismo material está en dos líneas", () => {
+    const linea = (id: number) => ({
+      id,
+      tipo: "MATERIAL" as const,
+      servicio_id: null,
+      producto_id: 20,
+      descripcion: "Cable 12 AWG",
+      cantidad: 1,
+      precio_unitario: 12.5,
+      total_linea: 12.5,
+    });
+
+    render(
+      <ProformaForm
+        proforma={{
+          id: 7,
+          numero: "PR-2026-000007",
+          cliente_id: 1,
+          fecha_emision: "2026-11-10",
+          fecha_validez: null,
+          estado: "BORRADOR",
+          moneda: "BOB",
+          subtotal: 25,
+          descuento: 0,
+          impuesto_tasa: 0,
+          impuesto: 0,
+          total: 25,
+          observaciones: null,
+          items: [linea(1), linea(2)],
+        } as unknown as Parameters<typeof ProformaForm>[0]["proforma"]}
+        clientes={[cliente(1, "Constructora Andina", "activo")]}
+        servicios={[]}
+        productos={[]}
+        today="2026-11-15"
+      />,
+    );
+
+    expect(screen.getByText("Hay ítems repetidos")).toBeInTheDocument();
+    expect(screen.getByText(/Cable 12 AWG \(2 veces\)/)).toBeInTheDocument();
+    for (const boton of screen.getAllByRole("button", { name: /^Guardar/ })) {
+      expect(boton).toBeEnabled();
+    }
+  });
+});
