@@ -96,6 +96,7 @@ describe("CobrosTable", () => {
     expect(within(table).getByText(/^Emitida \d{2}\/\d{2}\/\d{4}$/)).toBeInTheDocument();
     expect(within(table).queryByRole("columnheader", { name: "Mora" })).not.toBeInTheDocument();
     expect(within(table).queryByRole("columnheader", { name: "Pagado" })).not.toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Orden" })).not.toBeInTheDocument();
     expect(within(table).getByText(moneyText(400))).toBeInTheDocument();
     expect(within(table).getByText("Parcial")).toBeInTheDocument();
     expect(within(table).getByText("Vencida 12 d")).toBeInTheDocument();

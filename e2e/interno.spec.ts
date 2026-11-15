@@ -38,7 +38,7 @@ test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", asy
   await expect(pulso).toBeVisible();
 
   const clientes = pulso.getByRole("link", { name: /Clientes/ });
-  const cotizado = pulso.getByRole("link", { name: /Cotizado del mes/ });
+  const cotizado = pulso.getByRole("link", { name: /En espera de respuesta/ });
   const stock = pulso.getByRole("link", { name: /Stock bajo/ });
 
   await expect(clientes).toBeVisible();
@@ -80,7 +80,7 @@ test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", asy
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/proformas");
   await expect(
-    page.getByRole("heading", { name: "Proformas", exact: true }),
+    page.getByRole("heading", { name: "Proformas y Solicitudes", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Nueva proforma" }),
@@ -363,4 +363,36 @@ test("la pestaña de materiales de una orden expone el consumo", async ({
 
     await dialog.getByRole("button", { name: "Cancelar" }).click();
   }
+});
+
+test("casos borde: buscador remoto, cobros a 1280 px y rango de reportes", async ({
+  page,
+}) => {
+  // Punto 5: el cliente se busca en el servidor mientras se escribe.
+  await page.goto("/proformas/nueva");
+  const respuesta = page.waitForResponse(
+    (r) => r.url().includes("/api/v1/clientes?activos=1") && r.url().includes("search="),
+  );
+  const cliente = page.getByRole("combobox", { name: "Cliente" }).first();
+  await cliente.click();
+  await cliente.fill("Cli");
+  expect((await respuesta).ok()).toBe(true);
+  await expect(page.getByRole("option").first()).toBeVisible();
+
+  // Punto 13: Cuentas por cobrar cabe sin desplazamiento horizontal a 1280 px.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/cobros");
+  const tabla = page.getByRole("grid", { name: "Cuentas por cobrar" });
+  await expect(tabla).toBeVisible();
+  const desborde = await tabla.evaluate((el) => {
+    const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
+    return contenedor.scrollWidth - contenedor.clientWidth;
+  });
+  expect(desborde).toBeLessThanOrEqual(1);
+
+  // R-03: un rango de más de 1 año avisa y no consulta el reporte.
+  await page.goto("/reportes?tab=ordenes&desde=2024-01-01&hasta=2026-11-10");
+  await expect(
+    page.getByText("El rango del reporte no puede superar 1 año. Elige un periodo de 12 meses o menos."),
+  ).toBeVisible();
 });

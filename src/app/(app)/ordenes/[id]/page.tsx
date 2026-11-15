@@ -123,7 +123,8 @@ export default async function OrdenDetallePage({
 
   let operarios: User[] = [];
 
-  if (acciones.has("asignar") && can(user, "usuarios.ver")) {
+  // Asignar y reasignar necesitan la lista de operarios.
+  if ((acciones.has("asignar") || acciones.has("reasignar")) && can(user, "usuarios.ver")) {
     try {
       const page = await getUsuarios({
         rol: "operario",

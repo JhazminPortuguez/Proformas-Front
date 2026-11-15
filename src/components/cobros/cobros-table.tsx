@@ -97,7 +97,16 @@ export function CobrosTable({
             </Link>
             <ConceptoCuentaChip cuenta={cuenta} />
           </div>
-          <p className="numeric text-xs text-muted">
+          {/* La orden va en la segunda línea (sin columna propia) para que
+              la tabla quepa sin desplazamiento desde 1280 px. */}
+          <p className="numeric text-xs whitespace-nowrap text-muted">
+            <Link
+              href={cuentaOrdenHref(cuenta)}
+              className="whitespace-nowrap text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              {cuentaOrdenNumero(cuenta)}
+            </Link>
+            {" · "}
             {cuentaPagosCount(cuenta)}{" "}
             {cuentaPagosCount(cuenta) === 1 ? "pago" : "pagos"}
           </p>
@@ -110,22 +119,10 @@ export function CobrosTable({
       cell: (cuenta) => (
         <Link
           href={`/clientes/${cuenta.cliente_id}`}
-          className="block max-w-[15rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          title={cuentaClienteNombre(cuenta)}
+          className="block max-w-[11rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {cuentaClienteNombre(cuenta)}
-        </Link>
-      ),
-    },
-    {
-      id: "orden",
-      header: "Orden",
-      className: "hidden md:table-cell",
-      cell: (cuenta) => (
-        <Link
-          href={cuentaOrdenHref(cuenta)}
-          className="whitespace-nowrap text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          {cuentaOrdenNumero(cuenta)}
         </Link>
       ),
     },
