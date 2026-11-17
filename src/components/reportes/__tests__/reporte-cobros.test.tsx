@@ -143,6 +143,18 @@ describe("ReportesView con el reporte de cuentas por cobrar", () => {
       "href",
       "/api/v1/reportes/cobros?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=csv",
     );
+    // Mejora 2: PDF y Excel con los mismos filtros.
+    expect(screen.getByRole("link", { name: "Exportar PDF" })).toHaveAttribute(
+      "href",
+      "/api/v1/reportes/cobros?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=pdf",
+    );
+    expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute(
+      "href",
+      "/api/v1/reportes/cobros?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=xlsx",
+    );
+    expect(
+      within(screen.getByRole("group", { name: "Exportar reporte" })).getAllByRole("link"),
+    ).toHaveLength(3);
     expect(
       screen.getByRole("link", { name: "Cuentas por cobrar" }),
     ).toHaveAttribute("aria-current", "page");

@@ -1,11 +1,17 @@
 import type { ReactNode } from "react";
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { LinkTooltip } from "@/components/ui/action-tooltip";
 import { Card } from "@heroui/react";
 import {
   FOCUS_RING,
   PanelEmpty,
   SectionIntro,
 } from "@/components/dashboard/dashboard-ui";
+import {
+  EXPORTACIONES,
+  reporteExportHref,
+  type ReportesQuery,
+} from "@/lib/reportes";
 import { cn } from "@/lib/utils";
 
 export interface ReporteKpi {
@@ -180,22 +186,54 @@ export function ClienteConNit({
   );
 }
 
+const ENLACE_DESCARGA = cn(
+  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary",
+  FOCUS_RING,
+);
+
+const ICONO_FORMATO = {
+  csv: Download,
+  pdf: FileText,
+  xlsx: FileSpreadsheet,
+} as const;
+
 /**
  * Descarga del CSV. Es un enlace al back (vía el proxy `/api`), no una acción
  * de la app: el navegador baja el archivo con la sesión actual.
  */
 export function CsvLink({ href }: { href: string }) {
   return (
-    <a
-      href={href}
-      download
-      className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary",
-        FOCUS_RING,
-      )}
-    >
+    <a href={href} download className={ENLACE_DESCARGA}>
       <Download aria-hidden className="size-4" />
       Exportar CSV
     </a>
+  );
+}
+
+/**
+ * CSV, PDF y Excel con los mismos filtros que la pantalla. Son enlaces al
+ * back: el navegador descarga el archivo con la sesión actual.
+ */
+export function ExportarReporte({ query }: { query: ReportesQuery }) {
+  return (
+    <div role="group" aria-label="Exportar reporte" className="flex flex-wrap items-center gap-2">
+      {EXPORTACIONES.map(({ formato, label, tooltip }) => {
+        const Icono = ICONO_FORMATO[formato];
+
+        return (
+          <LinkTooltip key={formato} label={tooltip}>
+            <a
+              href={reporteExportHref(query, formato)}
+              download
+              className={ENLACE_DESCARGA}
+              aria-label={`Exportar ${label}`}
+            >
+              <Icono aria-hidden className="size-4" />
+              {label}
+            </a>
+          </LinkTooltip>
+        );
+      })}
+    </div>
   );
 }

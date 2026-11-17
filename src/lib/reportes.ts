@@ -159,11 +159,44 @@ export function reportesHref(query: ReportesQuery): string {
  * el navegador manda la cookie de sesión.
  */
 export function reporteCsvHref(query: ReportesQuery): string {
+  return reporteExportHref(query, "csv");
+}
+
+export type FormatoExportacion = "csv" | "pdf" | "xlsx";
+
+/** Archivo del reporte con los mismos filtros que la pantalla. */
+export function reporteExportHref(
+  query: ReportesQuery,
+  formato: FormatoExportacion,
+): string {
   return `/api/v1/reportes/${REPORTES[query.tab].endpoint}${buildQuery({
     ...reporteParams(query),
-    formato: "csv",
+    formato,
   })}`;
 }
+
+/** Botones de descarga, en este orden, con su tooltip. */
+export const EXPORTACIONES: readonly {
+  formato: FormatoExportacion;
+  label: string;
+  tooltip: string;
+}[] = [
+  {
+    formato: "csv",
+    label: "CSV",
+    tooltip: "Datos separados por comas, para importar en otros sistemas",
+  },
+  {
+    formato: "pdf",
+    label: "PDF",
+    tooltip: "Documento carta con logo, filtros, tabla y totales, listo para imprimir",
+  },
+  {
+    formato: "xlsx",
+    label: "Excel",
+    tooltip: "Libro .xlsx con montos y fechas con formato, filtros y fila de totales",
+  },
+];
 
 export function reportesPestanas(
   query: ReportesQuery,
