@@ -134,48 +134,60 @@ export function ClientesTable({
 
   const columns: DataTableColumn<Cliente>[] = [
     {
+      // Nombre con NIT/CI y dirección debajo. Ancho máximo + `truncate` (el
+      // texto completo queda en `title`): sin tope, un nombre largo estiraba
+      // la tabla y a 1280 px se desplazaba en horizontal.
       id: "nombre",
       header: "Cliente",
       isRowHeader: true,
-      cell: (cliente) => (
-        <div className="min-w-0">
-          <Link
-            href={`/clientes/${cliente.id}`}
-            className="block truncate font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            {cliente.nombre_razon}
-          </Link>
-          {cliente.direccion ? (
-            <p className="truncate text-xs text-muted">{cliente.direccion}</p>
-          ) : null}
-        </div>
-      ),
+      cell: (cliente) => {
+        const detalle = [
+          cliente.nit_ci ? `NIT/CI ${cliente.nit_ci}` : null,
+          cliente.direccion,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+        return (
+          <div className="min-w-0 max-w-[18rem]">
+            <Link
+              href={`/clientes/${cliente.id}`}
+              title={cliente.nombre_razon}
+              className="block truncate font-medium text-accent-soft-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              {cliente.nombre_razon}
+            </Link>
+            {detalle ? (
+              <p className="truncate text-xs text-muted" title={detalle}>
+                {detalle}
+              </p>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
-      id: "nit",
-      header: "NIT / CI",
-      className: "hidden sm:table-cell",
-      cell: (cliente) => (
-        <span className="numeric text-sm text-muted">{cliente.nit_ci ?? "—"}</span>
-      ),
-    },
-    {
-      id: "telefono",
-      header: "Teléfono",
+      // Teléfono y correo en una sola columna, con el mismo tope de ancho.
+      id: "contacto",
+      header: "Contacto",
       className: "hidden md:table-cell",
-      cell: (cliente) => (
-        <span className="numeric text-sm">{cliente.telefono ?? "—"}</span>
-      ),
-    },
-    {
-      id: "email",
-      header: "Email",
-      className: "hidden lg:table-cell",
-      cell: (cliente) => (
-        <span className="block max-w-[16rem] truncate text-sm">
-          {cliente.email ?? "—"}
-        </span>
-      ),
+      cell: (cliente) =>
+        cliente.telefono || cliente.email ? (
+          <div className="min-w-0 max-w-[12rem] text-sm">
+            {cliente.telefono ? (
+              <span className="numeric block truncate" title={cliente.telefono}>
+                {cliente.telefono}
+              </span>
+            ) : null}
+            {cliente.email ? (
+              <span className="block truncate text-xs text-muted" title={cliente.email}>
+                {cliente.email}
+              </span>
+            ) : null}
+          </div>
+        ) : (
+          <span className="text-sm text-muted">—</span>
+        ),
     },
     {
       id: "estado",

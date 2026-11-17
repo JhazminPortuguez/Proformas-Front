@@ -1,11 +1,49 @@
 import type {
   ClienteResumen,
+  ErroresValidacion,
   EstadoProforma,
   HistorialServicio,
 } from "@/lib/api/types";
 import type { EstadoTone } from "@/lib/estados";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery, formatMoney, formatNumber } from "@/lib/utils";
+import { esCorreo, mensajeCorreo, validarLargos } from "@/lib/validacion";
+
+/* -------------------------------------------------------------------------- */
+/* Formulario                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface ClienteBorrador {
+  nombre_razon: string;
+  nit_ci: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+}
+
+/**
+ * Validación del formulario de cliente antes de enviar. Mismos límites y
+ * textos que `StoreClienteRequest` (200, 30, 30, 150 y 255 caracteres).
+ */
+export function validarCliente(form: ClienteBorrador): ErroresValidacion {
+  const errores: ErroresValidacion = {};
+
+  if (!form.nombre_razon.trim()) {
+    errores.nombre_razon = ["El nombre o razón social es obligatorio."];
+  }
+
+  if (form.email.trim() && !esCorreo(form.email)) {
+    errores.email = [mensajeCorreo("correo electrónico")];
+  }
+
+  return validarLargos(errores, [
+    ["nombre_razon", "nombre o razón social", form.nombre_razon, 200],
+    ["nit_ci", "NIT/CI", form.nit_ci, 30],
+    ["telefono", "teléfono", form.telefono, 30],
+    ["email", "correo electrónico", form.email, 150],
+    ["direccion", "dirección", form.direccion, 255],
+  ]);
+}
 
 /* -------------------------------------------------------------------------- */
 /* Tabs de la ficha                                                            */

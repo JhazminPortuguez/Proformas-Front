@@ -227,3 +227,66 @@ describe("AjustarStockDialog", () => {
     expect(mocks.refresh).toHaveBeenCalled();
   });
 });
+
+describe("Diálogos de stock · decimales y largos", () => {
+  beforeEach(() => {
+    mocks.entrada.mockReset();
+    mocks.ajuste.mockReset();
+  });
+
+  it("entrada: más de 3 decimales en cantidad, 2 en costo y motivo largo", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <RegistrarEntradaDialog isOpen onOpenChange={vi.fn()} productos={PRODUCTOS} productoId={5} />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Cantidad"), { target: { value: "1.2345" } });
+    fireEvent.change(screen.getByLabelText("Costo unitario (opcional)"), {
+      target: { value: "8,999" },
+    });
+    fireEvent.change(screen.getByLabelText("Motivo (opcional)"), {
+      target: { value: "m".repeat(1001) },
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "Registrar entrada de stock" });
+
+    await user.click(within(dialog).getByRole("button", { name: "Registrar entrada" }));
+
+    expect(
+      screen.getByText("La cantidad de entrada debe tener como máximo 3 decimales."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("El costo unitario debe tener como máximo 2 decimales."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("El motivo no puede superar los 1000 caracteres."),
+    ).toBeInTheDocument();
+    expect(mocks.entrada).not.toHaveBeenCalled();
+  });
+
+  it("ajuste: más de 3 decimales en el stock y motivo largo", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AjustarStockDialog isOpen onOpenChange={vi.fn()} productos={PRODUCTOS} productoId={5} />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Stock final"), { target: { value: "3,1415" } });
+    fireEvent.change(screen.getByLabelText("Motivo del ajuste"), {
+      target: { value: "m".repeat(1001) },
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "Ajustar stock" });
+
+    await user.click(within(dialog).getByRole("button", { name: "Ajustar stock" }));
+
+    expect(
+      screen.getByText("El stock nuevo debe tener como máximo 3 decimales."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("El motivo no puede superar los 1000 caracteres."),
+    ).toBeInTheDocument();
+    expect(mocks.ajuste).not.toHaveBeenCalled();
+  });
+});

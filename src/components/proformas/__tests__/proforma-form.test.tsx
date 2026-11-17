@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ProformaForm } from "@/components/proformas/proforma-form";
@@ -98,5 +98,84 @@ describe("ProformaForm", () => {
     expect(
       screen.getByRole("textbox", { name: /^Descripción/ }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ProformaForm · decimales, máximos y largos", () => {
+  async function lineaLibre(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: /Línea libre/i }));
+    fireEvent.change(screen.getByRole("textbox", { name: /^Descripción/ }), {
+      target: { value: "Ajuste de tablero" },
+    });
+  }
+
+  it("rechaza más de 3 decimales en la cantidad y más de 2 en el precio", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await lineaLibre(user);
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^Cantidad/ }), {
+      target: { value: "1,2345" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /Precio unitario/i }), {
+      target: { value: "10.555" },
+    });
+    await user.click(screen.getByRole("button", { name: /Guardar borrador/i }));
+
+    expect(screen.getByText("La cantidad admite como máximo 3 decimales.")).toBeInTheDocument();
+    expect(
+      screen.getByText("El precio unitario admite como máximo 2 decimales."),
+    ).toBeInTheDocument();
+  });
+
+  it("rechaza una cantidad mayor a 100000 y textos más largos que en el back", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await lineaLibre(user);
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^Cantidad/ }), {
+      target: { value: "100001" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Descripción/ }), {
+      target: { value: "d".repeat(501) },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Unidad/ }), {
+      target: { value: "u".repeat(31) },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Observaciones/ }), {
+      target: { value: "o".repeat(2001) },
+    });
+    await user.click(screen.getByRole("button", { name: /Guardar borrador/i }));
+
+    expect(screen.getByText("La cantidad no puede superar 100000.")).toBeInTheDocument();
+    expect(
+      screen.getByText("El campo descripción no debe tener más de 500 caracteres."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("El campo unidad de medida no debe tener más de 30 caracteres."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("El campo observaciones no debe tener más de 2000 caracteres."),
+    ).toBeInTheDocument();
+  });
+
+  it("rechaza descuento e impuesto con más de 2 decimales", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await lineaLibre(user);
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^Precio unitario/i }), {
+      target: { value: "100" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Descuento/ }), {
+      target: { value: "1,234" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Impuesto/ }), {
+      target: { value: "13.555" },
+    });
+    await user.click(screen.getByRole("button", { name: /Guardar borrador/i }));
+
+    expect(screen.getByText("El descuento admite como máximo 2 decimales.")).toBeInTheDocument();
+    expect(screen.getByText("El impuesto admite como máximo 2 decimales.")).toBeInTheDocument();
   });
 });

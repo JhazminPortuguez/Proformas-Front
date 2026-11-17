@@ -15,6 +15,7 @@ import type {
   ClienteEstado,
   ErroresValidacion,
 } from "@/lib/api/types";
+import { validarCliente } from "@/lib/clientes";
 import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 
@@ -102,9 +103,7 @@ export function ClienteFormDrawer({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const localErrors: ErroresValidacion = form.nombre_razon.trim()
-      ? {}
-      : { nombre_razon: ["El nombre o razón social es obligatorio."] };
+    const localErrors: ErroresValidacion = validarCliente(form);
 
     if (Object.keys(localErrors).length > 0) {
       applyFieldErrors(localErrors, "Revisa los datos ingresados.");

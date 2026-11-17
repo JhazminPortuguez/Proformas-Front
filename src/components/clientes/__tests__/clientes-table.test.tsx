@@ -93,3 +93,51 @@ describe("ClientesTable", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("ClientesTable · cabe a 1280 px", () => {
+  it("junta NIT/CI y dirección bajo el nombre, y teléfono con correo en Contacto", () => {
+    renderTable();
+
+    const table = screen.getByRole("grid", { name: "Clientes" });
+    const encabezados = within(table)
+      .getAllByRole("columnheader")
+      .map((h) => h.textContent?.trim());
+
+    expect(encabezados).toEqual(
+      expect.arrayContaining(["Cliente", "Contacto", "Estado", "Proformas"]),
+    );
+    expect(encabezados).not.toContain("NIT / CI");
+    expect(encabezados).not.toContain("Email");
+
+    expect(
+      within(table).getByText("NIT/CI 123456789 · Av. Blanco Galindo km 5"),
+    ).toBeInTheDocument();
+    expect(within(table).getByText("77712345")).toBeInTheDocument();
+    expect(within(table).getByText("contacto@andina.example")).toBeInTheDocument();
+  });
+
+  it("un nombre largo se corta con tope de ancho y deja el texto completo en title", () => {
+    const largo =
+      "Corporación Industrial y Comercial de Servicios Eléctricos Integrales del Valle Alto S.R.L.";
+
+    renderTable({ ...CLIENTE, nombre_razon: largo, email: "a".repeat(60) + "@x.bo" });
+
+    const nombre = screen.getByRole("link", { name: largo });
+
+    expect(nombre).toHaveClass("truncate");
+    expect(nombre).toHaveAttribute("title", largo);
+    expect(nombre.parentElement).toHaveClass("max-w-[18rem]");
+    expect(screen.getByText("a".repeat(60) + "@x.bo")).toHaveAttribute(
+      "title",
+      "a".repeat(60) + "@x.bo",
+    );
+  });
+
+  it("sin teléfono ni correo, Contacto muestra un guion", () => {
+    renderTable({ ...CLIENTE, telefono: null, email: null, nit_ci: null, direccion: null });
+
+    const table = screen.getByRole("grid", { name: "Clientes" });
+
+    expect(within(table).getByText("—")).toBeInTheDocument();
+  });
+});

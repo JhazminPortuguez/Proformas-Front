@@ -19,6 +19,7 @@ import {
   fechaHoyDateOnly,
 } from "@/lib/cobros";
 import { formatMoney, parseDecimal } from "@/lib/utils";
+import { decimalesDe, largo } from "@/lib/validacion";
 
 export type CuentaPagoResumen = Pick<
   CuentaPorCobrar,
@@ -93,6 +94,8 @@ export function RegistrarPagoDialog({
 
     if (!Number.isFinite(montoNumero) || montoNumero <= 0) {
       errors.monto = ["Indica un monto mayor a cero."];
+    } else if (decimalesDe(monto) > 2) {
+      errors.monto = ["El monto del pago debe tener como máximo 2 decimales."];
     } else if (montoNumero > saldo + 0.005) {
       errors.monto = [
         `El monto no puede superar el saldo pendiente (${formatMoney(saldo)}).`,
@@ -105,6 +108,17 @@ export function RegistrarPagoDialog({
 
     if (!METODO_PAGO_OPTIONS.some((option) => option.value === metodo)) {
       errors.metodo = ["Selecciona el método con el que se recibió el pago."];
+    }
+
+    // Mismos límites y textos que RegistrarPagoRequest.
+    if (largo(referencia.trim()) > 100) {
+      errors.referencia = ["La referencia no debe superar los 100 caracteres."];
+    }
+
+    if (largo(observaciones.trim()) > 1000) {
+      errors.observaciones = [
+        "Las observaciones no deben superar los 1000 caracteres.",
+      ];
     }
 
     if (Object.keys(errors).length > 0) {

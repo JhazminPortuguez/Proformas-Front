@@ -1,26 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { api, expect, test, unico } from "./fixtures";
+import { crearCliente, crearCuentaPorCobrar, crearServicio, cuerpo } from "./datos";
 
-let warnings: string[] = [];
-
-test.beforeEach(async ({ page }) => {
-  warnings = [];
-  page.on("console", (message) => {
-    if (
-      message.type() === "warning" &&
-      /visible label|aria-label|aria-labelledby|PressResponder was rendered without a pressable child|Pressable child must be focusable/i.test(
-        message.text(),
-      )
-    ) {
-      warnings.push(message.text());
-    }
-  });
-});
-
-test.afterEach(() => {
-  expect(warnings, `Warnings de accesibilidad:\n${warnings.join("\n")}`).toEqual(
-    [],
-  );
-});
+// Los warnings de accesibilidad y los errores de CSP los vigila el fixture
+// común (e2e/fixtures.ts) en todas las pruebas.
 
 test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", async ({
   page,
@@ -411,4 +393,126 @@ test("casos borde: buscador remoto, cobros a 1280 px y rango de reportes", async
   await expect(
     page.getByText("El rango del reporte no puede superar 1 año. Elige un periodo de 12 meses o menos."),
   ).toBeVisible();
+});
+
+test("el listado de clientes cabe a 1280 px aunque los datos sean largos", async ({
+  page,
+}) => {
+  const nombre = unico(
+    "Corporación Industrial y Comercial de Servicios Eléctricos Integrales del Valle Alto S.R.L.",
+  );
+
+  await api(page.request, "POST", "/api/v1/clientes", {
+    nombre_razon: nombre,
+    nit_ci: `${Date.now()}`.padEnd(30, "7"),
+    telefono: "+591 4 4251234 int 2222 / 7001",
+    email: "administracion.compras.mantenimiento@corporacionindustrialvallealto.com.bo",
+    direccion: "Av. Blanco Galindo km 7,5, edificio Torres del Valle, piso 12, oficina 1204",
+    estado: "activo",
+  });
+
+  for (const width of [1280, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto(`/clientes?search=${encodeURIComponent(nombre)}`);
+
+    const tabla = page.getByRole("grid", { name: "Clientes" });
+
+    await expect(
+      tabla.getByRole("link", { name: nombre, exact: true }),
+    ).toBeVisible();
+    const desborde = await tabla.evaluate((el) => {
+      const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
+      return contenedor.scrollWidth - contenedor.clientWidth;
+    });
+
+    expect(desborde, `desborde a ${width} px`).toBeLessThanOrEqual(1);
+  }
+});
+
+test("el dashboard no se desborda en el celular con un servicio de nombre largo", async ({
+  page,
+}) => {
+  // Un servicio de nombre largo entre los más solicitados (cantidad alta en
+  // una orden vigente). Antes, en 375 px, estiraba la tarjeta a ~800 px.
+  const servicio = await crearServicio(
+    page.request,
+    10,
+    unico("Servicio con nombre largo de mantenimiento integral de tableros eléctricos"),
+  );
+  const cliente = await crearCliente(page.request);
+  const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "America/La_Paz" }).format(
+    new Date(),
+  );
+  const proforma = cuerpo(
+    await api<{ id: number }>(page.request, "POST", "/api/v1/proformas", {
+      cliente_id: cliente.id,
+      fecha_emision: hoy,
+      items: [{ tipo: "SERVICIO", servicio_id: servicio.id, cantidad: 99999 }],
+    }),
+  );
+
+  await api(page.request, "POST", `/api/v1/proformas/${proforma.id}/enviar`);
+  await api(page.request, "POST", `/api/v1/proformas/${proforma.id}/aceptar`);
+  await api(page.request, "POST", "/api/v1/ordenes", { proforma_id: proforma.id });
+
+  for (const width of [375, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/dashboard");
+    await expect(
+      page.getByText(/^Servicio con nombre largo de mantenimiento/).first(),
+    ).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        ),
+      )
+      .toBeLessThanOrEqual(1);
+  }
+});
+
+test("Cuentas por cobrar y Proformas caben a 1280 px con nombre largo y varios pagos", async ({
+  page,
+}) => {
+  const cliente = await crearCliente(
+    page.request,
+    unico("Importadora y Distribuidora de Materiales Eléctricos del Oriente Boliviano"),
+  );
+  const cuenta = await crearCuentaPorCobrar(page.request, { cliente, monto: 1000 });
+
+  // Dos pagos: la primera columna dice "OS-… · 2 pagos" (antes no se partía).
+  for (const monto of [100, 200]) {
+    await api(page.request, "POST", `/api/v1/cuentas-por-cobrar/${cuenta.id}/pagos`, {
+      monto,
+      metodo: "EFECTIVO",
+    });
+  }
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/cobros?search=${encodeURIComponent(cliente.nombre)}`);
+
+  const tabla = page.getByRole("grid", { name: "Cuentas por cobrar" });
+
+  await expect(tabla.getByText("2 pagos", { exact: false })).toBeVisible();
+  const desborde = await tabla.evaluate((el) => {
+    const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
+    return contenedor.scrollWidth - contenedor.clientWidth;
+  });
+
+  expect(desborde).toBeLessThanOrEqual(1);
+
+  // El mismo cliente en el listado de proformas (antes: 79 px de desborde).
+  await page.goto(`/proformas?search=${encodeURIComponent(cliente.nombre)}`);
+
+  const proformas = page.getByRole("grid", { name: "Proformas" });
+
+  await expect(proformas.getByText(cliente.nombre)).toBeVisible();
+  const desbordeProformas = await proformas.evaluate((el) => {
+    const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
+    return contenedor.scrollWidth - contenedor.clientWidth;
+  });
+
+  expect(desbordeProformas).toBeLessThanOrEqual(1);
 });

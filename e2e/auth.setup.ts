@@ -9,7 +9,8 @@ setup("autenticar administrador", async ({ page }) => {
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  // Con el servidor de desarrollo en frío, compilar el dashboard tarda.
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 60_000 });
 
   await page.context().storageState({ path: authFile });
 });

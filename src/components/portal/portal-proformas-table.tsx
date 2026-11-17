@@ -24,6 +24,10 @@ export function PdfLink({ proforma }: { proforma: Pick<PortalProforma, "id" | "n
   return (
     <a
       href={portalProformaPdfUrl(proforma.id)}
+      // Dentro de la tabla (React Aria), el manejador de clic de la fila
+      // anulaba la descarga nativa: el clic no hacía nada. El enlace se
+      // encarga solo de su clic.
+      onClick={(evento) => evento.stopPropagation()}
       className={PDF_LINK}
       aria-label={`Descargar PDF de la proforma ${proforma.numero}`}
     >

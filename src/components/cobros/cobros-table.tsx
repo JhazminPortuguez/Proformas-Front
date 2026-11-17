@@ -98,8 +98,10 @@ export function CobrosTable({
             <ConceptoCuentaChip cuenta={cuenta} />
           </div>
           {/* La orden va en la segunda línea (sin columna propia) para que
-              la tabla quepa sin desplazamiento desde 1280 px. */}
-          <p className="numeric text-xs whitespace-nowrap text-muted">
+              la tabla quepa sin desplazamiento desde 1280 px. La línea puede
+              partirse ("· 2 pagos" baja) si las otras columnas necesitan el
+              espacio. */}
+          <p className="numeric text-xs text-muted">
             <Link
               href={cuentaOrdenHref(cuenta)}
               className="whitespace-nowrap text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"

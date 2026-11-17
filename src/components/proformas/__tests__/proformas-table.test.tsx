@@ -207,4 +207,19 @@ describe("ProformasTable", () => {
     expect(within(table).getByText("10/11/2026")).toHaveClass("whitespace-nowrap");
     expect(within(table).queryByRole("columnheader", { name: "Emisión" })).not.toBeInTheDocument();
   });
+
+  it("un nombre de cliente largo se corta a 12rem y queda completo en title", () => {
+    const largo =
+      "Importadora y Distribuidora de Materiales Eléctricos del Oriente Boliviano";
+
+    renderTable({
+      ...PROFORMA,
+      cliente: { ...PROFORMA.cliente!, nombre_razon: largo },
+    });
+
+    const nombre = within(screen.getByRole("grid", { name: "Proformas" })).getByText(largo);
+
+    expect(nombre).toHaveClass("truncate", "max-w-[12rem]");
+    expect(nombre).toHaveAttribute("title", largo);
+  });
 });

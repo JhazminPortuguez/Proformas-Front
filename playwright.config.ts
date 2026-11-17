@@ -12,6 +12,7 @@ export default defineConfig({
     : [["list"]],
   use: {
     baseURL: "http://localhost:3000",
+    actionTimeout: 15_000,
     channel: "chrome",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
@@ -21,6 +22,12 @@ export default defineConfig({
     {
       command: "php artisan serve --port=8000",
       cwd: "../Proformas-Back",
+      // Las pruebas crean datos: si Playwright levanta el back, lo apunta a
+      // la COPIA de la base (nunca a la demo `proformas` del puerto 5432).
+      env: {
+        DB_PORT: process.env.E2E_DB_PORT ?? "5434",
+        DB_DATABASE: process.env.E2E_DB_DATABASE ?? "proformas_e2e",
+      },
       url: "http://127.0.0.1:8000/sanctum/csrf-cookie",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
