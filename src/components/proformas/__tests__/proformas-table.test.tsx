@@ -208,7 +208,7 @@ describe("ProformasTable", () => {
     expect(within(table).queryByRole("columnheader", { name: "Emisión" })).not.toBeInTheDocument();
   });
 
-  it("un nombre de cliente largo se corta a 12rem y queda completo en title", () => {
+  it("un nombre de cliente largo se corta a 10rem y queda completo en title", () => {
     const largo =
       "Importadora y Distribuidora de Materiales Eléctricos del Oriente Boliviano";
 
@@ -219,7 +219,7 @@ describe("ProformasTable", () => {
 
     const nombre = within(screen.getByRole("grid", { name: "Proformas" })).getByText(largo);
 
-    expect(nombre).toHaveClass("truncate", "max-w-[12rem]");
+    expect(nombre).toHaveClass("truncate", "max-w-[10rem]");
     expect(nombre).toHaveAttribute("title", largo);
   });
 });
