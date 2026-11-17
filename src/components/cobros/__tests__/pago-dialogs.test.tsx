@@ -259,3 +259,37 @@ describe("PagosTable · anulación", () => {
     expect(screen.getByText(/· 20\/09\/2026 10:00$/)).toBeInTheDocument();
   });
 });
+
+describe("RegistrarPagoDialog · decimales y largos", () => {
+  beforeEach(() => {
+    mocks.registrarPago.mockReset();
+  });
+
+  it("rechaza más de 2 decimales y textos más largos que en el back", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    fireEvent.change(screen.getByLabelText("Monto"), { target: { value: "10,555" } });
+    fireEvent.change(screen.getByLabelText("Referencia (opcional)"), {
+      target: { value: "r".repeat(101) },
+    });
+    fireEvent.change(screen.getByLabelText("Observaciones (opcional)"), {
+      target: { value: "o".repeat(1001) },
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "Registrar pago" });
+
+    await user.click(within(dialog).getByRole("button", { name: "Registrar pago" }));
+
+    expect(
+      screen.getByText("El monto del pago debe tener como máximo 2 decimales."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("La referencia no debe superar los 100 caracteres."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Las observaciones no deben superar los 1000 caracteres."),
+    ).toBeInTheDocument();
+    expect(mocks.registrarPago).not.toHaveBeenCalled();
+  });
+});

@@ -14,6 +14,7 @@ import { isApiError } from "@/lib/api/types";
 import type { ErroresValidacion } from "@/lib/api/types";
 import type { ProductoCatalogOption } from "@/lib/inventario";
 import { formatNumber, parseDecimal } from "@/lib/utils";
+import { decimalesDe, largo } from "@/lib/validacion";
 
 interface RegistrarEntradaDialogProps {
   isOpen: boolean;
@@ -70,6 +71,10 @@ export function RegistrarEntradaDialog({
 
     if (!Number.isFinite(cantidadNumero) || cantidadNumero <= 0) {
       errors.cantidad = ["Indica una cantidad mayor a cero."];
+    } else if (decimalesDe(cantidad) > 3) {
+      errors.cantidad = [
+        "La cantidad de entrada debe tener como máximo 3 decimales.",
+      ];
     }
 
     if (
@@ -77,6 +82,14 @@ export function RegistrarEntradaDialog({
       (!Number.isFinite(costoNumero) || costoNumero < 0)
     ) {
       errors.costo_unitario = ["El costo no puede ser negativo."];
+    } else if (costoNumero !== undefined && decimalesDe(costo) > 2) {
+      errors.costo_unitario = [
+        "El costo unitario debe tener como máximo 2 decimales.",
+      ];
+    }
+
+    if (largo(motivo.trim()) > 1000) {
+      errors.motivo = ["El motivo no puede superar los 1000 caracteres."];
     }
 
     if (Object.keys(errors).length > 0) {

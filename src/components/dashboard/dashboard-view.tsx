@@ -71,11 +71,13 @@ export function DashboardView({ user, data }: DashboardViewProps) {
         <CobranzaSection data={data} />
         <InventarioSection data={data} />
 
+        {/* min-w-0: sin él, la celda de la grilla toma el ancho del texto más
+            largo (aunque tenga `truncate`) y en el celular se desbordaba. */}
         <div className="grid gap-4 lg:grid-cols-5">
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             <ServiciosSection data={data} />
           </div>
-          <div className="lg:col-span-3">
+          <div className="min-w-0 lg:col-span-3">
             <ActividadSection data={data} />
           </div>
         </div>

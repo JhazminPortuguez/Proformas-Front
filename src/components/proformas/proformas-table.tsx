@@ -62,10 +62,14 @@ interface ProformasTableProps {
 
 /** Nombre o razón social con su NIT/CI debajo. */
 function ClienteCell({ proforma }: { proforma: Proforma }) {
+  const nombre = proforma.cliente?.nombre_razon ?? `Cliente #${proforma.cliente_id}`;
+
+  // 12rem: con un nombre largo, las demás columnas ocupan ~715 px y la tabla
+  // solo cabe a 1280 px si el cliente no pasa de ~240 px (antes, 18rem).
   return (
     <div className="min-w-0">
-      <p className="max-w-[18rem] truncate text-sm">
-        {proforma.cliente?.nombre_razon ?? `Cliente #${proforma.cliente_id}`}
+      <p className="max-w-[12rem] truncate text-sm" title={nombre}>
+        {nombre}
       </p>
       {proforma.cliente?.nit_ci ? (
         <p className="numeric text-xs text-muted">

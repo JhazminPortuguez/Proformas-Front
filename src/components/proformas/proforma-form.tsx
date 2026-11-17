@@ -52,6 +52,7 @@ import {
   itemsRepetidos,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
+import { decimalesDe, validarLargos } from "@/lib/validacion";
 import { TotalsSummary } from "./totals-summary";
 
 interface DraftItem {
@@ -500,6 +501,8 @@ export function ProformaForm({
         errors.descuento = [
           "El descuento debe ser un monto en Bs mayor o igual a 0.",
         ];
+      } else if (decimalesDe(form.descuento) > 2) {
+        errors.descuento = ["El descuento admite como máximo 2 decimales."];
       } else if (descuento > totals.subtotal) {
         errors.descuento = [
           "El descuento no puede superar el subtotal de la proforma.",
@@ -512,8 +515,14 @@ export function ProformaForm({
 
       if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) {
         errors.impuesto_tasa = ["El impuesto debe estar entre 0 y 100 %."];
+      } else if (decimalesDe(form.impuesto_tasa) > 2) {
+        errors.impuesto_tasa = ["El impuesto admite como máximo 2 decimales."];
       }
     }
+
+    validarLargos(errors, [
+      ["observaciones", "observaciones", form.observaciones, 2000],
+    ]);
 
     if (form.items.length === 0) {
       errors.items = ["Agrega al menos un ítem a la proforma."];
@@ -523,11 +532,23 @@ export function ProformaForm({
       const prefix = `items.${index}`;
       const cantidad = parseCantidad(item.cantidad);
 
+      // Mismos límites que el back: más de 0, hasta 100000 y 3 decimales.
       if (!Number.isFinite(cantidad) || cantidad <= 0) {
         errors[`${prefix}.cantidad`] = [
           "Ingresa una cantidad mayor a 0.",
         ];
+      } else if (decimalesDe(item.cantidad) > 3) {
+        errors[`${prefix}.cantidad`] = [
+          "La cantidad admite como máximo 3 decimales.",
+        ];
+      } else if (cantidad > 100000) {
+        errors[`${prefix}.cantidad`] = ["La cantidad no puede superar 100000."];
       }
+
+      validarLargos(errors, [
+        [`${prefix}.descripcion`, "descripción", item.descripcion, 500],
+        [`${prefix}.unidad_medida`, "unidad de medida", item.unidad_medida, 30],
+      ]);
 
       if (item.tipo === "SERVICIO" && !item.catalogoId) {
         errors[`${prefix}.servicio_id`] = ["Selecciona un servicio."];
@@ -551,6 +572,10 @@ export function ProformaForm({
         ) {
           errors[`${prefix}.precio_unitario`] = [
             "Ingresa un precio unitario válido.",
+          ];
+        } else if (decimalesDe(item.precio_unitario) > 2) {
+          errors[`${prefix}.precio_unitario`] = [
+            "El precio unitario admite como máximo 2 decimales.",
           ];
         }
       }

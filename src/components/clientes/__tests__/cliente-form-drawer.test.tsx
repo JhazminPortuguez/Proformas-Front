@@ -129,3 +129,45 @@ describe("ClienteFormDrawer · NIT/CI duplicado (C-02)", () => {
     expect(await within(dialog).findAllByText(mensaje)).not.toHaveLength(0);
   });
 });
+
+describe("ClienteFormDrawer · validación antes de enviar", { timeout: 15_000 }, () => {
+  beforeEach(() => {
+    mocks.create.mockReset();
+  });
+
+  it("marca correo inválido y textos largos sin llamar a la API", async () => {
+    const user = userEvent.setup();
+    const { dialog } = renderDrawer(null);
+
+    await user.type(within(dialog).getByRole("textbox", { name: /Nombre o razón social/ }), "Cliente nuevo");
+    await user.type(within(dialog).getByRole("textbox", { name: /NIT \/ CI/ }), "1".repeat(31));
+    await user.type(within(dialog).getByRole("textbox", { name: /Correo electrónico/ }), "compras@");
+    await user.click(within(dialog).getByRole("button", { name: "Crear cliente" }));
+
+    expect(
+      await within(dialog).findByText("El campo NIT/CI no debe tener más de 30 caracteres."),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("El campo correo electrónico debe ser una dirección de correo válida."),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("Revisa 2 campos")).toBeInTheDocument();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("con los datos corregidos, envía", async () => {
+    const user = userEvent.setup();
+    mocks.create.mockResolvedValue({ ...CLIENTE, id: 9 });
+    const { dialog, onSaved } = renderDrawer(null);
+
+    await user.type(within(dialog).getByRole("textbox", { name: /Nombre o razón social/ }), "Cliente nuevo");
+    await user.type(within(dialog).getByRole("textbox", { name: /Correo electrónico/ }), "compras@nuevo.bo");
+    await user.click(within(dialog).getByRole("button", { name: "Crear cliente" }));
+
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.create.mock.calls[0][0]).toMatchObject({
+      nombre_razon: "Cliente nuevo",
+      email: "compras@nuevo.bo",
+    });
+    expect(onSaved).toHaveBeenCalled();
+  });
+});

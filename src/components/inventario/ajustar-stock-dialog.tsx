@@ -14,6 +14,7 @@ import { isApiError } from "@/lib/api/types";
 import type { ErroresValidacion } from "@/lib/api/types";
 import type { ProductoCatalogOption } from "@/lib/inventario";
 import { formatNumber, parseDecimal } from "@/lib/utils";
+import { decimalesDe, largo } from "@/lib/validacion";
 
 interface AjustarStockDialogProps {
   isOpen: boolean;
@@ -67,10 +68,16 @@ export function AjustarStockDialog({
 
     if (!Number.isFinite(stockNumero) || stockNumero < 0) {
       errors.stock_nuevo = ["Indica un stock final igual o mayor a cero."];
+    } else if (decimalesDe(stockNuevo) > 3) {
+      errors.stock_nuevo = [
+        "El stock nuevo debe tener como máximo 3 decimales.",
+      ];
     }
 
     if (motivo.trim().length < 3) {
       errors.motivo = ["Explica el motivo del ajuste (mínimo 3 caracteres)."];
+    } else if (largo(motivo.trim()) > 1000) {
+      errors.motivo = ["El motivo no puede superar los 1000 caracteres."];
     }
 
     if (Object.keys(errors).length > 0) {
