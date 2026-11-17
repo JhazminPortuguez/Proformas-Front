@@ -8,17 +8,26 @@ import { expect, test } from "./fixtures";
  */
 const TABS = ["ordenes", "servicios", "inventario", "cobros"] as const;
 
-async function descargar(page: Page, nombre: string): Promise<{ archivo: Download; datos: Buffer }> {
+async function descargar(
+  page: Page,
+  nombre: string,
+  formato: "csv" | "pdf" | "xlsx",
+): Promise<{ archivo: Download; datos: Buffer }> {
   const enlace = page.getByRole("link", { name: nombre });
   let archivo: Download | undefined;
 
-  // Un clic durante la hidratación puede perderse: se reintenta.
+  // Un clic durante la hidratación puede perderse: se reintenta. Solo cuenta
+  // la descarga de este formato (un PDF grande tarda varios segundos y no
+  // debe confundirse con la descarga siguiente).
   await expect(async () => {
-    const espera = page.waitForEvent("download", { timeout: 5_000 });
+    const espera = page.waitForEvent("download", {
+      predicate: (d) => d.url().includes(`formato=${formato}`),
+      timeout: 20_000,
+    });
 
     await enlace.click();
     archivo = await espera;
-  }).toPass({ timeout: 40_000 });
+  }).toPass({ timeout: 60_000 });
 
   return { archivo: archivo!, datos: readFileSync((await archivo!.path())!) };
 }
@@ -26,7 +35,7 @@ async function descargar(page: Page, nombre: string): Promise<{ archivo: Downloa
 test("cada reporte se descarga en CSV, PDF y Excel con los filtros de la pantalla", async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(420_000);
 
   for (const tab of TABS) {
     await page.goto(`/reportes?tab=${tab}`);
@@ -39,17 +48,17 @@ test("cada reporte se descarga en CSV, PDF y Excel con los filtros de la pantall
       await expect(enlace).toHaveAttribute("href", new RegExp(`^/api/v1/reportes/${tab}\\?desde=\\d{4}-\\d{2}-01&hasta=`));
     }
 
-    const csv = await descargar(page, "Exportar CSV");
+    const csv = await descargar(page, "Exportar CSV", "csv");
 
     expect(csv.archivo.suggestedFilename()).toMatch(new RegExp(`^reporte-${tab}_.*\\.csv$`));
     expect(csv.datos.length).toBeGreaterThan(0);
 
-    const pdf = await descargar(page, "Exportar PDF");
+    const pdf = await descargar(page, "Exportar PDF", "pdf");
 
     expect(pdf.archivo.suggestedFilename()).toMatch(new RegExp(`^reporte-${tab}_.*\\.pdf$`));
     expect(pdf.datos.subarray(0, 4).toString()).toBe("%PDF");
 
-    const xlsx = await descargar(page, "Exportar Excel");
+    const xlsx = await descargar(page, "Exportar Excel", "xlsx");
 
     expect(xlsx.archivo.suggestedFilename()).toMatch(new RegExp(`^reporte-${tab}_.*\\.xlsx$`));
     // Un .xlsx real es un ZIP ("PK\x03\x04"), no un CSV renombrado.

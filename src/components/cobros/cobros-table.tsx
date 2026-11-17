@@ -122,7 +122,7 @@ export function CobrosTable({
         <Link
           href={`/clientes/${cuenta.cliente_id}`}
           title={cuentaClienteNombre(cuenta)}
-          className="block max-w-[11rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="block max-w-[10rem] truncate text-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {cuentaClienteNombre(cuenta)}
         </Link>
@@ -137,17 +137,22 @@ export function CobrosTable({
         const vencida = cuentaEstaVencida(cuenta);
 
         return (
-          <div className="numeric whitespace-nowrap">
+          // Las fechas no se cortan, pero "Emitida" puede bajar de línea si
+          // los montos (Total y Saldo) necesitan el espacio a 1280 px.
+          <div className="numeric">
             <span
               className={cn(
-                "block text-sm",
+                "block whitespace-nowrap text-sm",
                 vencida ? "font-medium text-danger" : "text-muted",
               )}
             >
               {formatDateNumeric(cuenta.fecha_vencimiento)}
             </span>
             <span className="block text-xs text-muted">
-              Emitida {formatDateNumeric(cuenta.fecha_emision)}
+              Emitida{" "}
+              <span className="whitespace-nowrap">
+                {formatDateNumeric(cuenta.fecha_emision)}
+              </span>
             </span>
           </div>
         );
