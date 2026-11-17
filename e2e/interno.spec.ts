@@ -480,7 +480,8 @@ test("Cuentas por cobrar y Proformas caben a 1280 px con nombre largo y varios p
     page.request,
     unico("Importadora y Distribuidora de Materiales Eléctricos del Oriente Boliviano"),
   );
-  const cuenta = await crearCuentaPorCobrar(page.request, { cliente, monto: 1000 });
+  // Monto de seis cifras: "Bs 250.000,00" y saldo "Bs 249.700,00".
+  const cuenta = await crearCuentaPorCobrar(page.request, { cliente, monto: 250000 });
 
   // Dos pagos: la primera columna dice "OS-… · 2 pagos" (antes no se partía).
   for (const monto of [100, 200]) {
