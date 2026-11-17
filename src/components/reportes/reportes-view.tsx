@@ -4,7 +4,7 @@ import { buttonVariants } from "@heroui/react";
 import { NavTabs } from "@/components/ui/nav-tabs";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
-import { CsvLink } from "@/components/reportes/reporte-ui";
+import { ExportarReporte } from "@/components/reportes/reporte-ui";
 import { ReportesFiltros } from "@/components/reportes/reportes-filtros";
 import type { ReporteClienteOpcion, User } from "@/lib/api/types";
 import {
@@ -13,7 +13,6 @@ import {
   MENSAJE_RANGO_AMPLIO,
   rangoDemasiadoAmplio,
   rangoInvertido,
-  reporteCsvHref,
   reportesHref,
   reportesPestanas,
   type ReportesQuery,
@@ -60,7 +59,7 @@ export function ReportesView({
           </span>
         </h2>
 
-        {error || invertido || amplio ? null : <CsvLink href={reporteCsvHref(query)} />}
+        {error || invertido || amplio ? null : <ExportarReporte query={query} />}
       </div>
 
       {invertido || amplio ? (

@@ -5,7 +5,9 @@ import {
   parseReportesQuery,
   rangoDemasiadoAmplio,
   rangoInvertido,
+  EXPORTACIONES,
   reporteCsvHref,
+  reporteExportHref,
   reportesHref,
   reportesPestanas,
 } from "@/lib/reportes";
@@ -74,6 +76,17 @@ describe("enlaces", () => {
     expect(reporteCsvHref(query)).toBe(
       "/api/v1/reportes/ordenes?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=csv",
     );
+  });
+
+  it("PDF y Excel usan los mismos filtros que la pantalla y el CSV", () => {
+    expect(reporteExportHref(query, "pdf")).toBe(
+      "/api/v1/reportes/ordenes?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=pdf",
+    );
+    expect(reporteExportHref(query, "xlsx")).toBe(
+      "/api/v1/reportes/ordenes?desde=2026-11-01&hasta=2026-11-30&cliente_id=3&formato=xlsx",
+    );
+    expect(EXPORTACIONES.map((e) => e.label)).toEqual(["CSV", "PDF", "Excel"]);
+    expect(EXPORTACIONES.every((e) => e.tooltip.length > 20)).toBe(true);
   });
 
   it("las pestañas conservan el periodo y los filtros", () => {
