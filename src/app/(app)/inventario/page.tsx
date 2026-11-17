@@ -226,6 +226,7 @@ export default async function InventarioPage({
           query={existenciasQuery}
           catalogo={catalogo}
           canAdjust={puedeAjustar}
+          canManage={can(user, "productos.gestionar")}
         />
       ) : null}
 
