@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { contentSecurityPolicy } from "./src/lib/csp";
+
+const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -29,6 +32,17 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+        ],
+      },
+      {
+        // Solo las páginas del front. /api y /sanctum son respuestas de
+        // Laravel (JSON, PDF, CSV), no documentos HTML de esta app.
+        source: "/((?!api/|sanctum/).*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: contentSecurityPolicy(isDev),
+          },
         ],
       },
     ];
