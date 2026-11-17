@@ -64,11 +64,12 @@ interface ProformasTableProps {
 function ClienteCell({ proforma }: { proforma: Proforma }) {
   const nombre = proforma.cliente?.nombre_razon ?? `Cliente #${proforma.cliente_id}`;
 
-  // 12rem: con un nombre largo, las demás columnas ocupan ~715 px y la tabla
-  // solo cabe a 1280 px si el cliente no pasa de ~240 px (antes, 18rem).
+  // 10rem: en una fila Enviada (Ver, Aceptar, Rechazar, PDF…) las demás
+  // columnas ocupan ~753 px y la tabla solo cabe a 1280 px si el cliente no
+  // pasa de ~200 px con su relleno (antes 18rem y luego 12rem).
   return (
     <div className="min-w-0">
-      <p className="max-w-[12rem] truncate text-sm" title={nombre}>
+      <p className="max-w-[10rem] truncate text-sm" title={nombre}>
         {nombre}
       </p>
       {proforma.cliente?.nit_ci ? (

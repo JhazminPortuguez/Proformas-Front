@@ -503,12 +503,25 @@ test("Cuentas por cobrar y Proformas caben a 1280 px con nombre largo y varios p
 
   expect(desborde).toBeLessThanOrEqual(1);
 
-  // El mismo cliente en el listado de proformas (antes: 79 px de desborde).
+  // El mismo cliente en el listado de proformas, con una fila Enviada (la
+  // que más acciones tiene). Antes: 79 px y luego 21 px de desborde.
+  const enviada = cuerpo(
+    await api<{ id: number }>(page.request, "POST", "/api/v1/proformas", {
+      cliente_id: cliente.id,
+      fecha_emision: new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/La_Paz",
+      }).format(new Date()),
+      items: [{ tipo: "LIBRE", descripcion: "Revisión", cantidad: 1, precio_unitario: 50 }],
+    }),
+  );
+
+  await api(page.request, "POST", `/api/v1/proformas/${enviada.id}/enviar`);
   await page.goto(`/proformas?search=${encodeURIComponent(cliente.nombre)}`);
 
   const proformas = page.getByRole("grid", { name: "Proformas" });
 
-  await expect(proformas.getByText(cliente.nombre)).toBeVisible();
+  await expect(proformas.getByText(cliente.nombre).first()).toBeVisible();
+  await expect(proformas.getByText("Enviada")).toBeVisible();
   const desbordeProformas = await proformas.evaluate((el) => {
     const contenedor = el.closest("[class*=overflow]") ?? el.parentElement!;
     return contenedor.scrollWidth - contenedor.clientWidth;
