@@ -1,4 +1,6 @@
 import type {
+  ErroresValidacion,
+  ProductoInput,
   MovimientoInventario,
   Orden,
   OrdenItem,
@@ -8,7 +10,8 @@ import type {
 import type { EstadoTone } from "@/lib/estados";
 import { roundMoney } from "@/lib/proformas";
 import { filasParam } from "@/lib/paginacion";
-import { buildQuery, formatNumber } from "@/lib/utils";
+import { buildQuery, formatNumber, parseDecimal } from "@/lib/utils";
+import { decimalesDe, validarLargos } from "@/lib/validacion";
 
 /* -------------------------------------------------------------------------- */
 /* Movimientos                                                                 */
@@ -372,4 +375,116 @@ export function movimientosDeProductoHref(productoId: number): string {
     hasta: "",
     page: 1,
   });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Formulario de producto                                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface ProductoBorrador {
+  nombre: string;
+  unidad_medida: string;
+  precio_unitario: string;
+  costo: string;
+  stock_minimo: string;
+  /** Solo al crear: se registra como movimiento de ENTRADA. */
+  stock_inicial: string;
+  activo: boolean;
+}
+
+type CampoNumerico = {
+  clave: string;
+  valor: string;
+  /** "El precio de venta", "El costo"… */
+  sujeto: string;
+  decimales: number;
+  obligatorio?: string;
+};
+
+function validarNumero(errores: ErroresValidacion, campo: CampoNumerico) {
+  const texto = campo.valor.trim();
+
+  if (!texto) {
+    if (campo.obligatorio) errores[campo.clave] = [campo.obligatorio];
+
+    return;
+  }
+
+  const numero = parseDecimal(texto);
+
+  if (!Number.isFinite(numero)) {
+    errores[campo.clave] = [`${campo.sujeto} debe ser numérico.`];
+  } else if (numero < 0) {
+    errores[campo.clave] = [`${campo.sujeto} no puede ser negativo.`];
+  } else if (decimalesDe(texto) > campo.decimales) {
+    errores[campo.clave] = [
+      `${campo.sujeto} debe tener como máximo ${campo.decimales} decimales.`,
+    ];
+  }
+}
+
+/**
+ * Validación del formulario de producto antes de enviar. Mismas reglas y
+ * textos que StoreProductoRequest/UpdateProductoRequest (MensajesProducto).
+ * Las claves de error son las del back (`precio_unitario`, `costo_promedio`,
+ * `stock_actual`), así los 422 caen en el mismo campo.
+ */
+export function validarProducto(
+  form: ProductoBorrador,
+  { esNuevo }: { esNuevo: boolean },
+): ErroresValidacion {
+  const errores: ErroresValidacion = {};
+
+  if (!form.nombre.trim()) {
+    errores.nombre = ["El nombre del producto es obligatorio."];
+  }
+
+  validarNumero(errores, {
+    clave: "precio_unitario",
+    valor: form.precio_unitario,
+    sujeto: "El precio de venta",
+    decimales: 2,
+    obligatorio: "El precio de venta es obligatorio.",
+  });
+  validarNumero(errores, {
+    clave: "stock_minimo",
+    valor: form.stock_minimo,
+    sujeto: "El stock mínimo",
+    decimales: 3,
+  });
+
+  if (esNuevo) {
+    validarNumero(errores, {
+      clave: "costo_promedio",
+      valor: form.costo,
+      sujeto: "El costo",
+      decimales: 2,
+    });
+    validarNumero(errores, {
+      clave: "stock_actual",
+      valor: form.stock_inicial,
+      sujeto: "El stock inicial",
+      decimales: 3,
+    });
+  }
+
+  return validarLargos(errores, [
+    ["nombre", "nombre", form.nombre, 200],
+    ["unidad_medida", "unidad de medida", form.unidad_medida, 30],
+  ]);
+}
+
+/** Payload de alta: el stock inicial solo viaja si es mayor que 0. */
+export function productoPayload(form: ProductoBorrador): ProductoInput {
+  const stock = form.stock_inicial.trim() ? parseDecimal(form.stock_inicial) : 0;
+
+  return {
+    nombre: form.nombre.trim(),
+    unidad_medida: form.unidad_medida.trim() || null,
+    precio_unitario: parseDecimal(form.precio_unitario),
+    costo_promedio: form.costo.trim() ? parseDecimal(form.costo) : 0,
+    stock_minimo: form.stock_minimo.trim() ? parseDecimal(form.stock_minimo) : 0,
+    ...(stock > 0 ? { stock_actual: stock } : {}),
+    activo: form.activo,
+  };
 }

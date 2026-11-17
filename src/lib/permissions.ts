@@ -35,6 +35,7 @@ export type Permission =
   | "inventario.ver"
   | "inventario.consumir"
   | "inventario.ajustar"
+  | "productos.gestionar"
   | "cobros.ver"
   | "pagos.registrar"
   | "pagos.anular"
@@ -72,6 +73,8 @@ const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
   "inventario.ver": ["admin", "operario"],
   "inventario.consumir": ["admin", "operario"],
   "inventario.ajustar": ["admin"],
+  // Igual que ProductoPolicy: solo el admin crea, edita, activa o elimina.
+  "productos.gestionar": ["admin"],
   "cobros.ver": ["admin", "operario"],
   "pagos.registrar": ["admin", "operario"],
   "pagos.anular": ["admin"],

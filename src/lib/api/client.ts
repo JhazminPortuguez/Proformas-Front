@@ -24,6 +24,8 @@ import type {
   PagoCuentaInput,
   PortalSolicitud,
   PortalSolicitudInput,
+  ProductoInput,
+  ProductoUpdateInput,
   Proforma,
   ProformaInput,
   RegistroInput,
@@ -497,5 +499,27 @@ export const productos = {
     );
 
     return body.data;
+  },
+
+  async create(payload: ProductoInput): Promise<Producto> {
+    const body = await request<Producto | { data: Producto }>(
+      "/productos",
+      jsonBody(payload),
+    );
+
+    return "data" in body ? body.data : body;
+  },
+
+  async update(id: number, payload: ProductoUpdateInput): Promise<Producto> {
+    const body = await request<Producto | { data: Producto }>(`/productos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+
+    return "data" in body ? body.data : body;
+  },
+
+  remove(id: number): Promise<void> {
+    return request<void>(`/productos/${id}`, { method: "DELETE" });
   },
 };

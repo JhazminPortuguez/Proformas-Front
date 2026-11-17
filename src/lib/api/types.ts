@@ -839,6 +839,26 @@ export interface ServicioInput {
   visible_catalogo: boolean;
 }
 
+/**
+ * Alta de producto. `stock_actual` es el stock inicial: el back lo registra
+ * como movimiento de ENTRADA (con `costo_promedio` como costo unitario).
+ */
+export interface ProductoInput {
+  nombre: string;
+  descripcion?: string | null;
+  unidad_medida?: string | null;
+  precio_unitario: number;
+  costo_promedio?: number;
+  stock_minimo?: number;
+  stock_actual?: number;
+  activo?: boolean;
+}
+
+/** Edición: stock y costo no se cambian aquí (entradas y ajustes). */
+export type ProductoUpdateInput = Partial<
+  Omit<ProductoInput, "stock_actual" | "costo_promedio">
+>;
+
 export interface UsuarioInput {
   name?: string;
   email?: string;
