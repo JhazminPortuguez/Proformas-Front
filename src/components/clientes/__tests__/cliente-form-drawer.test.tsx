@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   create: vi.fn(),
   enCurso: vi.fn(),
+  obtener: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -28,6 +29,7 @@ vi.mock("@/lib/api/client", () => ({
     update: mocks.update,
     remove: vi.fn(),
     enCurso: mocks.enCurso,
+    obtener: mocks.obtener,
   },
 }));
 
@@ -168,6 +170,64 @@ describe("ClienteFormDrawer · validación antes de enviar", { timeout: 15_000 }
       nombre_razon: "Cliente nuevo",
       email: "compras@nuevo.bo",
     });
+    expect(onSaved).toHaveBeenCalled();
+  });
+});
+
+describe("ClienteFormDrawer · otro usuario guardó antes (C-05)", { timeout: 15_000 }, () => {
+  const MENSAJE =
+    "Otro usuario modificó este cliente (Ana Torres, 17/11/2026 10:32) mientras lo editabas. Recarga para ver sus cambios; los tuyos no se guardaron.";
+
+  beforeEach(() => {
+    mocks.update.mockReset();
+    mocks.obtener.mockReset();
+  });
+
+  it("envía la versión con la que se abrió", async () => {
+    const user = userEvent.setup();
+    mocks.update.mockResolvedValue({ ...CLIENTE, version: 5 });
+    const { dialog } = renderDrawer({ ...CLIENTE, version: 4 });
+
+    await user.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update.mock.calls[0][1]).toMatchObject({ version: 4 });
+  });
+
+  it("ante un 409 avisa con el mensaje del back y no pierde lo escrito", async () => {
+    const user = userEvent.setup();
+    mocks.update.mockRejectedValue(apiErrorFromResponse(409, { message: MENSAJE }));
+    const { dialog, onSaved } = renderDrawer({ ...CLIENTE, version: 1 });
+    const telefono = within(dialog).getByRole("textbox", { name: /Teléfono/ });
+
+    await user.type(telefono, "70000001");
+    await user.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    expect(await within(dialog).findByText("Este cliente cambió mientras lo editabas")).toBeInTheDocument();
+    expect(within(dialog).getByText(MENSAJE)).toBeInTheDocument();
+    expect(telefono).toHaveValue("70000001");
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it("Recargar datos trae el cliente actual y el siguiente guardado usa su versión", async () => {
+    const user = userEvent.setup();
+    mocks.update
+      .mockRejectedValueOnce(apiErrorFromResponse(409, { message: MENSAJE }))
+      .mockResolvedValueOnce({ ...CLIENTE, version: 3 });
+    mocks.obtener.mockResolvedValue({ ...CLIENTE, telefono: "70099999", version: 2 });
+    const { dialog, onSaved } = renderDrawer({ ...CLIENTE, version: 1 });
+
+    await user.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+    await user.click(await within(dialog).findByRole("button", { name: "Recargar datos" }));
+
+    await waitFor(() => expect(mocks.obtener).toHaveBeenCalledWith(3));
+    expect(within(dialog).getByRole("textbox", { name: /Teléfono/ })).toHaveValue("70099999");
+    expect(within(dialog).queryByText("Este cliente cambió mientras lo editabas")).toBeNull();
+
+    await user.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(2));
+    expect(mocks.update.mock.calls[1][1]).toMatchObject({ version: 2, telefono: "70099999" });
     expect(onSaved).toHaveBeenCalled();
   });
 });

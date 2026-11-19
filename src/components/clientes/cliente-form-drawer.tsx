@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert } from "@heroui/react";
+import { Alert, Button } from "@heroui/react";
 import { DrawerActions, FormDrawer } from "@/components/ui/form-drawer";
 import { TextAreaControl, TextFieldControl, SelectControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -75,9 +75,14 @@ export function ClienteFormDrawer({
   cliente,
   onSaved,
 }: ClienteFormDrawerProps) {
-  const [initial] = useState<FormState>(() => toFormState(cliente));
+  const [initial, setInitial] = useState<FormState>(() => toFormState(cliente));
   const [form, setForm] = useState<FormState>(initial);
   const [pending, setPending] = useState(false);
+  // C-05: versión con la que se abrió el formulario. Si otro guarda antes,
+  // el back responde 409 y se ofrece recargar sin perder lo escrito.
+  const [version, setVersion] = useState<number>(cliente?.version ?? 1);
+  const [conflicto, setConflicto] = useState<string | null>(null);
+  const [recargando, setRecargando] = useState(false);
   // Trabajo en curso que se mostró al pasar a Inactivo: el siguiente guardar confirma.
   const [enCurso, setEnCurso] = useState<ClienteEnCurso | null>(null);
   const router = useRouter();
@@ -141,9 +146,11 @@ export function ClienteFormDrawer({
       estado: form.estado,
     };
 
+    setConflicto(null);
+
     try {
       if (cliente) {
-        await clientes.update(cliente.id, payload);
+        await clientes.update(cliente.id, { ...payload, version });
       } else {
         await clientes.create(payload);
       }
@@ -154,6 +161,19 @@ export function ClienteFormDrawer({
       if (isApiError(caught) && (caught.status === 401 || caught.status === 419)) {
         router.replace("/login");
         router.refresh();
+
+        return;
+      }
+
+      // C-05: otro usuario guardó el cliente mientras estaba abierto.
+      if (cliente && isApiError(caught) && caught.status === 409) {
+        const aviso = apiErrorMessage(
+          caught,
+          "Este cliente cambió mientras lo editabas. Recarga para ver sus cambios; los tuyos no se guardaron.",
+        );
+
+        setConflicto(aviso);
+        announce(aviso);
 
         return;
       }
@@ -169,6 +189,29 @@ export function ClienteFormDrawer({
       );
     } finally {
       setPending(false);
+    }
+  }
+
+  async function recargar() {
+    if (!cliente || recargando) return;
+
+    setRecargando(true);
+
+    try {
+      const actual = await clientes.obtener(cliente.id);
+      const datos = toFormState(actual);
+
+      setInitial(datos);
+      setForm(datos);
+      setVersion(actual.version ?? 1);
+      setConflicto(null);
+      setEnCurso(null);
+      reset();
+      announce("Datos del cliente recargados. Vuelve a aplicar tus cambios si aún hacen falta.");
+    } catch (caught) {
+      setConflicto(apiErrorMessage(caught, "No pudimos recargar el cliente."));
+    } finally {
+      setRecargando(false);
     }
   }
 
@@ -199,6 +242,26 @@ export function ClienteFormDrawer({
         />
       }
     >
+      {conflicto ? (
+        <Alert status="danger" role="alert">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Este cliente cambió mientras lo editabas</Alert.Title>
+            <Alert.Description>{conflicto}</Alert.Description>
+            <div className="mt-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onPress={recargar}
+                isDisabled={recargando}
+              >
+                {recargando ? "Recargando…" : "Recargar datos"}
+              </Button>
+            </div>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
       {enCurso ? (
         <Alert status="warning">
           <Alert.Indicator />

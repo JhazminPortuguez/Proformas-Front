@@ -186,6 +186,13 @@ export const clientes = {
     return request<void>(`/clientes/${id}`, { method: "DELETE" });
   },
 
+  /** El cliente tal como está ahora (para recargar el formulario tras un 409). */
+  async obtener(id: number): Promise<Cliente> {
+    const body = await request<Cliente | { data: Cliente }>(`/clientes/${id}`);
+
+    return "data" in body ? body.data : body;
+  },
+
   /** Buscador de documentos nuevos: prospectos y activos, sin el límite de 100. */
   async buscar(termino: string): Promise<Cliente[]> {
     const body = await request<{ data: Cliente[] }>(
