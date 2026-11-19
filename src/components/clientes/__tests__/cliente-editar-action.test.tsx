@@ -72,6 +72,8 @@ describe("ClienteEditarAction", () => {
         email: "contacto@andina.example",
         direccion: "Av. Blanco Galindo km 5",
         estado: "activo",
+        // C-05: la versión con la que se abrió (sin version, 1).
+        version: 1,
       });
     });
 

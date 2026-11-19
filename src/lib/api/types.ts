@@ -28,6 +28,8 @@ export interface Cliente {
   email: string | null;
   direccion: string | null;
   estado: ClienteEstado;
+  /** C-05: sube en cada guardado; el formulario la devuelve al editar. */
+  version?: number;
   proformas_count?: number;
   ordenes_count?: number;
 }
@@ -827,6 +829,8 @@ export interface ClienteInput {
   email?: string | null;
   direccion?: string | null;
   estado: ClienteEstado;
+  /** Solo al editar: la versión con la que se abrió el formulario (C-05). */
+  version?: number;
 }
 
 export interface ServicioInput {
