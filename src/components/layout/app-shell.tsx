@@ -5,6 +5,7 @@ import { Menu as MenuIcon } from "lucide-react";
 import { Button, Drawer } from "@heroui/react";
 import type { User } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { AvisoCambioDeDia } from "./aviso-cambio-de-dia";
 import { Breadcrumbs } from "./breadcrumbs";
 import { Brand, Sidebar, SidebarNav } from "./sidebar";
 import { ThemeToggle, useSystemThemeSync } from "./theme-toggle";
@@ -67,7 +68,10 @@ export function AppShell({ user, children }: AppShellProps) {
           tabIndex={-1}
           className="flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8"
         >
-          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1400px]">
+            <AvisoCambioDeDia />
+            {children}
+          </div>
         </main>
 
         <footer className="border-t border-border px-4 py-4 text-xs text-muted sm:px-6 lg:px-8">
