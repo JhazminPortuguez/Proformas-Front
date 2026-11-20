@@ -23,13 +23,13 @@ export function CuentaMontos({ cuenta }: CuentaMontosProps) {
     {
       key: "total",
       label: "Total de la cuenta",
-      value: formatMoney(total),
-      hint: cuenta.moneda,
+      value: formatMoney(total, cuenta.moneda),
+      hint: "Monto emitido",
     },
     {
       key: "pagado",
       label: "Pagado",
-      value: formatMoney(pagado),
+      value: formatMoney(pagado, cuenta.moneda),
       hint: `${formatNumber(pagosCount)} ${
         pagosCount === 1 ? "pago" : "pagos"
       }`,
@@ -37,7 +37,7 @@ export function CuentaMontos({ cuenta }: CuentaMontosProps) {
     {
       key: "saldo",
       label: "Saldo pendiente",
-      value: formatMoney(saldo),
+      value: formatMoney(saldo, cuenta.moneda),
       hint: saldo > 0 ? "Sujeto a cobro" : "Cuenta liquidada",
     },
   ];

@@ -230,4 +230,20 @@ describe("ClienteFormDrawer · otro usuario guardó antes (C-05)", { timeout: 15
     expect(mocks.update.mock.calls[1][1]).toMatchObject({ version: 2, telefono: "70099999" });
     expect(onSaved).toHaveBeenCalled();
   });
+  it("pestaña desactualizada (428): muestra el mensaje del back y no marca campos", async () => {
+    // Es el mismo camino que sigue el front anterior a C-05, que no envía la
+    // versión: el back responde 428 sin `errors`.
+    const AVISO =
+      "Esta pantalla está desactualizada y no se guardó ningún cambio. Recarga la página (F5) y vuelve a editar el cliente.";
+    const user = userEvent.setup();
+    mocks.update.mockRejectedValue(apiErrorFromResponse(428, { message: AVISO }));
+    const { dialog, onSaved } = renderDrawer({ ...CLIENTE, version: 1 });
+
+    await user.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    expect(await within(dialog).findByText(AVISO)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Revisa \d+ campo/)).toBeNull();
+    expect(within(dialog).queryByText("Revisa los datos ingresados.")).toBeNull();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
 });

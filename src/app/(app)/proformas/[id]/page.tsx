@@ -21,7 +21,7 @@ import type { Proforma, User } from "@/lib/api/types";
 import { proformaEstadoMeta } from "@/lib/estados";
 import { accionesProforma, ordenNoVisibleNota, puedeAbrirOrden } from "@/lib/proformas";
 import { can } from "@/lib/permissions";
-import { formatDateOnly, formatDateTime } from "@/lib/utils";
+import { etiquetaMoneda, formatDateOnly, formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Detalle de proforma",
@@ -325,7 +325,7 @@ export default async function ProformaDetallePage({
                 <div>
                   <dt className="text-xs text-muted">Moneda</dt>
                   <dd className="mt-0.5 text-foreground">
-                    {proforma.moneda} · Bolivianos
+                    {etiquetaMoneda(proforma.moneda)}
                   </dd>
                 </div>
 

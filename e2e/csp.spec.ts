@@ -117,12 +117,15 @@ test("login y registro no tienen errores de CSP", async ({ browser }) => {
   expect(errores).toEqual([]);
 });
 
+// Reportes consulta y dibuja varios gráficos: con la CPU ocupada (otra tarea
+// pesada en paralelo) tardó más de 10 s. Se da más margen a estas dos.
 test("Chart.js dibuja los gráficos de reportes con la CSP", async ({ page }) => {
+  test.slow();
   await page.goto("/reportes?tab=ordenes");
 
   const canvas = page.locator("canvas").first();
 
-  await expect(canvas).toBeVisible();
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
   // El canvas tiene píxeles pintados: Chart.js corrió sin bloqueos.
   await expect
     .poll(() =>
@@ -139,11 +142,16 @@ test("Chart.js dibuja los gráficos de reportes con la CSP", async ({ page }) =>
 });
 
 test("el CSV de reportes se descarga", async ({ page }) => {
+  test.slow();
   await page.goto("/reportes?tab=cobros");
 
+  const enlace = page.getByRole("link", { name: "Exportar CSV" });
+
+  await expect(enlace).toBeVisible({ timeout: 30_000 });
+
   const [descarga] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("link", { name: "Exportar CSV" }).click(),
+    page.waitForEvent("download", { timeout: 45_000 }),
+    enlace.click(),
   ]);
 
   expect(descarga.suggestedFilename()).toMatch(/\.csv$/);
