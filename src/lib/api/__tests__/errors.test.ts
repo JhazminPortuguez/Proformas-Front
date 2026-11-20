@@ -22,7 +22,7 @@ describe("mapeo de errores de API", () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(422);
-    expect(error.message).toBe("Revisa los datos ingresados.");
+    expect(error.message).toBe("Corrige los campos marcados en rojo y vuelve a guardar.");
     expect(error.errors?.nombre_razon).toEqual([
       "El nombre o razón social es obligatorio.",
     ]);
@@ -96,9 +96,9 @@ describe("mapeo de errores de API", () => {
     );
     // Sin errores por campo, sigue el genérico; y apiErrorMessage (formularios) no cambia.
     expect(mensajeDeError(apiErrorFromResponse(422, { message: "x" }))).toBe(
-      "Revisa los datos ingresados.",
+      "Corrige los campos marcados en rojo y vuelve a guardar.",
     );
-    expect(apiErrorMessage(error)).toBe("Revisa los datos ingresados.");
+    expect(apiErrorMessage(error)).toBe("Corrige los campos marcados en rojo y vuelve a guardar.");
   });
 
   it("normaliza y deduplica errores por campo", () => {

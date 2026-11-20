@@ -26,8 +26,8 @@ export function PipelineSection({ data }: { data: DashboardData }) {
     <section aria-labelledby="pipeline-title" className="space-y-3">
       <SectionIntro
         id="pipeline-title"
-        title="Pipeline"
-        description="Distribución actual de proformas y órdenes por estado."
+        title="Proformas y órdenes por estado"
+        description="Cuántas hay hoy en cada estado."
       />
 
       <div className="grid gap-4 lg:grid-cols-2">

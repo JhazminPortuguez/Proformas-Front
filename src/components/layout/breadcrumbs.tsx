@@ -9,20 +9,24 @@ export function Breadcrumbs() {
   const pathname = usePathname();
   const match = findNavItem(pathname);
 
-  const current = match?.item.label ?? "Inicio";
+  const current = match?.item.label ?? "Panel";
   const group = match?.group ?? null;
+  // En el panel no se repite "Panel > Panel".
+  const enElPanel = match?.item.href === "/dashboard";
 
   return (
     <nav aria-label="Ruta de navegación" className="min-w-0">
       <ol className="flex min-w-0 items-center gap-1.5 text-sm">
-        <li className="hidden shrink-0 sm:block">
-          <Link
-            href="/dashboard"
-            className="rounded text-muted transition-colors duration-200 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            Inicio
-          </Link>
-        </li>
+        {enElPanel ? null : (
+          <li className="hidden shrink-0 sm:block">
+            <Link
+              href="/dashboard"
+              className="rounded text-muted transition-colors duration-200 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              Panel
+            </Link>
+          </li>
+        )}
 
         {group ? (
           <>
@@ -33,9 +37,11 @@ export function Breadcrumbs() {
           </>
         ) : null}
 
-        <li aria-hidden className="hidden text-muted/60 sm:block">
-          <ChevronRight className="size-3.5" />
-        </li>
+        {enElPanel ? null : (
+          <li aria-hidden className="hidden text-muted/60 sm:block">
+            <ChevronRight className="size-3.5" />
+          </li>
+        )}
 
         <li className="min-w-0">
           <span

@@ -5,8 +5,11 @@ import {
   formatDateTimeNumeric,
 } from "@/lib/utils";
 
+// Mismo formato en listados y detalles: dd/mm/aaaa.
 const utcDate = new Intl.DateTimeFormat("es-BO", {
-  dateStyle: "medium",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
   timeZone: "UTC",
 });
 

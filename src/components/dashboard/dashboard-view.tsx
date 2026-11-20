@@ -59,7 +59,7 @@ export function DashboardView({ user, data }: DashboardViewProps) {
   return (
     <>
       <PageHeader
-        title={nombre ? `Hola, ${nombre}` : "Dashboard"}
+        title={nombre ? `Hola, ${nombre}` : "Panel"}
         description="Resumen operativo y financiero del mes."
         actions={acciones}
       />

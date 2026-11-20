@@ -1215,15 +1215,22 @@ export function ProformaForm({
           )}
         </section>
 
-        <TotalsSummary
-          subtotal={totals.subtotal}
-          descuento={totals.descuento}
-          impuesto={totals.impuesto}
-          total={totals.total}
-          impuestoTasa={safeNumber(form.impuesto_tasa)}
-          estimated
-          className="xl:sticky xl:top-20"
-        />
+        <div className="flex flex-col gap-2 xl:sticky xl:top-20">
+          <TotalsSummary
+            subtotal={totals.subtotal}
+            descuento={totals.descuento}
+            impuesto={totals.impuesto}
+            total={totals.total}
+            impuestoTasa={safeNumber(form.impuesto_tasa)}
+            estimated
+          />
+          {bloqueoEnvio ? (
+            // El tooltip de "Guardar y enviar" no se ve al tocar en el celular.
+            <p className="px-1 text-xs text-muted">
+              Para usar &quot;Guardar y enviar&quot;: {bloqueoEnvio}
+            </p>
+          ) : null}
+        </div>
       </div>
     </form>
   );

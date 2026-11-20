@@ -170,6 +170,13 @@ export function ProformaListActions({
           : actionButton("enviar", "Enviar", Send, "Enviar al cliente")
         : null}
 
+      {!icon && acciones.has("enviar") && bloqueoEnvio ? (
+        // En la tarjeta del celular el tooltip no se ve al tocar.
+        <p className="order-last basis-full px-1 text-xs text-muted">
+          No se puede enviar: {bloqueoEnvio}
+        </p>
+      ) : null}
+
       {acciones.has("aceptar")
         ? actionButton("aceptar", "Aceptar", Check, "Aceptar")
         : null}

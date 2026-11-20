@@ -14,11 +14,6 @@ const moneyFormatter = new Intl.NumberFormat("es-BO", {
 
 const numberFormatter = new Intl.NumberFormat("es-BO");
 
-const dateFormatter = new Intl.DateTimeFormat("es-BO", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "America/La_Paz",
-});
 
 /**
  * Las fechas date-only (`YYYY-MM-DD`) no representan un instante: si se pasan
@@ -26,17 +21,13 @@ const dateFormatter = new Intl.DateTimeFormat("es-BO", {
  * (UTC-4) retroceden un día. Este formateador las trata como fecha calendario.
  */
 const dateOnlyFormatter = new Intl.DateTimeFormat("es-BO", {
-  dateStyle: "medium",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
   timeZone: "UTC",
 });
 
-/** Solo el día de un instante, en la misma zona que `dateFormatter`. */
-const instantDayFormatter = new Intl.DateTimeFormat("es-BO", {
-  dateStyle: "medium",
-  timeZone: "America/La_Paz",
-});
-
-/** `dd/mm/aaaa` de un instante, en la misma zona que `dateFormatter`. */
+/** `dd/mm/aaaa` de un instante, en hora de Bolivia. */
 const numericDayFormatter = new Intl.DateTimeFormat("es-BO", {
   day: "2-digit",
   month: "2-digit",
@@ -113,14 +104,12 @@ export function formatNumber(value: number | null | undefined): string {
   return numberFormatter.format(value);
 }
 
+/**
+ * Instante como `dd/mm/aaaa HH:mm` (24 horas, hora de Bolivia): el mismo
+ * formato en listados, detalles y mensajes del back.
+ */
 export function formatDateTime(value: string | null | undefined): string {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return value;
-
-  return dateFormatter.format(date);
+  return formatDateTimeNumeric(value);
 }
 
 /**
@@ -143,7 +132,7 @@ export function formatDateOnly(value: string | null | undefined): string {
     const instant = new Date(trimmed);
 
     if (DATE_ONLY_PATTERN.test(trimmed) && !Number.isNaN(instant.getTime())) {
-      return instantDayFormatter.format(instant);
+      return numericDayFormatter.format(instant);
     }
   }
 

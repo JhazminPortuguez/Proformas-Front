@@ -73,7 +73,7 @@ export function AnularCuentaAction({ cuentaId, numero }: AnularCuentaActionProps
           }
         }}
         title="Anular cuenta por cobrar"
-        description={`La cuenta ${numero} quedará anulada: no se cobrará y dejará de sumar en el dashboard y en los reportes. Queda registrado quién la anuló, cuándo y por qué.`}
+        description={`La cuenta ${numero} quedará anulada: no se cobrará y dejará de sumar en el panel y en los reportes. Queda registrado quién la anuló, cuándo y por qué.`}
         confirmLabel="Anular cuenta"
         pendingLabel="Anulando…"
         tone="danger"

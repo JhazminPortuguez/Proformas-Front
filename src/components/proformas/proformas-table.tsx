@@ -25,7 +25,6 @@ import type {
 import {
   accionesProforma,
   avisoAceptarVencida,
-  formatDiaMes,
   ordenNoVisibleNota,
   proformaExpirada,
   puedeAbrirOrden,
@@ -82,18 +81,29 @@ function ClienteCell({ proforma }: { proforma: Proforma }) {
 }
 
 /** Fecha de validez; si la proforma enviada ya expiró, agrega un aviso. */
-function ValidezCell({ proforma, hoy }: { proforma: Proforma; hoy: string }) {
+function ValidezCell({
+  proforma,
+  hoy,
+  conEmision = true,
+}: {
+  proforma: Proforma;
+  hoy: string;
+  /** En la tarjeta del celular la emisión ya tiene su propio dato. */
+  conEmision?: boolean;
+}) {
   return (
     <div>
       <p className="numeric whitespace-nowrap text-sm text-muted">
         {formatDateNumeric(proforma.fecha_validez)}
       </p>
-      <p className="numeric whitespace-nowrap text-xs text-muted">
-        Emitida {formatDateNumeric(proforma.fecha_emision)}
-      </p>
+      {conEmision ? (
+        <p className="numeric whitespace-nowrap text-xs text-muted">
+          Emitida {formatDateNumeric(proforma.fecha_emision)}
+        </p>
+      ) : null}
       {proformaExpirada(proforma, hoy) && proforma.fecha_validez ? (
         <p className="text-xs text-warning">
-          Aviso: Expiró {formatDiaMes(proforma.fecha_validez)}
+          Venció el {formatDateNumeric(proforma.fecha_validez)}
         </p>
       ) : null}
     </div>
@@ -567,7 +577,7 @@ export function ProformasTable({
                   <div className="col-span-2">
                     <dt className="text-xs text-muted">Validez</dt>
                     <dd>
-                      <ValidezCell proforma={proforma} hoy={hoy} />
+                      <ValidezCell proforma={proforma} hoy={hoy} conEmision={false} />
                     </dd>
                   </div>
                 </dl>

@@ -19,7 +19,7 @@ const STATUS_FALLBACKS: Record<number, string> = {
   404: "No encontramos la información solicitada.",
   409: "La operación entra en conflicto con los datos actuales.",
   419: "Tu sesión expiró. Intenta nuevamente.",
-  422: "Revisa los datos ingresados.",
+  422: "Corrige los campos marcados en rojo y vuelve a guardar.",
   429: "Demasiados intentos. Espera un momento e intenta nuevamente.",
   500: "Ocurrió un error en el servidor. Intenta nuevamente.",
 };
@@ -160,7 +160,7 @@ export function apiErrorMessage(
  * Para avisos que no tienen campos donde mostrar los errores (acciones de una
  * fila, confirmaciones): un 422 del back explica el motivo en sus errores por
  * campo, ya normalizados, y se muestra el primero en vez del genérico
- * "Revisa los datos ingresados.". Los formularios siguen usando
+ * "Corrige los campos marcados en rojo y vuelve a guardar.". Los formularios siguen usando
  * `apiErrorMessage` y muestran cada error junto a su campo.
  */
 export function mensajeDeError(

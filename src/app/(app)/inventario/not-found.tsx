@@ -4,9 +4,9 @@ export default function InventarioNotFound() {
   return (
     <NotFoundState
       title="No encontramos esta pantalla de inventario"
-      description="El enlace puede haber cambiado o la sección ya no existe. Vuelve al dashboard para continuar."
+      description="El enlace puede haber cambiado o la sección ya no existe. Vuelve al panel para continuar."
       backHref="/dashboard"
-      backLabel="Volver al dashboard"
+      backLabel="Volver al panel"
     />
   );
 }

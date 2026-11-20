@@ -81,7 +81,7 @@ export default async function CobroDetallePage({
           back={
             <Link href="/cobros" className={ACTION_LINK_GHOST}>
               <ArrowLeft aria-hidden className="size-4" />
-              Volver a cobros
+              Volver a cuentas por cobrar
             </Link>
           }
         />
@@ -108,12 +108,12 @@ export default async function CobroDetallePage({
     <>
       <PageHeader
         wrap
-        title={`Cobro ${cuenta.numero}`}
+        title={`Cuenta por cobrar ${cuenta.numero}`}
         description={`${cuentaClienteNombre(cuenta)} · ${estadoMeta.label}`}
         back={
           <Link href="/cobros" className={ACTION_LINK_GHOST}>
             <ArrowLeft aria-hidden className="size-4" />
-            Volver a cobros
+            Volver a cuentas por cobrar
           </Link>
         }
         actions={
@@ -181,7 +181,7 @@ export default async function CobroDetallePage({
               {cuenta.anulada_at ? ` · ${formatDateTime(cuenta.anulada_at)}` : ""}
             </Alert.Description>
             <p className="mt-1 text-sm text-muted">
-              No se cobra ni suma en el dashboard ni en los reportes.
+              No se cobra ni suma en el panel ni en los reportes.
             </p>
           </Alert.Content>
         </Alert>

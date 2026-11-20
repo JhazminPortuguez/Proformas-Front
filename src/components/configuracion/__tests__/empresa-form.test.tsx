@@ -188,3 +188,19 @@ describe("EmpresaForm", () => {
     expect(await screen.findByText("Sin logo")).toBeInTheDocument();
   }, 20_000);
 });
+
+describe("EmpresaForm · botones deshabilitados explican por qué", () => {
+  it("sin cambios ni imagen elegida, lo dice junto a cada botón", async () => {
+    const user = userEvent.setup();
+
+    render(<EmpresaForm empresa={EMPRESA} />);
+
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
+    expect(screen.getByText("Sin cambios por guardar.")).toBeInTheDocument();
+    expect(screen.getByText("Elige una imagen para poder subirla.")).toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: /Teléfono/ }), "7");
+
+    expect(screen.queryByText("Sin cambios por guardar.")).toBeNull();
+  });
+});

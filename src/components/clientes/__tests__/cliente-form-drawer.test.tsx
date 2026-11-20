@@ -243,7 +243,7 @@ describe("ClienteFormDrawer · otro usuario guardó antes (C-05)", { timeout: 15
 
     expect(await within(dialog).findByText(AVISO)).toBeInTheDocument();
     expect(within(dialog).queryByText(/Revisa \d+ campo/)).toBeNull();
-    expect(within(dialog).queryByText("Revisa los datos ingresados.")).toBeNull();
+    expect(within(dialog).queryByText("Corrige los campos marcados en rojo y vuelve a guardar.")).toBeNull();
     expect(onSaved).not.toHaveBeenCalled();
   });
 });

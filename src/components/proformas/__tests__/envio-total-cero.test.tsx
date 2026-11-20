@@ -167,3 +167,62 @@ describe("Enviar una proforma en Bs 0", () => {
     ).not.toHaveAttribute("aria-disabled");
   });
 });
+
+/**
+ * En el celular el tooltip no se abre al tocar: el motivo también queda
+ * escrito junto al botón deshabilitado.
+ */
+describe("Motivo visible sin tooltip (usabilidad)", () => {
+  it("el detalle escribe por qué no se puede enviar", () => {
+    render(
+      <ProformaDetailActions
+        proformaId={5}
+        numero="PR-2026-000005"
+        acciones={["ver", "editar", "enviar"]}
+        canDelete={false}
+        total={0}
+      />,
+    );
+
+    expect(screen.getByText(`No se puede enviar: ${MOTIVO_TOTAL_CERO}`)).toBeInTheDocument();
+  });
+
+  it("la tarjeta del celular lo escribe; la tabla de escritorio usa el tooltip", () => {
+    const proforma = { id: 5, numero: "PR-2026-000005", total: 0 } as Proforma;
+    const { rerender } = render(
+      <ProformaListActions
+        proforma={proforma}
+        acciones={new Set<AccionProforma>(["ver", "enviar"])}
+        display="labels"
+        onRequestAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(`No se puede enviar: ${MOTIVO_TOTAL_CERO}`)).toBeInTheDocument();
+
+    rerender(
+      <ProformaListActions
+        proforma={proforma}
+        acciones={new Set<AccionProforma>(["ver", "enviar"])}
+        display="icons"
+        onRequestAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/No se puede enviar:/)).toBeNull();
+  });
+
+  it("el formulario lo escribe bajo los totales", () => {
+    render(
+      <ProformaForm
+        proforma={null}
+        clientes={[]}
+        servicios={[]}
+        productos={[]}
+        today="2026-11-08"
+      />,
+    );
+
+    expect(screen.getByText(`Para usar "Guardar y enviar": ${MOTIVO_TOTAL_CERO}`)).toBeInTheDocument();
+  });
+});

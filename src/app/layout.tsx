@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     default: "Proformas",
     template: "%s · Proformas",
   },
-  description: "Backoffice de clientes, servicios y proformas.",
+  description: "Gestión de clientes, servicios y proformas.",
   robots: {
     index: false,
     follow: false,

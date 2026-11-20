@@ -13,7 +13,7 @@ export default function AppNotFound() {
         href="/dashboard"
         className="inline-flex rounded bg-foreground px-4 py-2 text-sm font-medium text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
-        Volver al dashboard
+        Volver al panel
       </Link>
     </section>
   );

@@ -38,7 +38,7 @@ describe("AnularCuentaAction", { timeout: 15_000 }, () => {
 
     await user.click(screen.getByRole("button", { name: "Anular cuenta" }));
     const dialog = await screen.findByRole("alertdialog", { name: "Anular cuenta por cobrar" });
-    expect(dialog).toHaveTextContent("dejará de sumar en el dashboard y en los reportes");
+    expect(dialog).toHaveTextContent("dejará de sumar en el panel y en los reportes");
 
     const confirmar = screen.getAllByRole("button", { name: "Anular cuenta" }).at(-1)!;
     expect(confirmar).toBeDisabled();

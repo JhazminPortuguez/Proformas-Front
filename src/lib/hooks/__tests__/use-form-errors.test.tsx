@@ -43,7 +43,7 @@ function Harness() {
               email: ["Ingresa un correo válido."],
               nombre: ["El nombre es obligatorio."],
             },
-            "Revisa los datos ingresados.",
+            "Corrige los campos marcados en rojo y vuelve a guardar.",
           )
         }
       >
@@ -62,7 +62,7 @@ describe("useFormErrors", () => {
 
     expect(screen.getByTestId("count")).toHaveTextContent("2");
     expect(screen.getByTestId("message")).toHaveTextContent(
-      "Revisa los datos ingresados.",
+      "Corrige los campos marcados en rojo y vuelve a guardar.",
     );
     expect(screen.getByLabelText("Nombre")).toHaveFocus();
     expect(screen.getByLabelText("Nombre")).toHaveAttribute(

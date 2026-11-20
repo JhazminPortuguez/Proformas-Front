@@ -43,7 +43,7 @@ export function RegistroForm() {
     }
 
     if (Object.keys(localErrors).length > 0) {
-      applyFieldErrors(localErrors, "Revisa los datos ingresados.");
+      applyFieldErrors(localErrors, "Corrige los campos marcados en rojo y vuelve a guardar.");
 
       return;
     }

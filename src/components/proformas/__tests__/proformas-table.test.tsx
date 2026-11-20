@@ -105,19 +105,19 @@ describe("ProformasTable", () => {
 
     const table = screen.getByRole("grid", { name: "Proformas" });
 
-    expect(within(table).getByText("Aviso: Expiró 20/10")).toBeInTheDocument();
+    expect(within(table).getByText("Venció el 20/10/2026")).toBeInTheDocument();
     expect(within(table).getByText("Enviada")).toBeInTheDocument();
   });
 
   it("no avisa si la validez sigue vigente o la proforma no está enviada", () => {
     const { unmount } = renderTable({ ...PROFORMA, estado: "ENVIADA" });
 
-    expect(screen.queryByText(/Expiró/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Venció el/)).not.toBeInTheDocument();
     unmount();
 
     renderTable({ ...PROFORMA, fecha_validez: "2026-10-20" });
 
-    expect(screen.queryByText(/Expiró/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Venció el/)).not.toBeInTheDocument();
   });
 
   it("muestra la moneda real si no es Bs, sin convertir el monto", () => {
