@@ -172,7 +172,7 @@ describe("DashboardView", () => {
   it("enlaza el pipeline al listado filtrado por estado", () => {
     render(<DashboardView user={USER} data={DATA} />);
 
-    const pipeline = screen.getByRole("region", { name: "Pipeline" });
+    const pipeline = screen.getByRole("region", { name: "Proformas y órdenes por estado" });
 
     expect(
       within(pipeline).getByRole("link", { name: /Borrador/ }),

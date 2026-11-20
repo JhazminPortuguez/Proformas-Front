@@ -33,14 +33,14 @@ test("dashboard, proformas y órdenes cargan sin warnings de accesibilidad", asy
   await expect(cotizado).toContainText(/Bs/);
   await expect(stock).toBeVisible();
 
-  const pipeline = page.getByRole("region", { name: "Pipeline" });
+  const pipeline = page.getByRole("region", { name: "Proformas y órdenes por estado" });
 
   await expect(pipeline).toBeVisible();
   await expect(
-    pipeline.getByRole("heading", { name: "Proformas por estado" }),
+    pipeline.getByRole("heading", { name: "Proformas por estado", exact: true }),
   ).toBeVisible();
   await expect(
-    pipeline.getByRole("heading", { name: "Órdenes por estado" }),
+    pipeline.getByRole("heading", { name: "Órdenes por estado", exact: true }),
   ).toBeVisible();
 
   await expect(page.getByRole("region", { name: "Cobranza" })).toBeVisible();
@@ -270,7 +270,7 @@ test("cobros carga el listado y abre el diálogo de pago", async ({ page }) => {
   expect(href).toMatch(/^\/cobros\/\d+$/);
 
   await page.goto(href!);
-  await expect(page.getByRole("heading", { name: /^Cobro / })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Cuenta por cobrar CXC-/ })).toBeVisible();
   await expect(page.getByText("Datos de la cuenta")).toBeVisible();
 
   const pagar = page.getByRole("button", { name: "Registrar pago" }).first();

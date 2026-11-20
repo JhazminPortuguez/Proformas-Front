@@ -32,7 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: null,
     items: [
       {
-        label: "Dashboard",
+        label: "Panel",
         href: "/dashboard",
         icon: LayoutDashboard,
         ready: true,

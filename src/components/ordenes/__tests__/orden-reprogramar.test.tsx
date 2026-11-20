@@ -68,7 +68,7 @@ describe("OrdenActions · reprogramar", () => {
 
     const dialog = screen.getByRole("dialog", { name: "Reprogramar orden" });
 
-    expect(dialog).toHaveTextContent(/programada para el 5 nov\.? de 2026/);
+    expect(dialog).toHaveTextContent("programada para el 05/11/2026");
     expect(dialog).toHaveTextContent("queda en el historial");
     expect(campoFecha()).toHaveValue("2026-11-05");
 

@@ -29,7 +29,7 @@ export default function Error({
           href="/dashboard"
           className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors duration-200 hover:bg-surface-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          Volver al dashboard
+          Volver al panel
         </Link>
       </div>
     </main>

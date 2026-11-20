@@ -111,7 +111,7 @@ export function ClienteFormDrawer({
     const localErrors: ErroresValidacion = validarCliente(form);
 
     if (Object.keys(localErrors).length > 0) {
-      applyFieldErrors(localErrors, "Revisa los datos ingresados.");
+      applyFieldErrors(localErrors, "Corrige los campos marcados en rojo y vuelve a guardar.");
 
       return;
     }

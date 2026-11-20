@@ -187,7 +187,7 @@ export function EmpresaForm({ empresa: inicial }: { empresa: Empresa }) {
         onSubmit={onSubmit}
         noValidate
         aria-label="Datos de la empresa"
-        className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5"
+        className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-surface p-5"
       >
         <div>
           <h2 className="text-base font-semibold text-foreground">Datos de la empresa</h2>
@@ -262,6 +262,9 @@ export function EmpresaForm({ empresa: inicial }: { empresa: Empresa }) {
             <p role="status" className="text-sm text-success-soft-foreground">
               {aviso}
             </p>
+          ) : !isDirty ? (
+            // El botón está deshabilitado: se dice por qué.
+            <p className="text-sm text-muted">Sin cambios por guardar.</p>
           ) : null}
           <Button type="submit" variant="primary" isDisabled={pending || !isDirty}>
             {pending ? "Guardando…" : "Guardar cambios"}
@@ -271,7 +274,7 @@ export function EmpresaForm({ empresa: inicial }: { empresa: Empresa }) {
 
       <section
         aria-labelledby="logo-titulo"
-        className="flex flex-col gap-4 self-start rounded-xl border border-border bg-surface p-5"
+        className="flex min-w-0 flex-col gap-4 self-start rounded-xl border border-border bg-surface p-5"
       >
         <div>
           <h2 id="logo-titulo" className="text-base font-semibold text-foreground">
@@ -309,7 +312,7 @@ export function EmpresaForm({ empresa: inicial }: { empresa: Empresa }) {
             onChange={elegirArchivo}
             aria-invalid={logoError ? true : undefined}
             aria-describedby={logoError ? "logo-error" : undefined}
-            className="text-sm text-foreground file:me-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
+            className="w-full min-w-0 max-w-full text-sm text-foreground file:me-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
           />
           {logoError ? (
             <p id="logo-error" role="alert" className="text-xs text-danger">
@@ -317,6 +320,10 @@ export function EmpresaForm({ empresa: inicial }: { empresa: Empresa }) {
             </p>
           ) : null}
         </div>
+
+        {!archivo && !logoPending ? (
+          <p className="text-xs text-muted">Elige una imagen para poder subirla.</p>
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" size="sm" isDisabled={!archivo || logoPending} onPress={subirLogo}>

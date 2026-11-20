@@ -182,6 +182,11 @@ export function ProformaDetailActions({
         ) : null}
       </div>
 
+      {available.has("enviar") && bloqueoEnvio ? (
+        // El tooltip no se ve al tocar en el celular: el motivo queda escrito.
+        <p className="mt-1 text-xs text-muted">No se puede enviar: {bloqueoEnvio}</p>
+      ) : null}
+
       <ConfirmDialog
         isOpen={Boolean(target)}
         onOpenChange={(open) => {

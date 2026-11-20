@@ -32,7 +32,7 @@ export function Brand({ collapsed = false }: { collapsed?: boolean }) {
         <span className="truncate text-sm font-semibold text-foreground">
           Proformas
         </span>
-        <span className="truncate text-[11px] text-muted">Backoffice</span>
+        <span className="truncate text-[11px] text-muted">Gestión interna</span>
       </span>
     </Link>
   );

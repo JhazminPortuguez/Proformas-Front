@@ -15,13 +15,13 @@ export default function NotFound() {
           </h1>
           <p className="text-sm text-muted">
             La ruta que buscas no existe o fue movida. Revisa el enlace o vuelve
-            al dashboard.
+            al panel.
           </p>
           <Link
             href="/dashboard"
             className="rounded-lg text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
-            Volver al dashboard
+            Volver al panel
           </Link>
         </Card.Content>
       </Card>

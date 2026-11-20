@@ -63,7 +63,7 @@ export function ComingSoon({
               href="/dashboard"
               className="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
-              Volver al dashboard
+              Volver al panel
               <ArrowRight aria-hidden className="size-3.5" />
             </Link>
           </div>

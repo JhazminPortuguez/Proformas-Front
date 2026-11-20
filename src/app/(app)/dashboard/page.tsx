@@ -10,7 +10,7 @@ import { isApiError } from "@/lib/api/types";
 import type { DashboardData } from "@/lib/api/types";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Panel",
 };
 
 export default async function DashboardPage() {
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          title="Dashboard"
+          title="Panel"
           description="Resumen operativo y financiero del mes."
         />
         <ErrorState message={apiErrorMessage(error)} action={<RetryButton />} />
