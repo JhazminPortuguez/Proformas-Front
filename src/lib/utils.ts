@@ -94,6 +94,19 @@ export function formatMoney(
   return formatter.format(value);
 }
 
+const NOMBRES_MONEDA: Record<string, string> = {
+  BOB: "Bolivianos (Bs)",
+  USD: "Dólares (USD)",
+  EUR: "Euros (EUR)",
+};
+
+/** "Bolivianos (Bs)": la moneda escrita para personas, no su código ISO. */
+export function etiquetaMoneda(moneda?: string | null): string {
+  const code = moneda?.trim().toUpperCase() || "BOB";
+
+  return NOMBRES_MONEDA[code] ?? code;
+}
+
 export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
 

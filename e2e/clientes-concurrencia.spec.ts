@@ -68,3 +68,48 @@ test("si otro usuario guardó el cliente, el formulario avisa y permite recargar
 
   expect(final).toMatchObject({ telefono: "70033333", version: 3 });
 });
+
+/**
+ * Pestaña abierta con el front anterior a C-05: guarda sin `version`. Se
+ * simula quitando la versión del pedido; el usuario ve qué hacer (recargar)
+ * en vez de "Revisa 1 campo" sin ningún campo marcado.
+ */
+test("una pestaña desactualizada pide recargar la página", async ({ page }) => {
+  test.slow();
+
+  const cliente = await crearCliente(page.request);
+
+  await page.route(`**/api/v1/clientes/${cliente.id}`, async (route) => {
+    if (route.request().method() !== "PUT") return route.continue();
+
+    const datos = route.request().postDataJSON() as Record<string, unknown>;
+
+    delete datos.version;
+    await route.continue({ postData: JSON.stringify(datos) });
+  });
+
+  await page.goto(`/clientes/${cliente.id}`);
+
+  const dialog = page.getByRole("dialog", { name: /Editar cliente/ });
+
+  await expect(async () => {
+    await page.getByRole("button", { name: "Editar" }).click();
+    await expect(dialog).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
+
+  await dialog.getByRole("textbox", { name: /Teléfono/ }).fill("70044444");
+  await dialog.getByRole("button", { name: "Guardar cambios" }).click();
+
+  await expect(
+    dialog.getByText(
+      "Esta pantalla está desactualizada y no se guardó ningún cambio. Recarga la página (F5) y vuelve a editar el cliente.",
+    ),
+  ).toBeVisible();
+  await expect(dialog.getByText(/Revisa \d+ campo/)).toHaveCount(0);
+
+  const enElBack = cuerpo(
+    await api<{ telefono: string | null }>(page.request, "GET", `/api/v1/clientes/${cliente.id}`),
+  );
+
+  expect(enElBack.telefono).not.toBe("70044444");
+});

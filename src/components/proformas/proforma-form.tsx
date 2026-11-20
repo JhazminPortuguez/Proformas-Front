@@ -909,7 +909,7 @@ export function ProformaForm({
                   Moneda
                 </span>
                 <div className="flex h-10 items-center rounded-lg border border-border bg-surface-secondary px-3 text-sm text-muted">
-                  BOB · Bolivianos
+                  Bolivianos (Bs)
                 </div>
                 <span className="text-xs text-muted">
                   Fija en esta versión.

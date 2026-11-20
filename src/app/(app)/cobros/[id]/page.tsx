@@ -33,7 +33,7 @@ import {
 } from "@/lib/cobros";
 import { ordenEstadoMeta } from "@/lib/estados";
 import { can } from "@/lib/permissions";
-import { formatDateOnly, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { etiquetaMoneda, formatDateOnly, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Detalle de cuenta por cobrar",
@@ -283,7 +283,7 @@ export default async function CobroDetallePage({
 
               <div>
                 <dt className="text-xs text-muted">Moneda</dt>
-                <dd className="mt-0.5 text-foreground">{cuenta.moneda}</dd>
+                <dd className="mt-0.5 text-foreground">{etiquetaMoneda(cuenta.moneda)}</dd>
               </div>
 
               <div>
