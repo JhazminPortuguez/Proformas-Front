@@ -30,6 +30,7 @@ export type AccionProforma =
   | "rechazar"
   | "crear_orden"
   | "eliminar"
+  | "reenviar_correo"
   | "pdf";
 
 export const ACCIONES_PROFORMA: readonly AccionProforma[] = [
@@ -40,6 +41,7 @@ export const ACCIONES_PROFORMA: readonly AccionProforma[] = [
   "rechazar",
   "crear_orden",
   "eliminar",
+  "reenviar_correo",
   "pdf",
 ];
 
@@ -72,6 +74,7 @@ const ALIAS_ACCIONES: Record<string, AccionProforma> = {
   borrar: "eliminar",
   delete: "eliminar",
   destroy: "eliminar",
+  reenviar_correo: "reenviar_correo",
   pdf: "pdf",
   descargar: "pdf",
   descargar_pdf: "pdf",

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, Plus, Search } from "lucide-react";
-import { Button } from "@heroui/react";
+import { Alert, Button } from "@heroui/react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
@@ -198,6 +198,8 @@ export function ProformasTable({
   const [target, setTarget] = useState<ActionTarget | null>(null);
   const [actionPending, setActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Al enviar, la proforma queda Enviada aunque el correo no salga: se avisa.
+  const [avisoCorreo, setAvisoCorreo] = useState<string | null>(null);
 
   const clienteOptions = [
     { value: "todos", label: "Todos los clientes" },
@@ -254,10 +256,21 @@ export function ProformasTable({
       const { proforma, action } = target;
 
       switch (action) {
-        case "enviar":
-          await proformasApi.enviar(proforma.id);
-          announce(`Proforma ${proforma.numero} enviada.`);
+        case "enviar": {
+          const enviada = await proformasApi.enviar(proforma.id);
+
+          setAvisoCorreo(
+            enviada?.correo && !enviada?.correo.enviado
+              ? `Proforma ${proforma.numero} enviada. ${enviada?.correo.mensaje}`
+              : null,
+          );
+          announce(
+            enviada?.correo
+              ? `Proforma ${proforma.numero} enviada. ${enviada?.correo.mensaje}`
+              : `Proforma ${proforma.numero} enviada.`,
+          );
           break;
+        }
         case "aceptar":
           await proformasApi.aceptar(proforma.id);
           announce(`Proforma ${proforma.numero} aceptada.`);
@@ -482,6 +495,15 @@ export function ProformasTable({
           </div>
         </form>
       </div>
+
+      {avisoCorreo ? (
+        <Alert status="warning" className="mb-4">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Description>{avisoCorreo}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
 
       <div className="hidden md:block">
         <DataTable

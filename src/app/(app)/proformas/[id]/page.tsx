@@ -10,6 +10,7 @@ import { NavTabs } from "@/components/ui/nav-tabs";
 import { ProformaEstadoChip } from "@/components/ui/status-chip";
 import { CrearOrdenDialog } from "@/components/proformas/crear-orden-dialog";
 import { ProformaDetailActions } from "@/components/proformas/proforma-detail-actions";
+import { ProformaCompartir } from "@/components/proformas/proforma-compartir";
 import { ProformaHistory } from "@/components/proformas/proforma-history";
 import { ProformaItemsTable } from "@/components/proformas/proforma-items-table";
 import { TotalsSummary } from "@/components/proformas/totals-summary";
@@ -104,6 +105,10 @@ export default async function ProformaDetallePage({
     ? (tabParam as TabKey)
     : "resumen";
   const envioFallido = first(query.aviso) === "envio-fallido";
+  // Si el último intento de correo no salió, se avisa hasta que un reenvío funcione.
+  const ultimoCorreo = proforma.eventos?.[0] ?? null;
+  const avisoCorreo =
+    ultimoCorreo && ultimoCorreo.tipo !== "CORREO_ENVIADO" ? ultimoCorreo : null;
   const cliente = proforma.cliente;
   const estadoMeta = proformaEstadoMeta(proforma.estado);
 
@@ -223,6 +228,22 @@ export default async function ProformaDetallePage({
         </span>
       </div>
 
+      {proforma.estado === "ENVIADA" ? (
+        // Fila propia: en la cabecera apretaba el título a 1280 px.
+        <div className="mb-6">
+          <ProformaCompartir
+            proformaId={proforma.id}
+            numero={proforma.numero}
+            total={proforma.total}
+            moneda={proforma.moneda}
+            fechaValidez={proforma.fecha_validez}
+            email={proforma.cliente?.email}
+            telefono={proforma.cliente?.telefono}
+            puedeReenviar={acciones.has("reenviar_correo")}
+          />
+        </div>
+      ) : null}
+
       {envioFallido ? (
         <Alert status="warning" className="mb-6">
           <Alert.Indicator />
@@ -231,6 +252,22 @@ export default async function ProformaDetallePage({
             <Alert.Description>
               No pudimos enviarla. Revisa la conexión y vuelve a intentarlo
               desde las acciones del detalle.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
+      {proforma.estado === "ENVIADA" && avisoCorreo ? (
+        <Alert status="warning" className="mb-6">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>
+              {avisoCorreo.tipo === "CORREO_SIN_EMAIL"
+                ? "La proforma se envió, pero no por correo"
+                : "La proforma está Enviada, pero el correo no salió"}
+            </Alert.Title>
+            <Alert.Description>
+              {avisoCorreo.detalle ?? "No se pudo enviar el correo."}
             </Alert.Description>
           </Alert.Content>
         </Alert>

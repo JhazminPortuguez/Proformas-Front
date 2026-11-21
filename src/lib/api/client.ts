@@ -24,6 +24,7 @@ import type {
   PagoCuentaInput,
   PortalProforma,
   PortalSolicitud,
+  ResultadoCorreo,
   PortalSolicitudInput,
   ProductoInput,
   ProductoUpdateInput,
@@ -258,8 +259,15 @@ export const proformas = {
     return request<void>(`/proformas/${id}`, { method: "DELETE" });
   },
 
-  enviar(id: number): Promise<Proforma> {
-    return request<Proforma>(`/proformas/${id}/enviar`, { method: "POST" });
+  enviar(id: number): Promise<Proforma & { correo?: ResultadoCorreo }> {
+    return request<Proforma & { correo?: ResultadoCorreo }>(`/proformas/${id}/enviar`, { method: "POST" });
+  },
+
+  /** Vuelve a mandar la proforma Enviada por correo, con el PDF adjunto. */
+  reenviarCorreo(id: number): Promise<Proforma & { correo?: ResultadoCorreo }> {
+    return request<Proforma & { correo?: ResultadoCorreo }>(`/proformas/${id}/reenviar-correo`, {
+      method: "POST",
+    });
   },
 
   aceptar(id: number): Promise<Proforma> {

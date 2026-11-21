@@ -142,6 +142,7 @@ export function ResponderProforma({ proforma, compacto = false }: ResponderProfo
         pendingLabel={abierto === "aceptar" ? "Aceptando…" : "Rechazando…"}
         tone={abierto === "aceptar" ? "accent" : "danger"}
         optionalReason={abierto === "rechazar"}
+        icon={abierto === "aceptar" ? Check : X}
         reasonLabel="Motivo (opcional)"
         reasonPlaceholder="Cuéntale a la empresa por qué, si quieres…"
         onConfirm={confirmar}

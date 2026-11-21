@@ -35,7 +35,7 @@ export default async function PortalProformasPage({
   const header = (
     <PageHeader
       title="Mis proformas"
-      description="Las proformas que te enviamos. Puedes ver el detalle y descargar el PDF."
+      description="Las proformas que te enviamos. Puedes ver el detalle, descargar el PDF y aceptarlas o rechazarlas."
       wrap
     />
   );
