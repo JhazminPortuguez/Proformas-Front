@@ -39,6 +39,8 @@ interface ConfirmDialogProps {
   tone?: ConfirmDialogTone;
   /** Exige un motivo escrito para habilitar la confirmación. */
   requireReason?: boolean;
+  /** Muestra el campo de motivo, pero se puede confirmar sin escribirlo. */
+  optionalReason?: boolean;
   /** Aviso que no impide confirmar (por ejemplo, una proforma vencida). */
   notice?: string | null;
   reasonLabel?: string;
@@ -57,6 +59,7 @@ export function ConfirmDialog({
   error = null,
   tone = "danger",
   requireReason = false,
+  optionalReason = false,
   reasonLabel = "Motivo",
   reasonPlaceholder = "Explica brevemente por qué…",
   notice = null,
@@ -76,7 +79,7 @@ export function ConfirmDialog({
   }
 
   function handleConfirm() {
-    const nextReason = requireReason ? reason.trim() : undefined;
+    const nextReason = requireReason || optionalReason ? reason.trim() : undefined;
 
     setReason("");
     onConfirm(nextReason);
@@ -112,14 +115,14 @@ export function ConfirmDialog({
                 </Alert>
               ) : null}
 
-              {requireReason ? (
+              {requireReason || optionalReason ? (
                 <TextField
                   aria-label={reasonLabel}
                   name="motivo"
                   data-field="motivo"
                   value={reason}
                   onChange={setReason}
-                  isRequired
+                  isRequired={requireReason}
                   isDisabled={isPending}
                   fullWidth
                   className="flex flex-col gap-1.5"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ProformaItem } from "@/lib/api/types";
 import {
+  lineaRespuesta,
   accionesProforma,
   computeProformaTotals,
   formatDiaMes,
@@ -279,5 +280,51 @@ describe("envío de una proforma en Bs 0", () => {
   it("con un total positivo no hay motivo", () => {
     expect(motivoNoEnviar(0.01)).toBeNull();
     expect(motivoNoEnviar("410.00")).toBeNull();
+  });
+});
+
+describe("lineaRespuesta (P-11 / U-05)", () => {
+  const base = {
+    aceptada_at: null,
+    aceptada_canal: null,
+    rechazada_at: null,
+    rechazada_canal: null,
+    aceptador: null,
+    rechazador: null,
+  } as const;
+
+  it("aceptada desde el portal, con fecha y hora de Bolivia", () => {
+    expect(
+      lineaRespuesta({
+        ...base,
+        estado: "ACEPTADA",
+        aceptada_at: "2026-11-22T14:15:00Z",
+        aceptada_canal: "PORTAL",
+      }),
+    ).toBe("Aceptada por el cliente desde el portal el 22/11/2026 a las 10:15.");
+  });
+
+  it("registrada por el personal (o anterior a la ronda A, sin canal)", () => {
+    expect(
+      lineaRespuesta({
+        ...base,
+        estado: "ACEPTADA",
+        aceptada_at: "2026-11-22T14:15:00Z",
+        aceptada_canal: null,
+        aceptador: { id: 2, name: "Oscar" } as never,
+      }),
+    ).toBe("Aceptación registrada por Oscar el 22/11/2026 a las 10:15.");
+  });
+
+  it("rechazada desde el portal y sin respuesta", () => {
+    expect(
+      lineaRespuesta({
+        ...base,
+        estado: "RECHAZADA",
+        rechazada_at: "2026-11-23T03:30:00Z",
+        rechazada_canal: "PORTAL",
+      }),
+    ).toBe("Rechazada por el cliente desde el portal el 22/11/2026 a las 23:30.");
+    expect(lineaRespuesta({ ...base, estado: "ENVIADA" })).toBeNull();
   });
 });

@@ -10,10 +10,10 @@ import { useAnnouncer } from "@/components/ui/announcer";
 import { proformas as proformasApi } from "@/lib/api/client";
 import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
+import { useHoy } from "@/lib/hooks/use-hoy";
 import {
   avisoAceptarVencida,
   motivoNoEnviar,
-  todayDateOnly,
   type AccionProforma,
 } from "@/lib/proformas";
 import type { EstadoProforma } from "@/lib/api/types";
@@ -45,6 +45,7 @@ export function ProformaDetailActions({
   fechaValidez = null,
 }: ProformaDetailActionsProps) {
   const router = useRouter();
+  const hoy = useHoy();
   const { announce } = useAnnouncer();
   const [, startTransition] = useTransition();
   const [target, setTarget] = useState<DetailAction | null>(null);
@@ -205,7 +206,7 @@ export function ProformaDetailActions({
           target === "aceptar"
             ? avisoAceptarVencida(
                 { estado, fecha_validez: fechaValidez },
-                todayDateOnly(),
+                hoy,
               )
             : null
         }

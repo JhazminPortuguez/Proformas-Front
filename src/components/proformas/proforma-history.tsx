@@ -56,12 +56,20 @@ export function ProformaHistory({ proforma }: { proforma: Proforma }) {
   }
 
   if (proforma.aceptada_at) {
+    const desdePortal = proforma.aceptada_canal === "PORTAL";
+
     events.push({
       key: "aceptada",
-      title: "Aceptada por el cliente",
-      description: proforma.aceptador?.name
-        ? `Registrada por ${proforma.aceptador.name}.`
-        : null,
+      title: desdePortal
+        ? "Aceptada por el cliente desde el portal"
+        : "Aceptada por el cliente",
+      description: desdePortal
+        ? proforma.aceptador?.name
+          ? `La aceptó ${proforma.aceptador.name} con su cuenta del portal.`
+          : null
+        : proforma.aceptador?.name
+          ? `Registrada por ${proforma.aceptador.name}.`
+          : null,
       date: proforma.aceptada_at,
       dateOnly: isDateOnly(proforma.aceptada_at),
       tone: "success",
@@ -69,12 +77,27 @@ export function ProformaHistory({ proforma }: { proforma: Proforma }) {
   }
 
   if (proforma.rechazada_at) {
+    const desdePortal = proforma.rechazada_canal === "PORTAL";
+    const quien = proforma.rechazador?.name;
+    const detalle = [
+      desdePortal
+        ? quien
+          ? `La rechazó ${quien} con su cuenta del portal.`
+          : null
+        : quien
+          ? `Registrado por ${quien}.`
+          : null,
+      proforma.motivo_rechazo
+        ? `Motivo: ${proforma.motivo_rechazo}`
+        : desdePortal
+          ? "El cliente no indicó un motivo."
+          : null,
+    ].filter(Boolean);
+
     events.push({
       key: "rechazada",
-      title: "Rechazada",
-      description: proforma.motivo_rechazo
-        ? `Motivo: ${proforma.motivo_rechazo}`
-        : null,
+      title: desdePortal ? "Rechazada por el cliente desde el portal" : "Rechazada",
+      description: detalle.length > 0 ? detalle.join("\n") : null,
       date: proforma.rechazada_at,
       dateOnly: isDateOnly(proforma.rechazada_at),
       tone: "danger",

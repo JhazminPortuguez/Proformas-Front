@@ -20,6 +20,7 @@ import { FormErrorSummary } from "@/components/ui/form-errors";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { useFormErrors } from "@/lib/hooks/use-form-errors";
+import { useHoy } from "@/lib/hooks/use-hoy";
 import {
   clientes as clientesApi,
   productos as productosApi,
@@ -165,8 +166,11 @@ export function ProformaForm({
   clientes,
   servicios: serviciosCatalogo,
   productos: productosCatalogo,
-  today,
+  today: hoyDeLaPagina,
 }: ProformaFormProps) {
+  // Propuesta 13: si cambia el día con el formulario abierto, "hoy" (y el
+  // máximo de Emisión) se recalcula al aparecer el aviso de D-02.
+  const today = useHoy(hoyDeLaPagina);
   // Clientes, servicios y productos se buscan en el servidor mientras se
   // escribe (sin el límite de 100). Las páginas pasan solo la primera página.
   // Ítems nuevos: solo catálogo activo; se filtra igual por si llega uno
@@ -192,10 +196,24 @@ export function ProformaForm({
     applyFieldErrors,
     reset,
   } = useFormErrors();
-  const [initialForm] = useState<FormState>(() =>
+  const [initialForm, setInitialForm] = useState<FormState>(() =>
     toFormState(proforma, today),
   );
   const [form, setForm] = useState<FormState>(initialForm);
+  const [hoyAnterior, setHoyAnterior] = useState(today);
+
+  // Una proforma nueva con la Emisión sin tocar pasa al día nuevo; si la
+  // persona eligió otra fecha, se respeta.
+  if (today !== hoyAnterior) {
+    setHoyAnterior(today);
+
+    if (!proforma && form.fecha_emision === hoyAnterior) {
+      setForm((actual) => ({ ...actual, fecha_emision: today }));
+      setInitialForm((actual) =>
+        actual.fecha_emision === hoyAnterior ? { ...actual, fecha_emision: today } : actual,
+      );
+    }
+  }
   const [pending, setPending] = useState(false);
   const intentRef = useRef<"draft" | "send">("draft");
 

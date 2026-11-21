@@ -42,6 +42,8 @@ export interface ProformasQuery {
   clienteId: number | "";
   desde: string;
   hasta: string;
+  /** "Aceptadas sin orden": aceptadas a las que el personal aún no les creó la orden. */
+  sinOrden?: boolean;
   page: number;
   /** Filas por página (15, 25 o 50); sin dato, 15. */
   perPage?: number;
@@ -121,6 +123,15 @@ function OrdenDeProforma({
   proforma: Proforma;
   usuario: { id: number; rol: string };
 }) {
+  // Crear la orden es tarea del personal: se marca la que falta.
+  if (proforma.aceptada_sin_orden) {
+    return (
+      <p className="whitespace-nowrap text-xs font-medium text-warning-soft-foreground">
+        Aceptada sin orden
+      </p>
+    );
+  }
+
   if (
     proforma.estado !== "ACEPTADA" ||
     !proforma.orden_id ||
@@ -152,12 +163,16 @@ function OrdenDeProforma({
   );
 }
 
+/** Opción del filtro de estado que pide `sin_orden=1` (no es un estado). */
+const SIN_ORDEN = "SIN_ORDEN";
+
 const ESTADO_OPTIONS: { value: string; label: string }[] = [
   { value: "todos", label: "Todos los estados" },
   { value: "BORRADOR", label: "Borrador" },
   { value: "ENVIADA", label: "Enviada" },
   { value: "ACEPTADA", label: "Aceptada" },
   { value: "RECHAZADA", label: "Rechazada" },
+  { value: SIN_ORDEN, label: "Aceptadas sin orden" },
 ];
 
 interface ActionTarget {
@@ -201,6 +216,7 @@ export function ProformasTable({
       cliente_id: merged.clienteId,
       desde: merged.desde,
       hasta: merged.hasta,
+      sin_orden: merged.sinOrden ? "1" : "",
       per_page: filasParam(merged.perPage),
       page: merged.page,
     });
@@ -283,6 +299,7 @@ export function ProformasTable({
   const filtersActive = Boolean(
     query.search ||
       query.estado ||
+      query.sinOrden ||
       query.clienteId !== "" ||
       query.desde ||
       query.hasta,
@@ -399,12 +416,17 @@ export function ProformasTable({
             <SelectControl
               name="estado"
               label="Estado"
-              value={query.estado || "todos"}
+              value={query.sinOrden ? SIN_ORDEN : query.estado || "todos"}
               onChange={(value) =>
-                navigate({
-                  estado:
-                    value === "todos" ? "" : (value as EstadoProforma),
-                })
+                navigate(
+                  value === SIN_ORDEN
+                    ? { estado: "", sinOrden: true }
+                    : {
+                        estado:
+                          value === "todos" ? "" : (value as EstadoProforma),
+                        sinOrden: false,
+                      },
+                )
               }
               options={ESTADO_OPTIONS}
             />

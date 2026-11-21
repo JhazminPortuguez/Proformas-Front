@@ -192,7 +192,7 @@ describe("ContactoEmpresa", () => {
     );
 
     expect(
-      screen.getByText("Para aceptar esta proforma, comunícate con nosotros"),
+      screen.getByText("¿Dudas sobre una proforma? Comunícate con nosotros"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Llamar/ })).toHaveAttribute("href", "tel:44412345");
     expect(screen.getByRole("link", { name: "ventas@empresa.test" })).toHaveAttribute(
