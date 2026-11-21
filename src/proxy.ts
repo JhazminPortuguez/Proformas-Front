@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE = process.env.SESSION_COOKIE_NAME ?? "laravel-session";
 
-const PUBLIC_PATHS = new Set(["/login", "/registro"]);
+// /verificar-correo: el enlace del correo puede abrirse sin sesión.
+const PUBLIC_PATHS = new Set(["/login", "/registro", "/verificar-correo"]);
 
 /**
  * Este proxy NO valida la sesión: solo mira si existe la cookie para evitar

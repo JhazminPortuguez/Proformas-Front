@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { Alert } from "@heroui/react";
-import { MENSAJE_CLIENTE_INACTIVO, SolicitarForm } from "@/components/portal/solicitar-form";
+import {
+  MENSAJE_CLIENTE_INACTIVO,
+  MENSAJE_SOLICITAR_SIN_VERIFICAR,
+  SolicitarForm,
+} from "@/components/portal/solicitar-form";
 import { getPortalResumen, getPortalServicio, requireCliente } from "@/lib/api/server";
 import type { PortalServicio } from "@/lib/api/types";
 
@@ -25,9 +29,11 @@ export default async function SolicitarPage({
   let servicio: PortalServicio | null = null;
   let servicioNoDisponible = false;
   // Si no se puede consultar, se deja intentar: el back rechaza con 403.
-  const puedeSolicitar = await getPortalResumen()
-    .then((resumen) => resumen.puede_solicitar !== false)
-    .catch(() => true);
+  const resumen = await getPortalResumen().catch(() => null);
+  const inactivo = resumen?.puede_solicitar === false;
+  // Parte 3: sin verificar el correo tampoco envía (el aviso general está arriba).
+  const sinVerificar = resumen?.correo_verificado === false;
+  const puedeSolicitar = !inactivo && !sinVerificar;
 
   if (Number.isFinite(servicioId) && servicioId > 0) {
     servicio = await getPortalServicio(servicioId).catch(() => null);
@@ -48,7 +54,7 @@ export default async function SolicitarPage({
         </p>
       ) : null}
 
-      {puedeSolicitar ? null : (
+      {inactivo ? (
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
@@ -56,12 +62,13 @@ export default async function SolicitarPage({
             <Alert.Description>{MENSAJE_CLIENTE_INACTIVO}</Alert.Description>
           </Alert.Content>
         </Alert>
-      )}
+      ) : null}
 
       <SolicitarForm
         key={servicio?.id ?? "libre"}
         servicio={servicio}
         bloqueado={!puedeSolicitar}
+        motivoBloqueo={inactivo ? MENSAJE_CLIENTE_INACTIVO : MENSAJE_SOLICITAR_SIN_VERIFICAR}
       />
     </div>
   );

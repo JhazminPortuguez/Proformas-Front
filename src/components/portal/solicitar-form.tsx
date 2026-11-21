@@ -53,16 +53,22 @@ const LINK_SECUNDARIO =
  * modelo real. Si llega desde el catálogo, el servicio entra como primer ítem
  * con su nombre.
  */
+export const MENSAJE_SOLICITAR_SIN_VERIFICAR =
+  "Verifica tu correo para enviar solicitudes. Usa el enlace que te enviamos o pide uno nuevo arriba.";
+
 export const MENSAJE_CLIENTE_INACTIVO =
   "Tu cuenta de cliente está inactiva. Puedes ver tus solicitudes y proformas, pero para enviar una solicitud nueva comunícate con la empresa.";
 
 export function SolicitarForm({
   servicio,
   bloqueado = false,
+  motivoBloqueo = MENSAJE_CLIENTE_INACTIVO,
 }: {
   servicio?: PortalServicio | null;
-  /** Cliente inactivo: el formulario se muestra deshabilitado. */
+  /** Cliente inactivo o sin verificar el correo: el formulario se muestra deshabilitado. */
   bloqueado?: boolean;
+  /** Por qué no puede enviar (también para un 403 del back). */
+  motivoBloqueo?: string;
 }) {
   const router = useRouter();
   const { announce } = useAnnouncer();
@@ -154,7 +160,7 @@ export function SolicitarForm({
       applyFieldErrors(
         isApiError(caught) ? (caught.errors ?? {}) : {},
         isApiError(caught) && caught.status === 403
-          ? MENSAJE_CLIENTE_INACTIVO
+          ? motivoBloqueo
           : apiErrorMessage(caught, "No pudimos enviar tu solicitud. Intenta nuevamente."),
       );
     } finally {
@@ -337,6 +343,11 @@ export function SolicitarForm({
           })}
         </ul>
       </section>
+
+      {bloqueado && motivoBloqueo !== MENSAJE_CLIENTE_INACTIVO ? (
+        // El inactivo ya tiene su aviso arriba del formulario.
+        <p className="text-right text-sm text-muted">{motivoBloqueo}</p>
+      ) : null}
 
       <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
         <Link href="/portal" className={LINK_SECUNDARIO}>

@@ -170,6 +170,13 @@ export const auth = {
   me(signal?: AbortSignal): Promise<User> {
     return request<User>("/auth/me", { signal });
   },
+
+  /** Parte 3: nuevo enlace de verificación (3 cada 10 minutos). */
+  reenviarVerificacion(): Promise<{ message: string; enviado: boolean }> {
+    return request<{ message: string; enviado: boolean }>("/auth/verificar-correo/reenviar", {
+      method: "POST",
+    });
+  },
 };
 
 export const clientes = {

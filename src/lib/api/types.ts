@@ -8,6 +8,8 @@ export interface User {
   activo: boolean;
   cliente_id: number | null;
   empresa_id: number | null;
+  /** Parte 3: null mientras el cliente no verifica su correo. */
+  email_verified_at?: string | null;
   /** Cliente vinculado (usuarios con rol cliente), cuando la API lo incluye. */
   cliente?: Pick<Cliente, "id" | "nombre_razon" | "nit_ci"> | null;
 }
@@ -932,6 +934,8 @@ export interface PortalResumen {
   ultimo: PortalUltimo | null;
   /** Falso si el cliente está inactivo: ve lo suyo pero no envía solicitudes. */
   puede_solicitar?: boolean;
+  /** Parte 3: sin verificar, ve su portal pero no envía ni responde. */
+  correo_verificado?: boolean;
 }
 
 export interface PortalEmpresa {

@@ -9,6 +9,7 @@ import type { User } from "@/lib/api/types";
 import { isApiError } from "@/lib/api/types";
 import { auth } from "@/lib/api/client";
 import { ThemeToggle, useSystemThemeSync } from "@/components/layout/theme-toggle";
+import { AvisoVerificarCorreo } from "@/components/portal/aviso-verificar-correo";
 import { PORTAL_NAV, portalNavActivo } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
@@ -156,6 +157,10 @@ export function PortalShell({
               <Alert.Description>{error}</Alert.Description>
             </Alert.Content>
           </Alert>
+        ) : null}
+
+        {user.rol === "cliente" && !user.email_verified_at ? (
+          <AvisoVerificarCorreo email={user.email} />
         ) : null}
 
         {children}
