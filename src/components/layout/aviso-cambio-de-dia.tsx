@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Alert, Button } from "@heroui/react";
 import { useAnnouncer } from "@/components/ui/announcer";
+import { avisarCambioDeDia } from "@/lib/hooks/use-hoy";
 import { todayDateOnly } from "@/lib/proformas";
 import { formatDateNumeric } from "@/lib/utils";
 
@@ -63,6 +64,9 @@ export function AvisoCambioDeDia() {
     const hoy = todayDateOnly();
 
     if (hoy === cargado.current) return;
+
+    // Propuesta 13: los formularios abiertos recalculan "hoy" (useHoy).
+    avisarCambioDeDia();
 
     if (seActualizaSola(pathname, window.location.search)) {
       actualizar(hoy);
