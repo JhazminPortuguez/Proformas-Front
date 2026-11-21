@@ -41,6 +41,8 @@ interface ConfirmDialogProps {
   requireReason?: boolean;
   /** Muestra el campo de motivo, pero se puede confirmar sin escribirlo. */
   optionalReason?: boolean;
+  /** Ícono propio (por defecto, el del tono: papelera para "danger"). */
+  icon?: typeof Trash2;
   /** Aviso que no impide confirmar (por ejemplo, una proforma vencida). */
   notice?: string | null;
   reasonLabel?: string;
@@ -60,13 +62,14 @@ export function ConfirmDialog({
   tone = "danger",
   requireReason = false,
   optionalReason = false,
+  icon,
   reasonLabel = "Motivo",
   reasonPlaceholder = "Explica brevemente por qué…",
   notice = null,
 }: ConfirmDialogProps) {
   const { announce } = useAnnouncer();
   const [reason, setReason] = useState("");
-  const Icon = TONE_ICON[tone];
+  const Icon = icon ?? TONE_ICON[tone];
   const canConfirm = !isPending && (!requireReason || reason.trim().length > 0);
 
   useEffect(() => {

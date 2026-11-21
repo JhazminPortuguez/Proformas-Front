@@ -104,6 +104,41 @@ export function ProformaHistory({ proforma }: { proforma: Proforma }) {
     });
   }
 
+  for (const evento of proforma.eventos ?? []) {
+    if (!evento.created_at) continue;
+
+    const quien = evento.usuario ? ` Lo pidió ${evento.usuario}.` : "";
+
+    events.push(
+      evento.tipo === "CORREO_ENVIADO"
+        ? {
+            key: `correo-${evento.id}`,
+            title: `Correo enviado a ${evento.destinatario}`,
+            description: `Con el PDF adjunto y el enlace al portal.${quien}`,
+            date: evento.created_at,
+            tone: "accent",
+          }
+        : evento.tipo === "CORREO_FALLIDO"
+          ? {
+              key: `correo-${evento.id}`,
+              title: `No se pudo enviar el correo a ${evento.destinatario}`,
+              description: `${evento.detalle ?? ""}${quien}`.trim(),
+              date: evento.created_at,
+              tone: "danger",
+            }
+          : {
+              key: `correo-${evento.id}`,
+              title: "Sin correo registrado: no se envió el correo",
+              description: `${evento.detalle ?? ""}${quien}`.trim(),
+              date: evento.created_at,
+              tone: "neutral",
+            },
+    );
+  }
+
+  // Orden cronológico: creación, envío, correos, respuesta.
+  events.sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+
   const meta = proformaEstadoMeta(proforma.estado);
 
   return (

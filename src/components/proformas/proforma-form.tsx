@@ -686,8 +686,14 @@ export function ProformaForm({
 
       if (intent === "send") {
         try {
-          await proformasApi.enviar(savedId);
-          announce(`Proforma ${savedNumero} guardada y enviada.`);
+          const enviada = await proformasApi.enviar(savedId);
+
+          // Si el correo no salió, el detalle lo avisa (último evento).
+          announce(
+            enviada?.correo
+              ? `Proforma ${savedNumero} guardada y enviada. ${enviada?.correo.mensaje}`
+              : `Proforma ${savedNumero} guardada y enviada.`,
+          );
         } catch (sendError) {
           if (
             isApiError(sendError) &&

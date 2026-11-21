@@ -68,10 +68,17 @@ export function ProformaDetailActions({
 
     try {
       switch (target) {
-        case "enviar":
-          await proformasApi.enviar(proformaId);
-          announce(`Proforma ${numero} enviada.`);
+        case "enviar": {
+          // Si el correo no sale, el detalle lo avisa (último evento).
+          const enviada = await proformasApi.enviar(proformaId);
+
+          announce(
+            enviada?.correo
+              ? `Proforma ${numero} enviada. ${enviada?.correo.mensaje}`
+              : `Proforma ${numero} enviada.`,
+          );
           break;
+        }
         case "aceptar":
           await proformasApi.aceptar(proformaId);
           announce(`Proforma ${numero} aceptada.`);

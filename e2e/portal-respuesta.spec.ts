@@ -30,7 +30,22 @@ test("el cliente acepta su proforma desde el portal y el admin la ve aceptada", 
     ),
   );
 
-  await api(page.request, "POST", `/api/v1/proformas/${proformaId}/enviar`);
+  const envio = await api<{ correo?: { enviado: boolean; mensaje: string } }>(
+    page.request,
+    "POST",
+    `/api/v1/proformas/${proformaId}/enviar`,
+  );
+
+  // El cliente de la prueba no tiene correo ni teléfono: se envía igual y
+  // el detalle lo avisa; los botones de compartir dicen por qué no se puede.
+  expect(envio.correo).toEqual({
+    enviado: false,
+    mensaje: "El cliente no tiene correo registrado; no se envió el correo.",
+  });
+  await page.goto(`/proformas/${proformaId}`);
+  await expect(page.getByText("La proforma se envió, pero no por correo")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Compartir por WhatsApp" })).toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByText("El cliente no tiene teléfono registrado.", { exact: false })).toBeVisible();
 
   // 2. El cliente entra y la acepta desde "Mis proformas".
   const { page: portal } = await anonimo();

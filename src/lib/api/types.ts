@@ -243,10 +243,29 @@ export interface Proforma {
   items?: ProformaItem[];
   aceptador?: User | null;
   rechazador?: User | null;
+  /** Historial de envíos por correo, el más reciente primero (solo en el detalle). */
+  eventos?: ProformaEvento[];
   acciones_disponibles?: string[];
 }
 
 export type CanalRespuesta = "PORTAL" | "INTERNO";
+
+export type TipoProformaEvento = "CORREO_ENVIADO" | "CORREO_FALLIDO" | "CORREO_SIN_EMAIL";
+
+export interface ProformaEvento {
+  id: number;
+  tipo: TipoProformaEvento;
+  destinatario: string | null;
+  detalle: string | null;
+  usuario: string | null;
+  created_at: string | null;
+}
+
+/** Resultado del correo al enviar o reenviar (la proforma queda Enviada igual). */
+export interface ResultadoCorreo {
+  enviado: boolean;
+  mensaje: string;
+}
 
 export type ProformaItemInput =
   | {
