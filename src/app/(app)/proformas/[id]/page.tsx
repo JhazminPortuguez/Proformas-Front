@@ -19,7 +19,7 @@ import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { Proforma, User } from "@/lib/api/types";
 import { proformaEstadoMeta } from "@/lib/estados";
-import { accionesProforma, ordenNoVisibleNota, puedeAbrirOrden } from "@/lib/proformas";
+import { accionesProforma, lineaRespuesta, ordenNoVisibleNota, puedeAbrirOrden } from "@/lib/proformas";
 import { can } from "@/lib/permissions";
 import { etiquetaMoneda, formatDateOnly, formatDateTime } from "@/lib/utils";
 
@@ -218,7 +218,9 @@ export default async function ProformaDetallePage({
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <ProformaEstadoChip estado={proforma.estado} />
-        <span className="text-sm text-muted">{estadoMeta.description}</span>
+        <span className="text-sm text-muted">
+          {lineaRespuesta(proforma) ?? estadoMeta.description}
+        </span>
       </div>
 
       {envioFallido ? (

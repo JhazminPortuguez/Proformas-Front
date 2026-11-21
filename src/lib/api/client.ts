@@ -22,6 +22,7 @@ import type {
   Orden,
   OrdenInput,
   PagoCuentaInput,
+  PortalProforma,
   PortalSolicitud,
   PortalSolicitudInput,
   ProductoInput,
@@ -477,6 +478,19 @@ export { ensureCsrfCookie };
 export const portal = {
   crearSolicitud(payload: PortalSolicitudInput): Promise<PortalSolicitud> {
     return request<PortalSolicitud>("/portal/solicitudes", jsonBody(payload));
+  },
+
+  /** P-11 / U-05: el cliente acepta su proforma enviada. */
+  aceptarProforma(id: number): Promise<PortalProforma> {
+    return request<PortalProforma>(`/portal/proformas/${id}/aceptar`, jsonBody({}));
+  },
+
+  /** El motivo es opcional para el cliente. */
+  rechazarProforma(id: number, motivo?: string): Promise<PortalProforma> {
+    return request<PortalProforma>(
+      `/portal/proformas/${id}/rechazar`,
+      jsonBody(motivo ? { motivo } : {}),
+    );
   },
 };
 

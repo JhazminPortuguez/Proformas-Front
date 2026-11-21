@@ -124,6 +124,8 @@ export default async function ProformasPage({
   const hastaParam = first(params.hasta);
   const desde = isValidDateOnly(desdeParam) ? desdeParam : "";
   const hasta = isValidDateOnly(hastaParam) ? hastaParam : "";
+  // "Aceptadas sin orden" reemplaza al filtro de estado.
+  const sinOrden = first(params.sin_orden) === "1";
 
   let clientes: Cliente[];
   let proformas: Paginated<Proforma> | null = null;
@@ -140,6 +142,7 @@ export default async function ProformasPage({
             clienteId: clienteId ?? "",
             desde,
             hasta,
+            sinOrden,
             page,
             perPage,
           })
@@ -203,6 +206,7 @@ export default async function ProformasPage({
             clienteId: clienteId ?? "",
             desde,
             hasta,
+            sinOrden,
             page,
             perPage,
           }}

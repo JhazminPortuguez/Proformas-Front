@@ -7,12 +7,14 @@ import { NotFoundState } from "@/components/ui/not-found-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { RetryButton } from "@/components/ui/retry-button";
 import { ProformaEstadoChip } from "@/components/ui/status-chip";
+import { Alert } from "@heroui/react";
 import { ContactoEmpresa } from "@/components/portal/contacto-empresa";
+import { ResponderProforma } from "@/components/portal/responder-proforma";
 import { PdfLink, Validez } from "@/components/portal/portal-proformas-table";
 import { getPortalEmpresa, getPortalProforma, requireCliente } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import { formatDateNumeric, formatMoney, formatNumber } from "@/lib/utils";
+import { formatDateNumeric, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Proforma",
@@ -112,6 +114,48 @@ export default async function PortalProformaPage({
           </p>
         </div>
       </section>
+
+      {proforma.estado === "ENVIADA" ? (
+        <section
+          aria-labelledby="respuesta-titulo"
+          className="space-y-3 rounded-xl border border-border bg-surface p-5"
+        >
+          <h2 id="respuesta-titulo" className="text-sm font-semibold text-foreground">
+            Tu respuesta
+          </h2>
+          {proforma.puede_responder ? (
+            <p className="text-sm text-muted">
+              Revisa los ítems y el total ({formatMoney(proforma.total, moneda)}). Si estás de
+              acuerdo, acéptala; la empresa se comunicará contigo para coordinar el servicio.
+            </p>
+          ) : null}
+          <ResponderProforma proforma={proforma} />
+        </section>
+      ) : null}
+
+      {proforma.estado === "ACEPTADA" && proforma.aceptada_at ? (
+        <Alert status="success">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Proforma aceptada el {formatDateTime(proforma.aceptada_at)}</Alert.Title>
+            <Alert.Description>
+              La empresa se comunicará contigo para coordinar el servicio.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
+      {proforma.estado === "RECHAZADA" && proforma.rechazada_at ? (
+        <Alert status="default">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Proforma rechazada el {formatDateTime(proforma.rechazada_at)}</Alert.Title>
+            <Alert.Description>
+              Si quieres retomarla, comunícate con la empresa.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
 
       {proforma.estado === "ENVIADA" ? <ContactoEmpresa empresa={empresa} /> : null}
 

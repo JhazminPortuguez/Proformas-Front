@@ -35,13 +35,20 @@ test("en el dashboard los datos se actualizan solos al cambiar el día", async (
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-  const recarga = page.waitForRequest(
-    (pedido) => pedido.url().includes("/dashboard") && pedido.headers()["rsc"] === "1",
-    { timeout: 30_000 },
-  );
+  let recargo = false;
+
+  page.on("request", (pedido) => {
+    if (pedido.url().includes("/dashboard") && pedido.headers()["rsc"] === "1") recargo = true;
+  });
 
   await page.clock.fastForward("02:00");
-  await recarga;
+
+  // Si el reloj avanzó antes de que la página terminara de hidratarse, el
+  // aviso aún no escuchaba: volver a la pestaña ("focus") lo revisa de nuevo.
+  await expect(async () => {
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    expect(recargo).toBe(true);
+  }).toPass({ timeout: 30_000 });
 
   await expect(page.getByText("Empezó un mes nuevo")).toHaveCount(0);
 });

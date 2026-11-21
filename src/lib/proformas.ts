@@ -4,7 +4,7 @@ import type {
   Proforma,
   ProformaItem,
 } from "@/lib/api/types";
-import { formatDateNumeric, parseDecimal } from "@/lib/utils";
+import { formatDateNumeric, formatDateTimeNumeric, parseDecimal } from "@/lib/utils";
 
 /**
  * Normaliza texto para búsquedas locales: minúsculas, sin acentos y sin
@@ -453,4 +453,49 @@ export function itemsRepetidos(
   }
 
   return [...porClave.values()].filter((entrada) => entrada.veces > 1);
+}
+
+/** "el dd/mm/aaaa a las HH:mm" de un instante, en hora de Bolivia. */
+export function elDiaALas(instante: string): string {
+  const [fecha, hora] = formatDateTimeNumeric(instante).split(" ");
+
+  return hora ? `el ${fecha} a las ${hora}` : `el ${fecha}`;
+}
+
+/**
+ * P-11 / U-05: quién respondió, cuándo y por qué canal, para el detalle
+ * interno. Las respuestas anteriores a la ronda A no tienen canal: entonces
+ * solo el personal podía registrarlas.
+ */
+export function lineaRespuesta(
+  proforma: Pick<
+    Proforma,
+    "estado" | "aceptada_at" | "aceptada_canal" | "rechazada_at" | "rechazada_canal" | "aceptador" | "rechazador"
+  >,
+): string | null {
+  if (proforma.estado === "ACEPTADA" && proforma.aceptada_at) {
+    if (proforma.aceptada_canal === "PORTAL") {
+      return `Aceptada por el cliente desde el portal ${elDiaALas(proforma.aceptada_at)}.`;
+    }
+
+    const quien = proforma.aceptador?.name;
+
+    return quien
+      ? `Aceptación registrada por ${quien} ${elDiaALas(proforma.aceptada_at)}.`
+      : `Aceptada ${elDiaALas(proforma.aceptada_at)}.`;
+  }
+
+  if (proforma.estado === "RECHAZADA" && proforma.rechazada_at) {
+    if (proforma.rechazada_canal === "PORTAL") {
+      return `Rechazada por el cliente desde el portal ${elDiaALas(proforma.rechazada_at)}.`;
+    }
+
+    const quien = proforma.rechazador?.name;
+
+    return quien
+      ? `Rechazo registrado por ${quien} ${elDiaALas(proforma.rechazada_at)}.`
+      : `Rechazada ${elDiaALas(proforma.rechazada_at)}.`;
+  }
+
+  return null;
 }

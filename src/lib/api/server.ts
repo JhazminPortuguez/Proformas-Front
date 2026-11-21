@@ -266,6 +266,7 @@ export interface ListarProformasParams {
   clienteId?: number | "";
   desde?: string;
   hasta?: string;
+  sinOrden?: boolean;
   page?: number;
   perPage?: number;
 }
@@ -276,6 +277,7 @@ export function getProformas({
   clienteId,
   desde,
   hasta,
+  sinOrden,
   page = 1,
   perPage = 10,
 }: ListarProformasParams = {}): Promise<Paginated<Proforma>> {
@@ -285,6 +287,7 @@ export function getProformas({
     cliente_id: clienteId,
     desde,
     hasta,
+    sin_orden: sinOrden ? "1" : "",
     page,
     per_page: perPage,
   });

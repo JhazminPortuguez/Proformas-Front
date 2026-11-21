@@ -7,8 +7,9 @@ const ENLACE =
   "inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 /**
- * Datos de contacto reales de la empresa (tabla `empresas`). El portal no
- * acepta ni rechaza proformas: el cliente se comunica con la empresa.
+ * Datos de contacto reales de la empresa (tabla `empresas`). Desde la ronda A
+ * el cliente acepta o rechaza en el portal; esto queda para dudas o para
+ * actualizar una proforma vencida.
  */
 export function ContactoEmpresa({
   empresa,
@@ -25,7 +26,7 @@ export function ContactoEmpresa({
       className={cn("rounded-xl border border-border bg-surface-secondary/50 p-4", className)}
     >
       <p className="text-sm font-medium text-foreground">
-        Para aceptar esta proforma, comunícate con nosotros
+        ¿Dudas sobre una proforma? Comunícate con nosotros
       </p>
       {empresa.nombre ? <p className="mt-0.5 text-xs text-muted">{empresa.nombre}</p> : null}
 

@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileDown, FileText } from "lucide-react";
+import { ResponderProforma } from "@/components/portal/responder-proforma";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
 import { ProformaEstadoChip } from "@/components/ui/status-chip";
@@ -124,9 +125,14 @@ export function PortalProformasTable({
       cell: (proforma) => <ProformaEstadoChip estado={proforma.estado} />,
     },
     {
-      id: "pdf",
-      header: "PDF",
-      cell: (proforma) => <PdfLink proforma={proforma} />,
+      id: "acciones",
+      header: "Acciones",
+      cell: (proforma) => (
+        <div className="flex flex-col items-start gap-2">
+          <ResponderProforma proforma={proforma} compacto />
+          <PdfLink proforma={proforma} />
+        </div>
+      ),
     },
   ];
 
@@ -202,6 +208,9 @@ export function PortalProformasTable({
                     Ver detalle
                   </Link>
                   <PdfLink proforma={proforma} />
+                </div>
+                <div className="mt-3 empty:hidden">
+                  <ResponderProforma proforma={proforma} />
                 </div>
               </li>
             ))}

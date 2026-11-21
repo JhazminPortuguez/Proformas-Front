@@ -222,7 +222,13 @@ export interface Proforma {
   enviada_at: string | null;
   aceptada_at: string | null;
   aceptada_por: number | null;
+  /** P-11 / U-05: PORTAL (el cliente) o INTERNO (el personal). Null en las anteriores. */
+  aceptada_canal?: CanalRespuesta | null;
   rechazada_at: string | null;
+  rechazada_por?: number | null;
+  rechazada_canal?: CanalRespuesta | null;
+  /** Aceptada y sin orden vigente: falta que el personal cree la orden. */
+  aceptada_sin_orden?: boolean;
   motivo_rechazo: string | null;
   created_by: number | null;
   updated_by: number | null;
@@ -236,8 +242,11 @@ export interface Proforma {
   cliente?: Cliente | null;
   items?: ProformaItem[];
   aceptador?: User | null;
+  rechazador?: User | null;
   acciones_disponibles?: string[];
 }
+
+export type CanalRespuesta = "PORTAL" | "INTERNO";
 
 export type ProformaItemInput =
   | {
@@ -965,6 +974,11 @@ export interface PortalProforma {
   items_count: number | null;
   primer_item: string | null;
   solicitud_id: number | null;
+  aceptada_at?: string | null;
+  rechazada_at?: string | null;
+  /** P-11 / U-05: si puede aceptar o rechazar; si no, el motivo. */
+  puede_responder?: boolean;
+  motivo_no_puede_responder?: string | null;
   // Solo en el detalle:
   subtotal?: number;
   descuento?: number;
