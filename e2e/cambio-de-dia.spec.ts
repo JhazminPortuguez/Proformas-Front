@@ -34,6 +34,9 @@ test("en el dashboard los datos se actualizan solos al cambiar el día", async (
   await page.clock.install({ time: new Date("2026-11-01T03:59:00Z") });
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // El aviso toma como día de carga el de cuando la página termina de
+  // hidratarse: el reloj se mueve después.
+  await page.waitForLoadState("networkidle");
 
   let recargo = false;
 
