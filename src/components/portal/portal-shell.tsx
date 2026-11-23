@@ -10,6 +10,7 @@ import { isApiError } from "@/lib/api/types";
 import { auth } from "@/lib/api/client";
 import { ThemeToggle, useSystemThemeSync } from "@/components/layout/theme-toggle";
 import { AvisoVerificarCorreo } from "@/components/portal/aviso-verificar-correo";
+import { CompletarDatos } from "@/components/portal/completar-datos";
 import { PORTAL_NAV, portalNavActivo } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
@@ -162,6 +163,8 @@ export function PortalShell({
         {user.rol === "cliente" && !user.email_verified_at ? (
           <AvisoVerificarCorreo email={user.email} />
         ) : null}
+
+        {user.rol === "cliente" && user.datos_pendientes ? <CompletarDatos /> : null}
 
         {children}
       </main>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AuthCardSkeleton } from "@/components/auth/auth-card";
-import { getSessionUser } from "@/lib/api/server";
+import { getGoogleHabilitado, getSessionUser } from "@/lib/api/server";
 import { isApiError } from "@/lib/api/types";
 import { homePathFor } from "@/lib/roles";
 import { RegistroForm } from "./registro-form";
@@ -35,5 +35,5 @@ async function RegistroGate() {
     redirect(homePathFor(user.rol));
   }
 
-  return <RegistroForm />;
+  return <RegistroForm google={await getGoogleHabilitado()} />;
 }

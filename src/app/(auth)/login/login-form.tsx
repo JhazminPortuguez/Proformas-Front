@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Alert, Button } from "@heroui/react";
 import { AuthCard } from "@/components/auth/auth-card";
+import { GoogleBoton } from "@/components/auth/google-boton";
 import { TextFieldControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { FormErrorSummary } from "@/components/ui/form-errors";
@@ -16,7 +17,15 @@ import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
 import { safeNextPath } from "@/lib/redirect";
 
-export function LoginForm() {
+export function LoginForm({
+  google = false,
+  errorGoogle = null,
+}: {
+  /** Ronda B: el back tiene las credenciales de Google. */
+  google?: boolean;
+  /** Por qué Google devolvió al login (superusuario, inactivo…). */
+  errorGoogle?: string | null;
+} = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,6 +91,16 @@ export function LoginForm() {
         aria-busy={pending}
         className="flex flex-col gap-4"
       >
+        {errorGoogle && !message ? (
+          <Alert status="danger" role="alert">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>No pudimos ingresar con Google</Alert.Title>
+              <Alert.Description>{errorGoogle}</Alert.Description>
+            </Alert.Content>
+          </Alert>
+        ) : null}
+
         {fieldErrorCount > 0 ? (
           <FormErrorSummary count={fieldErrorCount} message={message} />
         ) : message ? (
@@ -127,6 +146,7 @@ export function LoginForm() {
           {pending ? "Ingresando…" : "Ingresar"}
         </Button>
 
+        {google ? <GoogleBoton /> : null}
       </form>
     </AuthCard>
   );

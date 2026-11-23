@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { Alert } from "@heroui/react";
+import { MENSAJE_SOLICITAR_SIN_DATOS } from "@/components/portal/completar-datos";
 import {
   MENSAJE_CLIENTE_INACTIVO,
   MENSAJE_SOLICITAR_SIN_VERIFICAR,
@@ -33,7 +34,9 @@ export default async function SolicitarPage({
   const inactivo = resumen?.puede_solicitar === false;
   // Parte 3: sin verificar el correo tampoco envía (el aviso general está arriba).
   const sinVerificar = resumen?.correo_verificado === false;
-  const puedeSolicitar = !inactivo && !sinVerificar;
+  // Ronda B, parte 2: la cuenta de Google completa teléfono y NIT/CI antes.
+  const sinDatos = resumen?.datos_pendientes === true;
+  const puedeSolicitar = !inactivo && !sinVerificar && !sinDatos;
 
   if (Number.isFinite(servicioId) && servicioId > 0) {
     servicio = await getPortalServicio(servicioId).catch(() => null);
@@ -68,7 +71,13 @@ export default async function SolicitarPage({
         key={servicio?.id ?? "libre"}
         servicio={servicio}
         bloqueado={!puedeSolicitar}
-        motivoBloqueo={inactivo ? MENSAJE_CLIENTE_INACTIVO : MENSAJE_SOLICITAR_SIN_VERIFICAR}
+        motivoBloqueo={
+          inactivo
+            ? MENSAJE_CLIENTE_INACTIVO
+            : sinVerificar
+              ? MENSAJE_SOLICITAR_SIN_VERIFICAR
+              : MENSAJE_SOLICITAR_SIN_DATOS
+        }
       />
     </div>
   );
