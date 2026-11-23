@@ -98,7 +98,11 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
 
     try {
       await usuariosApi.create(payload);
-      announce(`Usuario ${payload.name} creado.`);
+      announce(
+        payload.rol === "cliente"
+          ? `Usuario ${payload.name} creado. Le enviamos un enlace para verificar su correo.`
+          : `Usuario ${payload.name} creado.`,
+      );
       setForm(INICIAL);
       onSaved();
     } catch (caught) {
@@ -187,7 +191,7 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
           onChange={(value) => set("clienteId", value)}
           options={clienteOptions}
           error={firstError(fieldErrors, "cliente_id")}
-          description="El usuario verá en el portal las solicitudes y proformas de este cliente."
+          description="El usuario verá en el portal las solicitudes y proformas de este cliente. Le enviaremos un enlace para verificar su correo; hasta entonces no podrá enviar solicitudes ni responder proformas."
           placeholder="Buscar por nombre o NIT…"
           isRequired
         />

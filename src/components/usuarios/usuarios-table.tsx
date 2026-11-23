@@ -160,6 +160,9 @@ export function UsuariosTable({
             ) : null}
           </p>
           <p className="truncate text-xs text-muted">{usuario.email}</p>
+          {usuario.rol === "cliente" && !usuario.email_verified_at ? (
+            <p className="truncate text-xs text-warning-soft-foreground">Correo sin verificar</p>
+          ) : null}
           {usuario.rol === "cliente" && usuario.cliente ? (
             <p className="truncate text-xs text-muted">
               Cliente: <span className="text-foreground">{usuario.cliente.nombre_razon}</span>
