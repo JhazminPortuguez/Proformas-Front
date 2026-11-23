@@ -17,6 +17,21 @@ import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
 import { safeNextPath } from "@/lib/redirect";
 
+/**
+ * En el login, un 401 son credenciales equivocadas (no una sesión vencida) y
+ * un 403 es una cuenta desactivada. El texto no dice cuál de los dos datos
+ * falló (OWASP A07: no revela si el correo existe).
+ */
+export const MENSAJE_CREDENCIALES = "Correo o contraseña incorrectos.";
+export const MENSAJE_CUENTA_DESACTIVADA = "Tu cuenta está desactivada. Comunícate con la empresa.";
+
+export function mensajeLogin(error: unknown): string {
+  if (isApiError(error) && error.status === 401) return MENSAJE_CREDENCIALES;
+  if (isApiError(error) && error.status === 403) return MENSAJE_CUENTA_DESACTIVADA;
+
+  return apiErrorMessage(error, "No pudimos iniciar sesión. Revisa tus datos e intenta nuevamente.");
+}
+
 export function LoginForm({
   google = false,
   errorGoogle = null,
@@ -58,10 +73,7 @@ export function LoginForm({
     } catch (caught) {
       applyFieldErrors(
         isApiError(caught) ? (caught.errors ?? {}) : {},
-        apiErrorMessage(
-          caught,
-          "No pudimos iniciar sesión. Revisa tus datos e intenta nuevamente.",
-        ),
+        mensajeLogin(caught),
       );
     } finally {
       setPending(false);

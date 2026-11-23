@@ -60,9 +60,16 @@ export function EstadoSistemaView({ estado, email }: { estado: EstadoSistema; em
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Tarjeta titulo="Aplicación">
+        {app.debug ? (
+          <Estado
+            ok={false}
+            texto="El modo depuración está activo (APP_DEBUG=true). En producción apágalo: los errores mostrarían detalles técnicos."
+          />
+        ) : null}
         <dl>
           <Fila etiqueta="Versión">{app.version}</Fila>
           <Fila etiqueta="Entorno">{app.entorno}</Fila>
+          <Fila etiqueta="Modo depuración">{app.debug ? "Activo" : "Apagado"}</Fila>
           <Fila etiqueta="Laravel">{app.laravel}</Fila>
           <Fila etiqueta="PHP">{app.php}</Fila>
         </dl>

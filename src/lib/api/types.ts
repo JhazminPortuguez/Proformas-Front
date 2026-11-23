@@ -1055,6 +1055,8 @@ export interface EstadoSistema {
     nombre: string;
     version: string;
     entorno: string;
+    /** OWASP A05: debe estar apagado en producción. */
+    debug?: boolean;
     laravel: string;
     php: string;
   };
