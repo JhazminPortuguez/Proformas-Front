@@ -1,5 +1,47 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
 import { api, expect, PASSWORD_DEMO, unico } from "./fixtures";
+
+/**
+ * El back de las pruebas usa MAIL_MAILER=log (no salen correos reales): los
+ * enlaces de verificación se leen de storage/logs/laravel.log. Ruta por
+ * defecto: el back junto al front (../Proformas-Back); se cambia con
+ * E2E_LARAVEL_LOG.
+ */
+const LOG =
+  process.env.E2E_LARAVEL_LOG ?? resolve(process.cwd(), "../Proformas-Back/storage/logs/laravel.log");
+
+/** Último enlace de verificación del usuario, decodificado del correo en el log. */
+export function enlaceDeVerificacion(usuarioId: number): string | null {
+  const texto = readFileSync(LOG, "utf8")
+    // Por si el correo quedó en quoted-printable: saltos suaves y "=3D".
+    // (No se decodifica todo "=XX": rompería "expires=17…".)
+    .replace(/=\r?\n/g, "")
+    .replaceAll("=3D", "=")
+    .replaceAll("&amp;", "&");
+  const patron = new RegExp(
+    `https?://[^\\s"<]+/api/v1/auth/verificar-correo/${usuarioId}/[0-9a-f]+\\?expires=\\d+&signature=[0-9a-f]+`,
+    "g",
+  );
+  const enlaces = texto.match(patron);
+
+  return enlaces ? enlaces[enlaces.length - 1] : null;
+}
+
+/** Abre el enlace del correo (sin sesión, como desde el correo) y queda verificado. */
+export async function verificarCorreo(request: APIRequestContext, usuarioId: number) {
+  let enlace: string | null = null;
+
+  await expect(() => {
+    enlace = enlaceDeVerificacion(usuarioId);
+    expect(enlace, `enlace de verificación del usuario ${usuarioId} en el log`).not.toBeNull();
+  }).toPass({ timeout: 15_000 });
+
+  const respuesta = await request.get(enlace!, { maxRedirects: 0 });
+
+  expect(respuesta.headers()["location"]).toMatch(/estado=verificado$/);
+}
 
 /**
  * Datos propios de cada prueba, creados por la API como admin y con nombres
@@ -78,21 +120,34 @@ export async function stockDe(request: APIRequestContext, productoId: number) {
   return Number(producto.stock_actual);
 }
 
-/** Usuario con rol cliente vinculado a un cliente nuevo. */
-export async function crearUsuarioCliente(request: APIRequestContext) {
+/**
+ * Usuario con rol cliente vinculado a un cliente nuevo. Ronda B: el usuario
+ * cliente que crea el admin recibe el enlace de verificación; por defecto se
+ * abre ese enlace para que pueda usar el portal.
+ */
+export async function crearUsuarioCliente(
+  request: APIRequestContext,
+  { verificado = true }: { verificado?: boolean } = {},
+) {
   const cliente = await crearCliente(request);
   const email = `e2e.${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}@example.com`;
 
-  await api(request, "POST", "/api/v1/users", {
-    name: `Usuario ${cliente.nombre}`,
-    email,
-    password: PASSWORD_DEMO,
-    rol: "cliente",
-    cliente_id: cliente.id,
-    activo: true,
-  });
+  const usuario = cuerpo(
+    await api<ConId | { data: ConId }>(request, "POST", "/api/v1/users", {
+      name: `Usuario ${cliente.nombre}`,
+      email,
+      password: PASSWORD_DEMO,
+      rol: "cliente",
+      cliente_id: cliente.id,
+      activo: true,
+    }),
+  );
 
-  return { cliente, email };
+  if (verificado) {
+    await verificarCorreo(request, usuario.id);
+  }
+
+  return { cliente, email, id: usuario.id };
 }
 
 /** Elige una opción de un ComboBox con búsqueda en el servidor. */

@@ -23,7 +23,7 @@ import { usuarios as usuariosApi } from "@/lib/api/client";
 import { mensajeDeError } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
 import type { PaginationMeta, ReporteClienteOpcion, Rol, User } from "@/lib/api/types";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
+import { ROLE_DESCRIPTIONS, ROLE_LABELS, rolesQueAsigna, rolesQueGestiona } from "@/lib/roles";
 import { filasParam } from "@/lib/paginacion";
 import { buildQuery } from "@/lib/utils";
 
@@ -39,11 +39,11 @@ interface UsuariosTableProps {
   meta: PaginationMeta;
   query: Query;
   currentUserId: number;
+  /** Rol de quien mira: cada rol gestiona usuarios distintos (ronda B). */
+  viewerRol: Rol;
   /** Clientes existentes, para crear el acceso al portal de uno de ellos. */
   clientes?: ReporteClienteOpcion[];
 }
-
-const ROLES: Rol[] = ["admin", "operario", "cliente"];
 
 interface Override {
   rol?: Rol;
@@ -55,8 +55,13 @@ export function UsuariosTable({
   meta,
   query,
   currentUserId,
+  viewerRol,
   clientes = [],
 }: UsuariosTableProps) {
+  const gestionables = rolesQueGestiona(viewerRol);
+  const asignables = rolesQueAsigna(viewerRol);
+  const quienGestiona = (rol: Rol) =>
+    rol === "admin" || rol === "superusuario" ? "el superusuario" : "el administrador";
   const router = useRouter();
   const { announce } = useAnnouncer();
   const [isPending, startTransition] = useTransition();
@@ -104,7 +109,7 @@ export function UsuariosTable({
         if (handleUnauthorized(error)) return;
 
         if (isApiError(error) && error.status === 403) {
-          setRowError("Solo un administrador puede modificar usuarios.");
+          setRowError(mensajeDeError(error, "No tienes permiso para modificar este usuario."));
         } else {
           setRowError(
             mensajeDeError(error, "No pudimos actualizar el usuario."),
@@ -131,7 +136,7 @@ export function UsuariosTable({
       if (handleUnauthorized(error)) return;
 
       if (isApiError(error) && error.status === 403) {
-        setDeleteError("Solo un administrador puede eliminar usuarios.");
+        setDeleteError(mensajeDeError(error, "No tienes permiso para eliminar este usuario."));
       } else if (isApiError(error) && error.status === 409) {
         setDeleteError(
           "El usuario tiene registros asociados. Desactívalo en lugar de eliminarlo.",
@@ -176,12 +181,24 @@ export function UsuariosTable({
       header: "Rol",
       cell: (usuario) => {
         const rol = usuario.rol;
+
+        // Ronda B: los roles que no gestiona quien mira se ven, pero no se tocan.
+        if (!gestionables.includes(rol)) {
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm text-foreground">{ROLE_LABELS[rol]}</span>
+              <span className="text-[11px] text-muted">Lo gestiona {quienGestiona(rol)}</span>
+            </div>
+          );
+        }
+
         const disabled =
           pendingRow === usuario.id || usuario.id === currentUserId;
+        const base = asignables.includes(rol) ? asignables : [rol, ...asignables];
         const opciones =
           usuario.cliente_id === null && usuario.rol !== "cliente"
-            ? ROLES.filter((option) => option !== "cliente")
-            : ROLES;
+            ? base.filter((option) => option !== "cliente")
+            : base;
 
         return (
           <div className="flex flex-col gap-1.5">
@@ -236,7 +253,9 @@ export function UsuariosTable({
       cell: (usuario) => {
         const activo = usuario.activo;
         const disabled =
-          pendingRow === usuario.id || usuario.id === currentUserId;
+          pendingRow === usuario.id ||
+          usuario.id === currentUserId ||
+          !gestionables.includes(usuario.rol);
 
         return (
           <Switch
@@ -262,6 +281,8 @@ export function UsuariosTable({
       className: "text-end",
       cell: (usuario) => {
         const isSelf = usuario.id === currentUserId;
+
+        if (!gestionables.includes(usuario.rol)) return null;
 
         return (
           <div className="flex items-center justify-end">
@@ -356,15 +377,18 @@ export function UsuariosTable({
         </div>
       </div>
 
-      <div className="mb-3 text-xs text-muted" role="note">
-        Los clientes nuevos pueden registrarse solos desde la pantalla pública.
-        Si el correo ya pertenece a un cliente, crea aquí su acceso con el rol
-        Cliente y elige ese cliente.
-      </div>
+      {asignables.includes("cliente") ? (
+        <div className="mb-3 text-xs text-muted" role="note">
+          Los clientes nuevos pueden registrarse solos desde la pantalla pública.
+          Si el correo ya pertenece a un cliente, crea aquí su acceso con el rol
+          Cliente y elige ese cliente.
+        </div>
+      ) : null}
 
       <UsuarioFormDrawer
         isOpen={formOpen}
         onOpenChange={setFormOpen}
+        roles={asignables}
         clientes={clientes}
         onSaved={() => {
           setFormOpen(false);

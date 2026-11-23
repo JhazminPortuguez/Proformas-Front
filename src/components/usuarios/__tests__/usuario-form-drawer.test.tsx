@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UsuarioFormDrawer } from "@/components/usuarios/usuario-form-drawer";
 import { UsuariosTable } from "@/components/usuarios/usuarios-table";
-import type { User } from "@/lib/api/types";
+import type { Rol, User } from "@/lib/api/types";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -34,9 +34,9 @@ const CLIENTES = [
   { id: 3, nombre_razon: "Constructora Andina", nit_ci: null },
 ];
 
-function renderDrawer(onSaved = vi.fn()) {
+function renderDrawer(onSaved = vi.fn(), roles: Rol[] = ["operario", "cliente"]) {
   render(
-    <UsuarioFormDrawer isOpen onOpenChange={vi.fn()} clientes={CLIENTES} onSaved={onSaved} />,
+    <UsuarioFormDrawer isOpen onOpenChange={vi.fn()} roles={roles} clientes={CLIENTES} onSaved={onSaved} />,
   );
 
   return onSaved;
@@ -150,6 +150,7 @@ describe("UsuariosTable", () => {
         meta={{ current_page: 1, per_page: 15, total: 2, last_page: 1 }}
         query={{ search: "", page: 1 }}
         currentUserId={1}
+        viewerRol="admin"
         clientes={CLIENTES}
       />,
     );
@@ -157,4 +158,78 @@ describe("UsuariosTable", () => {
     expect(screen.getByText("Cliente Prospecto SRL")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nuevo usuario" })).toBeInTheDocument();
   });
+
+  const OTRO_ADMIN: User = { ...ADMIN, id: 2, name: "Otra Admin", email: "otra@x.test" };
+  const OPERARIO: User = { ...ADMIN, id: 3, name: "Rosa", email: "rosa@x.test", rol: "operario" };
+
+  it("ronda B: el admin ve a otro administrador, pero no lo puede modificar", () => {
+    render(
+      <UsuariosTable
+        usuarios={[ADMIN, OTRO_ADMIN, OPERARIO]}
+        meta={{ current_page: 1, per_page: 15, total: 3, last_page: 1 }}
+        query={{ search: "", page: 1 }}
+        currentUserId={1}
+        viewerRol="admin"
+        clientes={CLIENTES}
+      />,
+    );
+
+    expect(screen.getAllByText("Lo gestiona el superusuario")).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "Rol de Otra Admin" })).not.toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Activo: Otra Admin" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Eliminar Otra Admin" })).not.toBeInTheDocument();
+    // Al operario sí.
+    expect(screen.getByRole("switch", { name: "Activo: Rosa" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Eliminar Rosa" })).toBeEnabled();
+  });
+
+  it("ronda B: el superusuario gestiona administradores", () => {
+    const SUPER: User = { ...ADMIN, id: 7, name: "Soporte", email: "soporte@x.test", rol: "superusuario" };
+
+    render(
+      <UsuariosTable
+        usuarios={[SUPER, OTRO_ADMIN, OPERARIO]}
+        meta={{ current_page: 1, per_page: 15, total: 3, last_page: 1 }}
+        query={{ search: "", page: 1 }}
+        currentUserId={7}
+        viewerRol="superusuario"
+      />,
+    );
+
+    expect(screen.getByRole("switch", { name: "Activo: Otra Admin" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Eliminar Otra Admin" })).toBeEnabled();
+    expect(screen.queryByText(/Los clientes nuevos pueden registrarse/)).not.toBeInTheDocument();
+  });
+});
+
+describe("UsuarioFormDrawer según quién crea (ronda B)", () => {
+  it("el admin no ofrece el rol Administrador", async () => {
+    const user = userEvent.setup();
+    renderDrawer();
+
+    await user.click(screen.getByRole("button", { name: /Rol/ }));
+
+    expect(await screen.findByRole("option", { name: "Cliente" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Administrador" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Superusuario" })).not.toBeInTheDocument();
+  }, LENTA);
+
+  it("el superusuario crea administradores y operarios, no clientes ni superusuarios", async () => {
+    const user = userEvent.setup();
+    mocks.create.mockResolvedValue({});
+    renderDrawer(vi.fn(), ["admin", "operario"]);
+
+    await llenarDatos(user);
+    await elegirRol(user, "Administrador");
+    expect(screen.queryByRole("combobox", { name: /Cliente/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Rol/ }));
+    expect(screen.queryByRole("option", { name: "Cliente" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Superusuario" })).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.create.mock.calls[0][0]).toMatchObject({ rol: "admin", cliente_id: null });
+  }, LENTA);
 });

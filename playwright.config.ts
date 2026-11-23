@@ -27,6 +27,9 @@ export default defineConfig({
       env: {
         DB_PORT: process.env.E2E_DB_PORT ?? "5434",
         DB_DATABASE: process.env.E2E_DB_DATABASE ?? "proformas_e2e",
+        // Nunca correos reales en las pruebas, aunque el .env tenga SMTP: los
+        // enlaces de verificación se leen del log.
+        MAIL_MAILER: "log",
       },
       url: "http://127.0.0.1:8000/sanctum/csrf-cookie",
       reuseExistingServer: !process.env.CI,

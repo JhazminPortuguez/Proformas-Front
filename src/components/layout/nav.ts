@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   ClipboardList,
   FileText,
@@ -12,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Rol } from "@/lib/api/types";
+import { ROLES_OPERACION } from "@/lib/roles";
 
 export interface NavItem {
   label: string;
@@ -19,6 +21,7 @@ export interface NavItem {
   icon: LucideIcon;
   /** false = pantalla placeholder "Próximamente". */
   ready: boolean;
+  /** Sin dato: solo la operación (admin y operario). */
   roles?: Rol[];
 }
 
@@ -90,14 +93,21 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/usuarios",
         icon: ShieldCheck,
         ready: true,
-        roles: ["admin"],
+        roles: ["admin", "superusuario"],
       },
       {
         label: "Configuración",
         href: "/configuracion",
         icon: Settings,
         ready: true,
-        roles: ["admin"],
+        roles: ["superusuario"],
+      },
+      {
+        label: "Estado del sistema",
+        href: "/sistema",
+        icon: Activity,
+        ready: true,
+        roles: ["superusuario"],
       },
     ],
   },
@@ -111,7 +121,7 @@ export function navItemsFor(rol: Rol): NavGroup[] {
   return NAV_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter(
-      (item) => !item.roles || item.roles.includes(rol),
+      (item) => (item.roles ?? ROLES_OPERACION).includes(rol),
     ),
   })).filter((group) => group.items.length > 0);
 }

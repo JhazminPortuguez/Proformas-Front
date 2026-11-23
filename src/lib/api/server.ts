@@ -17,6 +17,8 @@ import type {
   CuentaPorCobrar,
   DashboardData,
   Empresa,
+  EstadoSistema,
+  Parametros,
   EstadoCobro,
   EstadoOrden,
   EstadoProforma,
@@ -41,6 +43,7 @@ import type {
   User,
 } from "./types";
 import { buildQuery } from "@/lib/utils";
+import { homePathFor, ROLES_OPERACION } from "@/lib/roles";
 
 const API_URL = (process.env.LARAVEL_API_URL ?? "http://127.0.0.1:8000").replace(
   /\/$/,
@@ -124,7 +127,11 @@ export const getSessionUser = cache(async (): Promise<User | null> => {
  * rol no corresponde. Debe llamarse dentro de un boundary de Suspense porque
  * lee cookies.
  */
-export async function requireUser(roles?: Rol[]): Promise<User> {
+/**
+ * Guard del backoffice. Sin `roles`, la página es de la operación (admin y
+ * operario): el superusuario vuelve a su inicio (ronda B).
+ */
+export async function requireUser(roles: Rol[] = ROLES_OPERACION): Promise<User> {
   const user = await getSessionUser();
 
   if (!user || !user.activo) {
@@ -135,8 +142,8 @@ export async function requireUser(roles?: Rol[]): Promise<User> {
     redirect("/portal");
   }
 
-  if (roles && !roles.includes(user.rol)) {
-    redirect("/dashboard");
+  if (!roles.includes(user.rol)) {
+    redirect(homePathFor(user.rol));
   }
 
   return user;
@@ -639,4 +646,14 @@ export function getPortalProforma(id: number): Promise<PortalProforma | null> {
 /** Datos de la empresa para la pantalla de configuración (solo admin). */
 export function getEmpresa(): Promise<Empresa> {
   return request<Empresa>("/empresa");
+}
+
+/** Ronda B: valores iniciales de una proforma nueva. */
+export function getParametros(): Promise<Parametros> {
+  return request<Parametros>("/parametros");
+}
+
+/** Ronda B: pantalla "Estado del sistema" del superusuario. */
+export function getEstadoSistema(): Promise<EstadoSistema> {
+  return request<EstadoSistema>("/sistema/estado");
 }

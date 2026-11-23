@@ -254,6 +254,28 @@ export function compareDateOnly(a: string, b: string): number {
  * Hoy como fecha date-only en la zona de la operación. Se calcula en el
  * servidor y se pasa al formulario para evitar diferencias de hidratación.
  */
+/** Ronda B: "AAAA-MM-DD" más `dias` días (fechas sin hora, sin zona). */
+export function sumarDias(fecha: string, dias: number): string {
+  const [anio, mes, dia] = fecha.split("-").map(Number);
+  const resultado = new Date(Date.UTC(anio, mes - 1, dia + dias));
+
+  return resultado.toISOString().slice(0, 10);
+}
+
+/** Valores iniciales de una proforma nueva según los parámetros del sistema. */
+export function valoresIniciales(
+  parametros: { impuesto_por_defecto: string; dias_validez_por_defecto: number | null } | null | undefined,
+  hoy: string,
+): { impuesto_tasa: string; fecha_validez: string } {
+  const tasa = Number(parametros?.impuesto_por_defecto ?? "13");
+  const dias = parametros?.dias_validez_por_defecto ?? null;
+
+  return {
+    impuesto_tasa: Number.isFinite(tasa) ? String(tasa) : "13",
+    fecha_validez: dias ? sumarDias(hoy, dias) : "",
+  };
+}
+
 export function todayDateOnly(
   timeZone = "America/La_Paz",
   now: Date = new Date(),

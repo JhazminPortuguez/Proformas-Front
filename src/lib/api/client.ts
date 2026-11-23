@@ -15,8 +15,11 @@ import type {
   ClienteInput,
   ConsumoOrdenItemInput,
   CuentaPorCobrar,
+  CorreoPruebaRespuesta,
   Empresa,
   EmpresaInput,
+  Parametros,
+  ParametrosInput,
   EntradaInventarioInput,
   MovimientoInventario,
   Orden,
@@ -509,7 +512,21 @@ export const portal = {
   },
 };
 
-/** Configuración de la empresa (solo administrador). */
+/** Ronda B: parámetros del sistema (solo el superusuario los cambia). */
+export const parametros = {
+  update(payload: ParametrosInput): Promise<Parametros> {
+    return request<Parametros>("/parametros", { method: "PUT", body: JSON.stringify(payload) });
+  },
+};
+
+/** Ronda B: estado del sistema (superusuario). */
+export const sistema = {
+  correoPrueba(): Promise<CorreoPruebaRespuesta> {
+    return request<CorreoPruebaRespuesta>("/sistema/correo-prueba", { method: "POST" });
+  },
+};
+
+/** Configuración de la empresa (solo el superusuario, ronda B). */
 export const empresa = {
   update(payload: EmpresaInput): Promise<Empresa> {
     return request<Empresa>("/empresa", { method: "PUT", body: JSON.stringify(payload) });

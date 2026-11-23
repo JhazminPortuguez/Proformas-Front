@@ -4,8 +4,10 @@ import type { OrdenAccion, Rol, User } from "@/lib/api/types";
  * Permisos de la interfaz. No reemplazan las policies del backend: solo
  * evitan mostrar acciones que el servidor va a rechazar.
  *
- * Regla del MVP: admin es superconjunto del operario; solo admin elimina,
- * gestiona usuarios/configuración y anula pagos.
+ * Regla del MVP: admin es superconjunto del operario; solo admin elimina y
+ * anula pagos. Ronda B: la configuración y el estado del sistema son del
+ * superusuario (rol técnico, fuera de la operación); los dos gestionan
+ * usuarios, cada uno con sus roles (ver `rolesQueGestiona`).
  */
 export type Permission =
   | "dashboard.ver"
@@ -43,6 +45,7 @@ export type Permission =
   | "usuarios.ver"
   | "usuarios.gestionar"
   | "configuracion.gestionar"
+  | "sistema.ver"
   | "portal.ver";
 
 const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
@@ -79,9 +82,10 @@ const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
   "pagos.registrar": ["admin", "operario"],
   "pagos.anular": ["admin"],
   "reportes.ver": ["admin"],
-  "usuarios.ver": ["admin"],
-  "usuarios.gestionar": ["admin"],
-  "configuracion.gestionar": ["admin"],
+  "usuarios.ver": ["admin", "superusuario"],
+  "usuarios.gestionar": ["admin", "superusuario"],
+  "configuracion.gestionar": ["superusuario"],
+  "sistema.ver": ["superusuario"],
   "portal.ver": ["cliente"],
 };
 

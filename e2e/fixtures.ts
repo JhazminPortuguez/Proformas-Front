@@ -27,6 +27,12 @@ export const ADMIN_EMAIL =
   process.env.E2E_ADMIN_EMAIL ?? "pepitotilcayo@example.com";
 export const OPERARIO_EMAIL =
   process.env.E2E_OPERARIO_EMAIL ?? "operario@example.com";
+/**
+ * Ronda B: superusuario de la copia, creado con
+ * `php artisan sistema:crear-superusuario --password-temporal`.
+ */
+export const SUPER_EMAIL = process.env.E2E_SUPER_EMAIL ?? "";
+export const SUPER_PASSWORD = process.env.E2E_SUPER_PASSWORD ?? "";
 
 type Vigilancia = { csp: string[]; a11y: string[] };
 

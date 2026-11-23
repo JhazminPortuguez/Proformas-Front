@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { enlaceDeVerificacion } from "./datos";
 import { expect, test } from "./fixtures";
 
 /**
@@ -7,28 +6,8 @@ import { expect, test } from "./fixtures";
  * portal, abre el enlace del correo y queda verificado.
  *
  * El back de las pruebas usa MAIL_MAILER=log (no salen correos reales): el
- * enlace se lee de storage/logs/laravel.log. Ruta por defecto: el back junto
- * al front (../Proformas-Back); se cambia con E2E_LARAVEL_LOG.
+ * enlace se lee de storage/logs/laravel.log (ver `enlaceDeVerificacion`).
  */
-const LOG =
-  process.env.E2E_LARAVEL_LOG ?? resolve(process.cwd(), "../Proformas-Back/storage/logs/laravel.log");
-
-/** Último enlace de verificación del usuario, decodificado del correo en el log. */
-function enlaceDeVerificacion(usuarioId: number): string | null {
-  const texto = readFileSync(LOG, "utf8")
-    // Por si el correo quedó en quoted-printable: saltos suaves y "=3D".
-    // (No se decodifica todo "=XX": rompería "expires=17…".)
-    .replace(/=\r?\n/g, "")
-    .replaceAll("=3D", "=")
-    .replaceAll("&amp;", "&");
-  const patron = new RegExp(
-    `https?://[^\\s"<]+/api/v1/auth/verificar-correo/${usuarioId}/[0-9a-f]+\\?expires=\\d+&signature=[0-9a-f]+`,
-    "g",
-  );
-  const enlaces = texto.match(patron);
-
-  return enlaces ? enlaces[enlaces.length - 1] : null;
-}
 
 test("registro → enlace del correo → correo verificado", async ({ anonimo }) => {
   test.setTimeout(120_000);

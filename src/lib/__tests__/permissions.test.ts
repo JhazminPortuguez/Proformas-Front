@@ -60,4 +60,30 @@ describe("permissions", () => {
   it("expone la matriz de roles por permiso", () => {
     expect(rolesFor("clientes.eliminar")).toEqual(["admin"]);
   });
+
+  it("ronda B: el superusuario configura y gestiona usuarios, pero no opera", () => {
+    const superusuario = user("superusuario");
+
+    expect(can(superusuario, "configuracion.gestionar")).toBe(true);
+    expect(can(superusuario, "sistema.ver")).toBe(true);
+    expect(can(superusuario, "usuarios.gestionar")).toBe(true);
+
+    for (const permiso of [
+      "dashboard.ver",
+      "clientes.ver",
+      "proformas.crear",
+      "ordenes.asignar",
+      "reportes.ver",
+      "cobros.ver",
+      "portal.ver",
+    ] as const) {
+      expect(can(superusuario, permiso)).toBe(false);
+    }
+  });
+
+  it("ronda B: el admin ya no ve Configuración ni el estado del sistema", () => {
+    expect(can(user("admin"), "configuracion.gestionar")).toBe(false);
+    expect(can(user("admin"), "sistema.ver")).toBe(false);
+    expect(can(user("admin"), "usuarios.gestionar")).toBe(true);
+  });
 });

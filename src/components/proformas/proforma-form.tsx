@@ -33,6 +33,7 @@ import { isApiError } from "@/lib/api/types";
 import type {
   Cliente,
   ErroresValidacion,
+  Parametros,
   Proforma,
   ProformaInput,
   ProformaItem,
@@ -51,6 +52,7 @@ import {
   clientesParaProforma,
   errorFechaEmision,
   itemsRepetidos,
+  valoresIniciales,
 } from "@/lib/proformas";
 import { firstError, formatMoney, formatNumber, parseDecimal } from "@/lib/utils";
 import { decimalesDe, validarLargos } from "@/lib/validacion";
@@ -83,6 +85,8 @@ interface ProformaFormProps {
   productos: Producto[];
   /** Fecha date-only calculada en el servidor (zona America/La_Paz). */
   today: string;
+  /** Ronda B: impuesto y días de validez iniciales de una proforma nueva. */
+  parametros?: Parametros | null;
 }
 
 let itemSequence = 0;
@@ -131,14 +135,17 @@ function toDraftItem(item: ProformaItem): DraftItem {
   };
 }
 
-function toFormState(proforma: Proforma | null, today: string): FormState {
+function toFormState(
+  proforma: Proforma | null,
+  today: string,
+  parametros?: Parametros | null,
+): FormState {
   if (!proforma) {
     return {
       clienteId: "",
       fecha_emision: today,
-      fecha_validez: "",
+      ...valoresIniciales(parametros, today),
       descuento: "0",
-      impuesto_tasa: "13",
       observaciones: "",
       items: [],
     };
@@ -167,6 +174,7 @@ export function ProformaForm({
   servicios: serviciosCatalogo,
   productos: productosCatalogo,
   today: hoyDeLaPagina,
+  parametros = null,
 }: ProformaFormProps) {
   // Propuesta 13: si cambia el día con el formulario abierto, "hoy" (y el
   // máximo de Emisión) se recalcula al aparecer el aviso de D-02.
@@ -197,7 +205,7 @@ export function ProformaForm({
     reset,
   } = useFormErrors();
   const [initialForm, setInitialForm] = useState<FormState>(() =>
-    toFormState(proforma, today),
+    toFormState(proforma, today, parametros),
   );
   const [form, setForm] = useState<FormState>(initialForm);
   const [hoyAnterior, setHoyAnterior] = useState(today);
@@ -208,10 +216,18 @@ export function ProformaForm({
     setHoyAnterior(today);
 
     if (!proforma && form.fecha_emision === hoyAnterior) {
-      setForm((actual) => ({ ...actual, fecha_emision: today }));
-      setInitialForm((actual) =>
-        actual.fecha_emision === hoyAnterior ? { ...actual, fecha_emision: today } : actual,
-      );
+      // La validez inicial (emisión + días por defecto) se mueve con ella si
+      // nadie la cambió.
+      const validezAnterior = valoresIniciales(parametros, hoyAnterior).fecha_validez;
+      const validezNueva = valoresIniciales(parametros, today).fecha_validez;
+      const mover = (estado: FormState): FormState => ({
+        ...estado,
+        fecha_emision: today,
+        fecha_validez: estado.fecha_validez === validezAnterior ? validezNueva : estado.fecha_validez,
+      });
+
+      setForm(mover);
+      setInitialForm((actual) => (actual.fecha_emision === hoyAnterior ? mover(actual) : actual));
     }
   }
   const [pending, setPending] = useState(false);
