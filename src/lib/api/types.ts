@@ -11,6 +11,8 @@ export interface User {
   empresa_id: number | null;
   /** Parte 3: null mientras el cliente no verifica su correo. */
   email_verified_at?: string | null;
+  /** Ronda B, parte 2: cuenta creada con Google sin teléfono ni NIT/CI. */
+  datos_pendientes?: boolean;
   /** Cliente vinculado (usuarios con rol cliente), cuando la API lo incluye. */
   cliente?: Pick<Cliente, "id" | "nombre_razon" | "nit_ci"> | null;
 }
@@ -937,6 +939,8 @@ export interface PortalResumen {
   puede_solicitar?: boolean;
   /** Parte 3: sin verificar, ve su portal pero no envía ni responde. */
   correo_verificado?: boolean;
+  /** Ronda B, parte 2: debe completar teléfono y NIT/CI antes de solicitar. */
+  datos_pendientes?: boolean;
 }
 
 export interface PortalEmpresa {

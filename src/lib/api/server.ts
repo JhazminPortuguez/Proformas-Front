@@ -648,6 +648,18 @@ export function getEmpresa(): Promise<Empresa> {
   return request<Empresa>("/empresa");
 }
 
+/**
+ * Ronda B, parte 2: si el back tiene las credenciales de Google. Si no se
+ * puede consultar, el botón no se muestra.
+ */
+export async function getGoogleHabilitado(): Promise<boolean> {
+  try {
+    return (await request<{ habilitado: boolean }>("/auth/google/estado")).habilitado === true;
+  } catch {
+    return false;
+  }
+}
+
 /** Ronda B: valores iniciales de una proforma nueva. */
 export function getParametros(): Promise<Parametros> {
   return request<Parametros>("/parametros");

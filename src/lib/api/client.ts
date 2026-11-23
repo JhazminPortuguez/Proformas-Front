@@ -494,6 +494,11 @@ export { ensureCsrfCookie };
 
 /** Portal del cliente: el cliente de la solicitud sale de la sesión. */
 export const portal = {
+  /** Ronda B, parte 2: la cuenta creada con Google completa teléfono y NIT/CI. */
+  completarDatos(payload: { telefono: string; nit_ci: string }): Promise<User> {
+    return request<User>("/portal/mis-datos", { method: "PUT", body: JSON.stringify(payload) });
+  },
+
   crearSolicitud(payload: PortalSolicitudInput): Promise<PortalSolicitud> {
     return request<PortalSolicitud>("/portal/solicitudes", jsonBody(payload));
   },

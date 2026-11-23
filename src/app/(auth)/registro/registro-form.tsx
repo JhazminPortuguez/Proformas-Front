@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Alert, Button } from "@heroui/react";
 import { AuthCard } from "@/components/auth/auth-card";
+import { GoogleBoton } from "@/components/auth/google-boton";
 import { TextFieldControl } from "@/components/ui/fields";
 import { useAnnouncer } from "@/components/ui/announcer";
 import { FormErrorSummary } from "@/components/ui/form-errors";
@@ -15,7 +16,7 @@ import { firstError } from "@/lib/utils";
 import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
 
-export function RegistroForm() {
+export function RegistroForm({ google = false }: { google?: boolean } = {}) {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -189,6 +190,7 @@ export function RegistroForm() {
           {pending ? "Creando cuenta…" : "Crear cuenta"}
         </Button>
 
+        {google ? <GoogleBoton texto="Registrarme con Google" /> : null}
       </form>
     </AuthCard>
   );
