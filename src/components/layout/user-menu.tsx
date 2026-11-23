@@ -11,6 +11,7 @@ import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const ROLE_COLOR: Record<Rol, "accent" | "default" | "success"> = {
+  superusuario: "accent",
   admin: "accent",
   operario: "default",
   cliente: "success",

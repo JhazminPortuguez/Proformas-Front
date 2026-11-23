@@ -6,13 +6,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { RetryButton } from "@/components/ui/retry-button";
 import {
   getClientes,
+  getParametros,
   getProductos,
   getServicios,
   requireUser,
 } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { Cliente, Producto, Servicio } from "@/lib/api/types";
+import type { Cliente, Parametros, Producto, Servicio } from "@/lib/api/types";
 import { todayDateOnly } from "@/lib/proformas";
 
 export const metadata: Metadata = {
@@ -25,14 +26,19 @@ export default async function NuevaProformaPage() {
   let clientes: Cliente[];
   let servicios: Servicio[];
   let productos: Producto[];
+  let parametros: Parametros | null;
 
   try {
-    const [clientesPage, serviciosPage, productosPage] = await Promise.all([
+    const [clientesPage, serviciosPage, productosPage, parametrosSistema] = await Promise.all([
       // Primera página: el formulario busca el resto en el servidor.
         getClientes({ perPage: 20, activos: true }),
       getServicios({ activo: true, perPage: 20 }),
       getProductos({ activo: true, perPage: 20 }),
+      // Ronda B: si no se pueden leer, el formulario usa 13 % y validez en blanco.
+      getParametros().catch(() => null),
     ]);
+
+    parametros = parametrosSistema;
 
     clientes = clientesPage.data;
     servicios = serviciosPage.data;
@@ -57,6 +63,7 @@ export default async function NuevaProformaPage() {
       servicios={servicios}
       productos={productos}
       today={todayDateOnly()}
+      parametros={parametros}
     />
   );
 }

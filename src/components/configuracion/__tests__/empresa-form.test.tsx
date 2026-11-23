@@ -76,11 +76,24 @@ describe("configuración: utilidades", () => {
     ).toEqual({ nombre: "Empresa", nit: null, telefono: "444", email: null, direccion: null, condiciones: null });
   });
 
-  it("Configuración ya no está marcada como Pronto y es solo del admin", () => {
-    const item = navItemsFor("admin").flatMap((g) => g.items).find((i) => i.href === "/configuracion");
+  it("ronda B: Configuración es solo del superusuario", () => {
+    const item = navItemsFor("superusuario").flatMap((g) => g.items).find((i) => i.href === "/configuracion");
 
     expect(item?.ready).toBe(true);
-    expect(navItemsFor("operario").flatMap((g) => g.items).some((i) => i.href === "/configuracion")).toBe(false);
+    for (const rol of ["admin", "operario", "cliente"] as const) {
+      expect(navItemsFor(rol).flatMap((g) => g.items).some((i) => i.href === "/configuracion")).toBe(false);
+    }
+  });
+
+  it("ronda B: el menú del superusuario tiene solo Configuración, Usuarios y Estado del sistema", () => {
+    const etiquetas = navItemsFor("superusuario").flatMap((g) => g.items).map((i) => i.label);
+
+    expect(etiquetas.sort()).toEqual(["Configuración", "Estado del sistema", "Usuarios"]);
+
+    const admin = navItemsFor("admin").flatMap((g) => g.items).map((i) => i.label);
+    expect(admin).toContain("Usuarios");
+    expect(admin).toContain("Panel");
+    expect(admin).not.toContain("Estado del sistema");
   });
 });
 

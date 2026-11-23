@@ -65,6 +65,7 @@ describe("UsuariosTable · operario con órdenes activas", () => {
           meta={{ current_page: 1, per_page: 15, total: 2, last_page: 1 }}
           query={{ search: "", page: 1 }}
           currentUserId={ADMIN.id}
+          viewerRol="admin"
         />
       </AnnouncerProvider>,
     );

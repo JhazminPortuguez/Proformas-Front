@@ -66,3 +66,38 @@ describe("propuesta 13: 'hoy' en un formulario abierto", () => {
     expect(emision.max).toBe("2026-11-01");
   });
 });
+
+describe("ronda B: parámetros del sistema en una proforma nueva", () => {
+  function conParametros() {
+    render(
+      <ProformaForm
+        proforma={null}
+        clientes={[]}
+        servicios={[]}
+        productos={[]}
+        today="2026-10-31"
+        parametros={{ impuesto_por_defecto: "15.00", dias_validez_por_defecto: 15 }}
+      />,
+    );
+
+    return {
+      validez: screen.getByLabelText(/Validez/) as HTMLInputElement,
+      impuesto: screen.getByLabelText(/Impuesto/) as HTMLInputElement,
+    };
+  }
+
+  it("empieza con el impuesto y la validez de los parámetros", () => {
+    const { validez, impuesto } = conParametros();
+
+    expect(impuesto.value).toBe("15");
+    expect(validez.value).toBe("2026-11-15");
+  });
+
+  it("al cambiar el día, la validez sin tocar se mueve con la emisión", () => {
+    const { validez } = conParametros();
+
+    pasarLaMedianoche();
+
+    expect(validez.value).toBe("2026-11-16");
+  });
+});

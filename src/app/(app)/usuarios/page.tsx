@@ -23,7 +23,8 @@ export default async function UsuariosPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireUser(["admin"]);
+  const user = await requireUser(["admin", "superusuario"]);
+  const esSuperusuario = user.rol === "superusuario";
   const params = await searchParams;
 
   const search = first(params.search).trim();
@@ -37,7 +38,8 @@ export default async function UsuariosPage({
   try {
     [result, clientes] = await Promise.all([
       getUsuarios({ search, page, perPage }),
-      getReporteClientes(),
+      // El superusuario no gestiona usuarios cliente: no necesita la lista.
+      esSuperusuario ? Promise.resolve([]) : getReporteClientes(),
     ]);
   } catch (error) {
     if (isApiError(error) && (error.status === 401 || error.status === 419)) {
@@ -59,7 +61,11 @@ export default async function UsuariosPage({
     <>
       <PageHeader
         title="Usuarios"
-        description="Administra quién entra al sistema y al portal de clientes. Solo un administrador puede crear usuarios, cambiar roles o desactivar cuentas."
+        description={
+          esSuperusuario
+            ? "Administradores y operarios del sistema. Los usuarios cliente los gestiona el administrador."
+            : "Operarios y accesos al portal de clientes. A los administradores los gestiona el superusuario."
+        }
       />
 
       <UsuariosTable
@@ -67,6 +73,7 @@ export default async function UsuariosPage({
         meta={result.meta}
         query={{ search, page, perPage }}
         currentUserId={user.id}
+        viewerRol={user.rol}
         clientes={clientes}
       />
     </>

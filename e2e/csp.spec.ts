@@ -1,4 +1,4 @@
-import { api, expect, test } from "./fixtures";
+import { api, expect, SUPER_EMAIL, SUPER_PASSWORD, test } from "./fixtures";
 
 /**
  * Content-Security-Policy. El fixture común falla la prueba si cualquier
@@ -70,7 +70,6 @@ test("ninguna página del admin tiene errores de CSP", async ({ page }) => {
     "/inventario?tab=movimientos",
     "/cobros",
     "/usuarios",
-    "/configuracion",
     "/reportes?tab=ordenes",
     "/reportes?tab=servicios",
     "/reportes?tab=clientes",
@@ -85,6 +84,8 @@ test("ninguna página del admin tiene errores de CSP", async ({ page }) => {
   for (const ruta of rutas) {
     await page.goto(ruta);
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+    // La página de error también tiene un h1: se descarta aparte.
+    await expect(page.getByRole("heading", { level: 1, name: "Algo salió mal" }), ruta).toHaveCount(0);
     // Deja correr la hidratación y los efectos antes de pasar a la siguiente.
     await page.waitForLoadState("networkidle");
   }
@@ -189,9 +190,31 @@ test("el PDF de una proforma se abre en una pestaña nueva", async ({
   expect(respuesta.headers()["content-type"]).toContain("application/pdf");
 });
 
+test("las páginas del superusuario no tienen errores de CSP", async ({ sesion }) => {
+  test.slow();
+  expect(SUPER_EMAIL, "Falta E2E_SUPER_EMAIL (superusuario creado con el comando en la copia)").not.toBe("");
+
+  const { page } = await sesion(SUPER_EMAIL, SUPER_PASSWORD);
+
+  for (const [ruta, titulo] of [
+    ["/configuracion", "Configuración"],
+    ["/usuarios", "Usuarios"],
+    ["/sistema", "Estado del sistema"],
+  ] as const) {
+    await page.goto(ruta);
+    await expect(page.getByRole("heading", { level: 1, name: titulo })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+  }
+});
+
+// Ronda B: la configuración es del superusuario.
 test("el logo se previsualiza (blob:) y se muestra desde el back", async ({
-  page,
+  sesion,
 }) => {
+  expect(SUPER_EMAIL, "Falta E2E_SUPER_EMAIL (superusuario creado con el comando en la copia)").not.toBe("");
+
+  const { page } = await sesion(SUPER_EMAIL, SUPER_PASSWORD);
+
   await page.goto("/configuracion");
 
   const respuesta = await api<

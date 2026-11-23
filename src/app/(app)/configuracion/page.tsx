@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { EmpresaForm } from "@/components/configuracion/empresa-form";
+import { ParametrosForm } from "@/components/configuracion/parametros-form";
 import { ErrorState } from "@/components/ui/feedback";
 import { PageHeader } from "@/components/ui/page-header";
 import { RetryButton } from "@/components/ui/retry-button";
@@ -14,12 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ConfiguracionPage() {
-  await requireUser(["admin"]);
+  // Ronda B: la configuración pasó del administrador al superusuario.
+  await requireUser(["superusuario"]);
 
   const header = (
     <PageHeader
       title="Configuración"
-      description="Datos de la empresa y logo. Se usan en el PDF de las proformas y en el portal de clientes."
+      description="Datos de la empresa, logo y parámetros del sistema. Se usan en el PDF de las proformas, en el portal de clientes y al crear proformas."
     />
   );
 
@@ -44,6 +46,12 @@ export default async function ConfiguracionPage() {
     <>
       {header}
       <EmpresaForm empresa={empresa} />
+      <ParametrosForm
+        parametros={{
+          impuesto_por_defecto: empresa.impuesto_por_defecto ?? "13",
+          dias_validez_por_defecto: empresa.dias_validez_por_defecto ?? null,
+        }}
+      />
     </>
   );
 }

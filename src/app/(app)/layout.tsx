@@ -16,7 +16,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 async function ProtectedShell({ children }: { children: React.ReactNode }) {
-  const user = await requireUser();
+  // Todo el personal y el superusuario; cada página restringe lo suyo.
+  const user = await requireUser(["admin", "operario", "superusuario"]);
 
   return <AppShell user={user}>{children}</AppShell>;
 }

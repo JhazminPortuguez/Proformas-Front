@@ -1,4 +1,5 @@
-export type Rol = "admin" | "operario" | "cliente";
+/** Ronda B: "superusuario" es el rol técnico (configuración y administradores). */
+export type Rol = "superusuario" | "admin" | "operario" | "cliente";
 
 export interface User {
   id: number;
@@ -1025,7 +1026,58 @@ export interface Empresa {
   condiciones: string | null;
   /** Endpoint que sirve el logo; null si la empresa no tiene. */
   logo_url: string | null;
+  /** Ronda B: parámetros del sistema (también en /parametros). */
+  impuesto_por_defecto?: string;
+  dias_validez_por_defecto?: number | null;
   updated_at: string | null;
+}
+
+/** Ronda B: valores iniciales de una proforma nueva (los cambia el superusuario). */
+export interface Parametros {
+  /** Decimal en texto, p. ej. "13.00". */
+  impuesto_por_defecto: string;
+  /** null = la validez queda en blanco. */
+  dias_validez_por_defecto: number | null;
+}
+
+export interface ParametrosInput {
+  impuesto_por_defecto: number;
+  dias_validez_por_defecto: number | null;
+}
+
+/** Ronda B: pantalla "Estado del sistema" (sin la contraseña del correo). */
+export interface EstadoSistema {
+  app: {
+    nombre: string;
+    version: string;
+    entorno: string;
+    laravel: string;
+    php: string;
+  };
+  migraciones: {
+    aplicadas: number;
+    pendientes: number;
+    ultima: string | null;
+  };
+  correo: {
+    mailer: string;
+    envia_correos_reales: boolean;
+    configurado: boolean;
+    host: string | null;
+    puerto: number | null;
+    seguridad: string | null;
+    usuario: string | null;
+    password_configurada: boolean;
+    remitente: string | null;
+    remitente_nombre: string | null;
+    faltan: string[];
+  };
+}
+
+export interface CorreoPruebaRespuesta {
+  enviado: boolean;
+  real?: boolean;
+  message: string;
 }
 
 export interface EmpresaInput {

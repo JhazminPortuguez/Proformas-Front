@@ -4,7 +4,7 @@ import { buttonVariants } from "@heroui/react";
 import { NavTabs } from "@/components/ui/nav-tabs";
 import { ErrorState } from "@/components/ui/feedback";
 import { RetryButton } from "@/components/ui/retry-button";
-import { ExportarReporte } from "@/components/reportes/reporte-ui";
+import { ExportarReporte } from "@/components/reportes/exportar-reporte";
 import { ReportesFiltros } from "@/components/reportes/reportes-filtros";
 import type { ReporteClienteOpcion, User } from "@/lib/api/types";
 import {

@@ -22,13 +22,21 @@ interface FormState {
   clienteId: string;
 }
 
-const INICIAL: FormState = { name: "", email: "", password: "", rol: "operario", clienteId: "" };
-
-const ROLES: Rol[] = ["operario", "admin", "cliente"];
+function inicial(roles: Rol[]): FormState {
+  return {
+    name: "",
+    email: "",
+    password: "",
+    rol: roles.includes("operario") ? "operario" : (roles[0] ?? "operario"),
+    clienteId: "",
+  };
+}
 
 interface UsuarioFormDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  /** Roles que puede dar quien crea (ronda B: el admin no crea administradores). */
+  roles: Rol[];
   /** Clientes existentes, para dar acceso al portal a uno de ellos. */
   clientes: ReporteClienteOpcion[];
   onSaved: () => void;
@@ -39,7 +47,8 @@ interface UsuarioFormDrawerProps {
  * cliente existente al que se vincula: así se da acceso al portal a un
  * cliente cuyo correo ya está registrado.
  */
-export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: UsuarioFormDrawerProps) {
+export function UsuarioFormDrawer({ isOpen, onOpenChange, roles, clientes, onSaved }: UsuarioFormDrawerProps) {
+  const INICIAL = useMemo(() => inicial(roles), [roles]);
   const router = useRouter();
   const { announce } = useAnnouncer();
   const [form, setForm] = useState<FormState>(INICIAL);
@@ -47,7 +56,7 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
   const { formRef, fieldErrors, fieldErrorCount, message, applyFieldErrors, reset } =
     useFormErrors();
 
-  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(INICIAL), [form]);
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(INICIAL), [form, INICIAL]);
 
   const clienteOptions = clientes.map((cliente) => ({
     id: cliente.id,
@@ -98,7 +107,11 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
 
     try {
       await usuariosApi.create(payload);
-      announce(`Usuario ${payload.name} creado.`);
+      announce(
+        payload.rol === "cliente"
+          ? `Usuario ${payload.name} creado. Le enviamos un enlace para verificar su correo.`
+          : `Usuario ${payload.name} creado.`,
+      );
       setForm(INICIAL);
       onSaved();
     } catch (caught) {
@@ -174,7 +187,7 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
         label="Rol"
         value={form.rol}
         onChange={(value) => set("rol", value)}
-        options={ROLES.map((rol) => ({ value: rol, label: ROLE_LABELS[rol] }))}
+        options={roles.map((rol) => ({ value: rol, label: ROLE_LABELS[rol] }))}
         description={ROLE_DESCRIPTIONS[form.rol]}
         error={firstError(fieldErrors, "rol")}
         isRequired
@@ -187,7 +200,7 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, clientes, onSaved }: U
           onChange={(value) => set("clienteId", value)}
           options={clienteOptions}
           error={firstError(fieldErrors, "cliente_id")}
-          description="El usuario verá en el portal las solicitudes y proformas de este cliente."
+          description="El usuario verá en el portal las solicitudes y proformas de este cliente. Le enviaremos un enlace para verificar su correo; hasta entonces no podrá enviar solicitudes ni responder proformas."
           placeholder="Buscar por nombre o NIT…"
           isRequired
         />
