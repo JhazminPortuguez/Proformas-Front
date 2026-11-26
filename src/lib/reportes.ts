@@ -5,7 +5,7 @@ import { buildQuery } from "@/lib/utils";
 /* Pestañas                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export type ReporteTab = "ordenes" | "servicios" | "inventario" | "cobros";
+export type ReporteTab = "ordenes" | "servicios" | "inventario" | "cobros" | "promociones";
 
 export interface ReporteMeta {
   label: string;
@@ -34,6 +34,12 @@ export const REPORTES: Record<ReporteTab, ReporteMeta> = {
   cobros: {
     label: "Cuentas por cobrar",
     endpoint: "cobros",
+    filtros: { cliente: true, operario: false },
+  },
+  // Ronda C: usos de cada promoción y cuánto se descontó.
+  promociones: {
+    label: "Promociones",
+    endpoint: "promociones",
     filtros: { cliente: true, operario: false },
   },
 };

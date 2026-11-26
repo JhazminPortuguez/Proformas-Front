@@ -18,6 +18,8 @@ export type Permission =
   | "servicios.ver"
   | "servicios.gestionar"
   | "servicios.eliminar"
+  | "promociones.ver"
+  | "promociones.gestionar"
   | "proformas.ver"
   | "proformas.crear"
   | "proformas.editar"
@@ -57,6 +59,9 @@ const ROLES_POR_PERMISO: Record<Permission, readonly Rol[]> = {
   "servicios.ver": ["admin", "operario"],
   "servicios.gestionar": ["admin"],
   "servicios.eliminar": ["admin"],
+  // Ronda C: el operario las ve en la proforma; solo el admin las gestiona.
+  "promociones.ver": ["admin", "operario"],
+  "promociones.gestionar": ["admin"],
   "proformas.ver": ["admin", "operario"],
   "proformas.crear": ["admin", "operario"],
   "proformas.editar": ["admin", "operario"],

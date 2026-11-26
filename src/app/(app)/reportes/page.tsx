@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ReporteCobrosView } from "@/components/reportes/reporte-cobros";
 import { ReporteInventarioView } from "@/components/reportes/reporte-inventario";
 import { ReporteOrdenesView } from "@/components/reportes/reporte-ordenes";
+import { ReportePromocionesView } from "@/components/reportes/reporte-promociones";
 import { ReporteServiciosView } from "@/components/reportes/reporte-servicios";
 import { ReportesView } from "@/components/reportes/reportes-view";
 import {
@@ -20,6 +21,7 @@ import type {
   ReporteCobros,
   ReporteInventario,
   ReporteOrdenes,
+  ReportePromociones,
   ReporteServiciosProformas,
   User,
 } from "@/lib/api/types";
@@ -84,6 +86,12 @@ async function cargarReporte(query: ReportesQuery): Promise<ReactNode> {
       return (
         <ReporteCobrosView
           data={await getReporte<ReporteCobros>(endpoint, params)}
+        />
+      );
+    case "promociones":
+      return (
+        <ReportePromocionesView
+          data={await getReporte<ReportePromociones>(endpoint, params)}
         />
       );
   }

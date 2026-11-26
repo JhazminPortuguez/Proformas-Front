@@ -237,6 +237,7 @@ export default async function ProformaDetallePage({
             total={proforma.total}
             moneda={proforma.moneda}
             fechaValidez={proforma.fecha_validez}
+            descuentoPromocion={proforma.descuento_promocion}
             email={proforma.cliente?.email}
             telefono={proforma.cliente?.telefono}
             puedeReenviar={acciones.has("reenviar_correo")}
@@ -414,6 +415,7 @@ export default async function ProformaDetallePage({
             <TotalsSummary
               subtotal={proforma.subtotal}
               descuento={proforma.descuento}
+              descuentoPromocion={proforma.descuento_promocion}
               impuesto={proforma.impuesto}
               total={proforma.total}
               impuestoTasa={proforma.impuesto_tasa}
@@ -470,6 +472,7 @@ export default async function ProformaDetallePage({
           <TotalsSummary
             subtotal={proforma.subtotal}
             descuento={proforma.descuento}
+            descuentoPromocion={proforma.descuento_promocion}
             impuesto={proforma.impuesto}
             total={proforma.total}
             impuestoTasa={proforma.impuesto_tasa}

@@ -24,7 +24,11 @@ export function CuentaMontos({ cuenta }: CuentaMontosProps) {
       key: "total",
       label: "Total de la cuenta",
       value: formatMoney(total, cuenta.moneda),
-      hint: "Monto emitido",
+      // Ronda C: el total ya viene con las promociones descontadas.
+      hint:
+        cuenta.descuento_promocion && cuenta.descuento_promocion > 0
+          ? `Monto emitido, con ${formatMoney(cuenta.descuento_promocion, cuenta.moneda)} de descuento por promoción`
+          : "Monto emitido",
     },
     {
       key: "pagado",

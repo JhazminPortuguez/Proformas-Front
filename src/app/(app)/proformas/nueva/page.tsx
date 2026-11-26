@@ -8,12 +8,13 @@ import {
   getClientes,
   getParametros,
   getProductos,
+  getPromociones,
   getServicios,
   requireUser,
 } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
-import type { Cliente, Parametros, Producto, Servicio } from "@/lib/api/types";
+import type { Cliente, Parametros, Producto, Promocion, Servicio } from "@/lib/api/types";
 import { todayDateOnly } from "@/lib/proformas";
 
 export const metadata: Metadata = {
@@ -27,16 +28,21 @@ export default async function NuevaProformaPage() {
   let servicios: Servicio[];
   let productos: Producto[];
   let parametros: Parametros | null;
+  let promociones: Promocion[];
 
   try {
-    const [clientesPage, serviciosPage, productosPage, parametrosSistema] = await Promise.all([
+    const [clientesPage, serviciosPage, productosPage, parametrosSistema, promocionesPage] = await Promise.all([
       // Primera página: el formulario busca el resto en el servidor.
         getClientes({ perPage: 20, activos: true }),
       getServicios({ activo: true, perPage: 20 }),
       getProductos({ activo: true, perPage: 20 }),
       // Ronda B: si no se pueden leer, el formulario usa 13 % y validez en blanco.
       getParametros().catch(() => null),
+      // Ronda C: si no se pueden leer, la proforma se arma sin promociones.
+      getPromociones({ vigentes: true, perPage: 100 }).catch(() => null),
     ]);
+
+    promociones = promocionesPage?.data ?? [];
 
     parametros = parametrosSistema;
 
@@ -64,6 +70,7 @@ export default async function NuevaProformaPage() {
       productos={productos}
       today={todayDateOnly()}
       parametros={parametros}
+      promociones={promociones}
     />
   );
 }

@@ -6,6 +6,7 @@ import {
   proformaItemUnidad,
 } from "@/lib/proformas";
 import { formatMoney, formatNumber } from "@/lib/utils";
+import { PromocionDeLinea } from "@/components/promociones/promocion-de-linea";
 
 export function ProformaItemsTable({ proforma }: { proforma: Proforma }) {
   const items = proforma.items ?? [];
@@ -66,6 +67,7 @@ export function ProformaItemsTable({ proforma }: { proforma: Proforma }) {
                   {catalogo && catalogo !== title ? (
                     <p className="text-xs text-muted">Catálogo: {catalogo}</p>
                   ) : null}
+                  <PromocionDeLinea item={item} />
                 </td>
                 <td className="numeric px-3 py-3 text-end align-top whitespace-nowrap">
                   {formatNumber(item.cantidad)}

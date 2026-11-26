@@ -165,10 +165,14 @@ export function puedeAccionProforma(
 export interface ProformaTotalsLine {
   cantidad: number;
   precio_unitario: number;
+  /** Ronda C: descuento de la promoción de la línea, en Bs. */
+  descuento_promocion?: number;
 }
 
 export interface ProformaTotals {
   subtotal: number;
+  /** Ronda C: suma de los descuentos por promoción (ya restados del subtotal). */
+  descuento_promocion: number;
   descuento: number;
   base: number;
   impuesto: number;
@@ -184,7 +188,7 @@ export function roundMoney(value: number): number {
 /**
  * Reproduce el cálculo esperado del backend para mostrar un estimado en vivo.
  *
- * subtotal = suma(cantidad × precio)
+ * subtotal = suma(cantidad × precio − promoción de la línea)
  * base = subtotal − descuento (el descuento nunca supera el subtotal)
  * impuesto = base × tasa / 100
  * total = base + impuesto
@@ -198,6 +202,9 @@ export function computeProformaTotals({
   descuento: number;
   impuestoTasa: number;
 }): ProformaTotals {
+  const descuentoPromocion = roundMoney(
+    items.reduce((sum, item) => sum + Math.max(item.descuento_promocion ?? 0, 0), 0),
+  );
   const subtotal = roundMoney(
     items.reduce((sum, item) => {
       const cantidad = Number.isFinite(item.cantidad) ? item.cantidad : 0;
@@ -206,7 +213,7 @@ export function computeProformaTotals({
         : 0;
 
       return sum + Math.max(cantidad, 0) * Math.max(precio, 0);
-    }, 0),
+    }, 0) - descuentoPromocion,
   );
 
   const safeDiscount = Number.isFinite(descuento) ? Math.max(descuento, 0) : 0;
@@ -218,7 +225,14 @@ export function computeProformaTotals({
   const impuesto = roundMoney((base * tasa) / 100);
   const total = roundMoney(base + impuesto);
 
-  return { subtotal, descuento: appliedDiscount, base, impuesto, total };
+  return {
+    subtotal,
+    descuento_promocion: descuentoPromocion,
+    descuento: appliedDiscount,
+    base,
+    impuesto,
+    total,
+  };
 }
 
 /* -------------------------------------------------------------------------- */

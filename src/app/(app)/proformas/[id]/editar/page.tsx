@@ -8,6 +8,7 @@ import {
   getClientes,
   getProductos,
   getProforma,
+  getPromociones,
   getServicios,
   requireUser,
 } from "@/lib/api/server";
@@ -17,6 +18,7 @@ import type {
   Cliente,
   Producto,
   Proforma,
+  Promocion,
   Servicio,
 } from "@/lib/api/types";
 import {
@@ -46,16 +48,20 @@ export default async function EditarProformaPage({
   let clientes: Cliente[];
   let servicios: Servicio[];
   let productos: Producto[];
+  let promociones: Promocion[];
 
   try {
-    const [proformaData, clientesPage, serviciosPage, productosPage] =
+    const [proformaData, clientesPage, serviciosPage, productosPage, promocionesPage] =
       await Promise.all([
         getProforma(proformaId),
         // Primera página: el formulario busca el resto en el servidor.
         getClientes({ perPage: 20, activos: true }),
         getServicios({ activo: true, perPage: 20 }),
         getProductos({ activo: true, perPage: 20 }),
+        getPromociones({ vigentes: true, perPage: 100 }).catch(() => null),
       ]);
+
+    promociones = promocionesPage?.data ?? [];
 
     proforma = proformaData;
     clientes = clientesPage.data;
@@ -90,6 +96,7 @@ export default async function EditarProformaPage({
       servicios={servicios}
       productos={productos}
       today={todayDateOnly()}
+      promociones={promociones}
     />
   );
 }
