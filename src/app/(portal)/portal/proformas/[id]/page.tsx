@@ -14,6 +14,7 @@ import { PdfLink, Validez } from "@/components/portal/portal-proformas-table";
 import { getPortalEmpresa, getPortalProforma, requireCliente } from "@/lib/api/server";
 import { apiErrorMessage } from "@/lib/api/errors";
 import { isApiError } from "@/lib/api/types";
+import { PromocionDeLinea } from "@/components/promociones/promocion-de-linea";
 import { formatDateNumeric, formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -182,6 +183,7 @@ export default async function PortalProformaPage({
                     {item.nombre && item.descripcion ? (
                       <span className="block text-xs text-muted">{item.descripcion}</span>
                     ) : null}
+                    <PromocionDeLinea item={item} moneda={moneda} />
                   </th>
                   <td className="numeric px-4 py-3 text-right">{formatNumber(item.cantidad)}</td>
                   <td className="px-4 py-3 text-muted">{item.unidad_medida ?? "—"}</td>
@@ -200,6 +202,11 @@ export default async function PortalProformaPage({
         <dl className="ms-auto grid w-full max-w-xs grid-cols-2 gap-y-1 text-sm">
           <dt className="text-muted">Subtotal</dt>
           <dd className="numeric text-right">{formatMoney(proforma.subtotal ?? 0, moneda)}</dd>
+          {proforma.descuento_promocion ? (
+            <p className="col-span-2 text-xs text-success-soft-foreground">
+              Incluye {formatMoney(proforma.descuento_promocion, moneda)} de descuento por promociones.
+            </p>
+          ) : null}
           {proforma.descuento ? (
             <>
               <dt className="text-muted">Descuento</dt>

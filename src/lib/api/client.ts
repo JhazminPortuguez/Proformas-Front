@@ -33,6 +33,8 @@ import type {
   ProductoUpdateInput,
   Proforma,
   ProformaInput,
+  Promocion,
+  PromocionInput,
   RegistroInput,
   Servicio,
   ServicioInput,
@@ -252,6 +254,33 @@ export const servicios = {
 
   remove(id: number): Promise<void> {
     return request<void>(`/servicios/${id}`, { method: "DELETE" });
+  },
+};
+
+/** Ronda C: promociones (las gestiona el administrador). */
+export const promociones = {
+  /** Las que se pueden aplicar hoy, para el selector de cada línea. */
+  async vigentes(): Promise<Promocion[]> {
+    const body = await request<{ data: Promocion[] }>("/promociones?vigentes=1&per_page=100");
+
+    return body.data;
+  },
+
+  async create(payload: PromocionInput): Promise<Promocion> {
+    return unwrapResource(await request<Promocion | { data: Promocion }>("/promociones", jsonBody(payload)));
+  },
+
+  async update(id: number, payload: PromocionInput): Promise<Promocion> {
+    return unwrapResource(
+      await request<Promocion | { data: Promocion }>(`/promociones/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }),
+    );
+  },
+
+  remove(id: number): Promise<void> {
+    return request<void>(`/promociones/${id}`, { method: "DELETE" });
   },
 };
 

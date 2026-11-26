@@ -5,6 +5,7 @@ import {
   FileText,
   LayoutDashboard,
   Package,
+  Percent,
   Settings,
   ShieldCheck,
   Users,
@@ -54,6 +55,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Clientes", href: "/clientes", icon: Users, ready: true },
       { label: "Proformas", href: "/proformas", icon: FileText, ready: true },
       { label: "Servicios", href: "/servicios", icon: Wrench, ready: true },
+      {
+        label: "Promociones",
+        href: "/promociones",
+        icon: Percent,
+        ready: true,
+        roles: ["admin"],
+      },
     ],
   },
   {

@@ -35,6 +35,8 @@ import type {
   PortalSolicitud,
   Producto,
   Proforma,
+  Promocion,
+  EstadoPromocion,
   ReporteClienteOpcion,
   Rol,
   Servicio,
@@ -237,6 +239,25 @@ export function getHistorialServicios({
 
   return request<Paginated<HistorialServicio>>(
     `/clientes/${clienteId}/servicios${query}`,
+  );
+}
+
+/** Ronda C: catálogo de promociones (vigentes: solo las que se aplican hoy). */
+export function getPromociones({
+  search,
+  estado,
+  vigentes = false,
+  page = 1,
+  perPage = 15,
+}: {
+  search?: string;
+  estado?: EstadoPromocion | "";
+  vigentes?: boolean;
+  page?: number;
+  perPage?: number;
+} = {}): Promise<Paginated<Promocion>> {
+  return request<Paginated<Promocion>>(
+    `/promociones${buildQuery({ search, estado, vigentes: vigentes ? 1 : "", page, per_page: perPage })}`,
   );
 }
 

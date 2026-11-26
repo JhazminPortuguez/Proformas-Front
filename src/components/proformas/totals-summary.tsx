@@ -7,6 +7,8 @@ interface TotalsSummaryProps {
   impuesto: number;
   total: number;
   impuestoTasa: number;
+  /** Ronda C: lo descontado por promociones (ya incluido en el subtotal). */
+  descuentoPromocion?: number;
   /** Muestra "estimado" porque el cálculo definitivo lo hace el servidor. */
   estimated?: boolean;
   className?: string;
@@ -19,6 +21,7 @@ export function TotalsSummary({
   impuesto,
   total,
   impuestoTasa,
+  descuentoPromocion = 0,
   estimated = false,
   className,
   footer,
@@ -47,6 +50,12 @@ export function TotalsSummary({
           <dt className="text-muted">Subtotal</dt>
           <dd className="numeric text-foreground">{formatMoney(subtotal)}</dd>
         </div>
+
+        {descuentoPromocion > 0 ? (
+          <p className="text-xs text-success-soft-foreground">
+            Incluye {formatMoney(descuentoPromocion)} de descuento por promociones.
+          </p>
+        ) : null}
 
         <div className="flex items-baseline justify-between gap-3">
           <dt className="text-muted">Descuento</dt>

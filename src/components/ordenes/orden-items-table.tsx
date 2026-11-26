@@ -1,3 +1,4 @@
+import { PromocionDeLinea } from "@/components/promociones/promocion-de-linea";
 import type { Orden } from "@/lib/api/types";
 import {
   ordenItemTitle,
@@ -70,6 +71,7 @@ export function OrdenItemsTable({ orden }: { orden: Orden }) {
                   {catalogo && catalogo !== title ? (
                     <p className="text-xs text-muted">Catálogo: {catalogo}</p>
                   ) : null}
+                  <PromocionDeLinea item={item} />
                 </td>
                 <td className="px-3 py-3 align-top text-muted">
                   {ordenItemUnidad(item)}

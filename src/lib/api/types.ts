@@ -205,6 +205,13 @@ export interface ProformaItem {
   unidad_medida?: string | null;
   servicio?: Servicio | null;
   producto?: Producto | null;
+  /** Ronda C: copia de la promoción con que se guardó la línea. */
+  promocion_id?: number | null;
+  promocion?: PromocionLinea | null;
+  /** Descuento de la promoción (ya restado de total_linea). */
+  descuento_promocion?: number;
+  /** cantidad × precio, antes de la promoción. */
+  importe_bruto?: number;
 }
 
 export interface Proforma {
@@ -218,6 +225,8 @@ export interface Proforma {
   impuesto_tasa: number;
   subtotal: number;
   descuento: number;
+  /** Ronda C: lo descontado por promociones (ya incluido en el subtotal). */
+  descuento_promocion?: number;
   impuesto: number;
   total: number;
   observaciones: string | null;
@@ -278,12 +287,14 @@ export type ProformaItemInput =
       servicio_id: number;
       cantidad: number;
       descripcion?: string | null;
+      promocion_id?: number | null;
     }
   | {
       tipo: "MATERIAL";
       producto_id: number;
       cantidad: number;
       descripcion?: string | null;
+      promocion_id?: number | null;
     }
   | {
       tipo: "LIBRE";
@@ -291,6 +302,7 @@ export type ProformaItemInput =
       cantidad: number;
       precio_unitario: number;
       unidad_medida?: string | null;
+      promocion_id?: number | null;
     };
 
 export interface ProformaInput {
@@ -366,6 +378,13 @@ export interface OrdenItem {
   consumido_at?: string | null;
   producto?: Producto | null;
   servicio?: Servicio | null;
+  /** Ronda C: copia de la promoción con que se guardó la línea. */
+  promocion_id?: number | null;
+  promocion?: PromocionLinea | null;
+  /** Descuento de la promoción (ya restado de total_linea). */
+  descuento_promocion?: number;
+  /** cantidad × precio, antes de la promoción. */
+  importe_bruto?: number;
 }
 
 export interface OrdenEvento {
@@ -499,6 +518,8 @@ export interface CuentaPorCobrar {
   fecha_vencimiento: string | null;
   moneda: string;
   monto_total: number;
+  /** Ronda C: lo descontado por promociones (ya restado del monto total). */
+  descuento_promocion?: number;
   saldo: number;
   estado_cobro: EstadoCobro;
   vencida: boolean;
@@ -817,6 +838,80 @@ export interface ReporteCobros {
   cuentas: ReporteCuentaSaldo[];
 }
 
+// ---------------------------------------------------------------------------
+// Ronda C: promociones.
+
+export type TipoPromocion = "PORCENTAJE" | "MONTO_FIJO" | "DOS_POR_UNO";
+
+export type AlcancePromocion = "SERVICIO" | "PRODUCTO" | "CUALQUIERA";
+
+export type EstadoPromocion = "VIGENTE" | "PROGRAMADA" | "VENCIDA" | "INACTIVA";
+
+/** Lo que guarda cada línea de la promoción aplicada. */
+export interface PromocionLinea {
+  nombre: string;
+  tipo: TipoPromocion;
+  valor: number | null;
+  /** "10 %", "Bs 50,00" o "2x1". */
+  etiqueta: string;
+}
+
+export interface Promocion {
+  id: number;
+  nombre: string;
+  tipo: TipoPromocion;
+  tipo_etiqueta: string;
+  valor: number | null;
+  etiqueta: string;
+  aplica_a: AlcancePromocion;
+  aplica_a_etiqueta: string;
+  servicio_id: number | null;
+  producto_id: number | null;
+  servicio?: { id: number; nombre: string } | null;
+  producto?: { id: number; nombre: string } | null;
+  /** Fechas date-only (`YYYY-MM-DD`). */
+  vigente_desde: string;
+  vigente_hasta: string;
+  activa: boolean;
+  estado: EstadoPromocion;
+  vigente: boolean;
+  /** Líneas de proforma que la usan. */
+  usos?: number;
+}
+
+export interface PromocionInput {
+  nombre: string;
+  tipo: TipoPromocion;
+  valor: number | null;
+  aplica_a: AlcancePromocion;
+  servicio_id: number | null;
+  producto_id: number | null;
+  vigente_desde: string;
+  vigente_hasta: string;
+  activa: boolean;
+}
+
+export interface ReportePromocionFila {
+  id: number;
+  nombre: string;
+  tipo: TipoPromocion;
+  tipo_etiqueta: string;
+  etiqueta: string;
+  usos: number;
+  proformas: number;
+  descontado: number;
+  descontado_ventas: number;
+}
+
+export interface ReportePromociones {
+  periodo: ReportePeriodo;
+  usos: number;
+  proformas: number;
+  descontado: number;
+  descontado_ventas: number;
+  promociones: ReportePromocionFila[];
+}
+
 export interface PaginationMeta {
   current_page: number;
   per_page: number;
@@ -988,6 +1083,13 @@ export interface PortalProformaItem {
   cantidad: number;
   precio_unitario: number;
   total_linea: number;
+  /** Ronda C: copia de la promoción con que se guardó la línea. */
+  promocion_id?: number | null;
+  promocion?: PromocionLinea | null;
+  /** Descuento de la promoción (ya restado de total_linea). */
+  descuento_promocion?: number;
+  /** cantidad × precio, antes de la promoción. */
+  importe_bruto?: number;
 }
 
 export interface PortalProforma {
@@ -1010,6 +1112,7 @@ export interface PortalProforma {
   // Solo en el detalle:
   subtotal?: number;
   descuento?: number;
+  descuento_promocion?: number;
   impuesto_tasa?: number;
   impuesto?: number;
   observaciones?: string | null;

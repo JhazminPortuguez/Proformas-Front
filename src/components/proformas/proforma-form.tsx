@@ -15,7 +15,7 @@ import { Alert, Button } from "@heroui/react";
 import { ActionTooltip, BOTON_BLOQUEADO } from "@/components/ui/action-tooltip";
 import { CatalogSelect } from "@/components/ui/catalog-select";
 import type { CatalogOption } from "@/components/ui/catalog-select";
-import { TextAreaControl, TextFieldControl } from "@/components/ui/fields";
+import { SelectControl, TextAreaControl, TextFieldControl } from "@/components/ui/fields";
 import { FormErrorSummary } from "@/components/ui/form-errors";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAnnouncer } from "@/components/ui/announcer";
@@ -39,9 +39,12 @@ import type {
   ProformaItem,
   ProformaItemInput,
   Producto,
+  Promocion,
+  PromocionLinea,
   Servicio,
   TipoProformaItem,
 } from "@/lib/api/types";
+import { descuentoPromocion, promocionAplica } from "@/lib/promociones";
 import {
   TIPO_ITEM_LABEL,
   compareDateOnly,
@@ -49,6 +52,7 @@ import {
   isValidDateOnly,
   motivoNoEnviar,
   parseCantidad,
+  roundMoney,
   clientesParaProforma,
   errorFechaEmision,
   itemsRepetidos,
@@ -66,7 +70,12 @@ interface DraftItem {
   cantidad: string;
   precio_unitario: string;
   unidad_medida: string;
+  /** Ronda C: id de la promoción de la línea ("" = sin promoción). */
+  promocionId: string;
 }
+
+/** Valor del selector de promoción para "sin promoción". */
+const SIN_PROMOCION = "ninguna";
 
 interface FormState {
   clienteId: string;
@@ -87,6 +96,8 @@ interface ProformaFormProps {
   today: string;
   /** Ronda B: impuesto y días de validez iniciales de una proforma nueva. */
   parametros?: Parametros | null;
+  /** Ronda C: promociones vigentes hoy, para elegir en cada línea. */
+  promociones?: Promocion[];
 }
 
 let itemSequence = 0;
@@ -114,6 +125,7 @@ function emptyItem(tipo: TipoProformaItem): DraftItem {
     cantidad: "1",
     precio_unitario: "",
     unidad_medida: "",
+    promocionId: "",
   };
 }
 
@@ -132,6 +144,7 @@ function toDraftItem(item: ProformaItem): DraftItem {
     cantidad: numberToInput(item.cantidad) || "0",
     precio_unitario: numberToInput(item.precio_unitario),
     unidad_medida: item.unidad_medida ?? item.producto?.unidad_medida ?? "",
+    promocionId: item.promocion_id ? String(item.promocion_id) : "",
   };
 }
 
@@ -168,6 +181,73 @@ function safeNumber(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/**
+ * Ronda C: promoción de la línea (máximo una) con el precio, el descuento y
+ * el total de la línea. Una línea de cortesía (Bs 0) no lleva promoción.
+ */
+function LineaPromocion({
+  prefix,
+  value,
+  onChange,
+  options,
+  error,
+  bruto,
+  descuento,
+}: {
+  prefix: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  error?: string;
+  bruto: number;
+  descuento: number;
+}) {
+  const cortesia = bruto <= 0 && value === SIN_PROMOCION;
+
+  return (
+    <div className="grid gap-3 border-t border-dashed border-border pt-3 sm:col-span-2 lg:col-span-12 lg:grid-cols-12">
+      <div className="lg:col-span-6">
+        <SelectControl<string>
+          name={`${prefix}.promocion_id`}
+          label="Promoción"
+          value={value}
+          onChange={onChange}
+          options={options}
+          error={error}
+          isDisabled={cortesia}
+          description={
+            cortesia
+              ? "Una línea de cortesía (Bs 0) no lleva promoción."
+              : options.length > 1
+                ? "Opcional. Solo aparecen las vigentes que aplican a este ítem."
+                : "No hay promociones vigentes para este ítem."
+          }
+        />
+      </div>
+
+      <dl
+        aria-label="Importe de la línea"
+        className="grid grid-cols-3 gap-2 self-end rounded-lg bg-surface-secondary px-3 py-2 text-sm lg:col-span-6"
+      >
+        <div>
+          <dt className="text-xs text-muted">Precio</dt>
+          <dd className="numeric">{formatMoney(bruto)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">Descuento</dt>
+          <dd className={descuento > 0 ? "numeric text-success-soft-foreground" : "numeric"}>
+            {descuento > 0 ? `− ${formatMoney(descuento)}` : formatMoney(0)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">Total</dt>
+          <dd className="numeric font-semibold">{formatMoney(roundMoney(bruto - descuento))}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
 export function ProformaForm({
   proforma,
   clientes,
@@ -175,6 +255,7 @@ export function ProformaForm({
   productos: productosCatalogo,
   today: hoyDeLaPagina,
   parametros = null,
+  promociones = [],
 }: ProformaFormProps) {
   // Propuesta 13: si cambia el día con el formulario abierto, "hoy" (y el
   // máximo de Emisión) se recalcula al aparecer el aviso de D-02.
@@ -384,6 +465,9 @@ export function ProformaForm({
   }
 
   function changeCatalog(item: DraftItem, value: string) {
+    // Ronda C: otra elección del catálogo puede no admitir la promoción.
+    updateItem(item.key, "promocionId", "");
+
     if (value === "") {
       updateItem(item.key, "catalogoId", "");
       updateItem(item.key, "descripcion", "");
@@ -432,6 +516,73 @@ export function ProformaForm({
     }
   }
 
+  // Ronda C: las líneas guardadas conservan la copia de su promoción (nombre,
+  // tipo y valor) aunque el administrador la haya editado, igual que el back.
+  const copiasPromocion = new Map<string, PromocionLinea>();
+
+  for (const item of proforma?.items ?? []) {
+    if (item.promocion_id && item.promocion) {
+      copiasPromocion.set(String(item.promocion_id), item.promocion);
+    }
+  }
+
+  function promocionVigente(id: string): Promocion | undefined {
+    return promociones.find((promocion) => String(promocion.id) === id);
+  }
+
+  /** La promoción de la línea con los datos con que se calcula, o null. */
+  function promocionDeLinea(item: DraftItem): (PromocionLinea & { vigente: boolean }) | null {
+    if (!item.promocionId) return null;
+
+    const vigente = promocionVigente(item.promocionId);
+    const copia = copiasPromocion.get(item.promocionId);
+
+    if (copia) return { ...copia, vigente: Boolean(vigente) };
+
+    return vigente
+      ? { nombre: vigente.nombre, tipo: vigente.tipo, valor: vigente.valor, etiqueta: vigente.etiqueta, vigente: true }
+      : null;
+  }
+
+  function importeBruto(item: DraftItem): number {
+    return roundMoney(Math.max(parseCantidad(item.cantidad) || 0, 0) * effectivePrice(item));
+  }
+
+  function descuentoLinea(item: DraftItem): number {
+    const promocion = promocionDeLinea(item);
+
+    if (!promocion) return 0;
+
+    return descuentoPromocion(
+      promocion.tipo,
+      promocion.valor,
+      Math.max(parseCantidad(item.cantidad) || 0, 0),
+      effectivePrice(item),
+    );
+  }
+
+  /** Opciones del selector: sin promoción, las vigentes que aplican y la guardada. */
+  function opcionesPromocion(item: DraftItem): { value: string; label: string }[] {
+    const opciones = [{ value: SIN_PROMOCION, label: "Sin promoción" }];
+
+    for (const promocion of promociones) {
+      if (promocionAplica(promocion, item.tipo, item.catalogoId)) {
+        opciones.push({ value: String(promocion.id), label: `${promocion.nombre} · ${promocion.etiqueta}` });
+      }
+    }
+
+    const guardada = item.promocionId ? copiasPromocion.get(item.promocionId) : undefined;
+
+    if (guardada && !opciones.some((opcion) => opcion.value === item.promocionId)) {
+      opciones.push({
+        value: item.promocionId,
+        label: `${guardada.nombre} · ${guardada.etiqueta}${promocionVigente(item.promocionId) ? "" : " (ya no vigente)"}`,
+      });
+    }
+
+    return opciones;
+  }
+
   function catalogEntry(item: DraftItem): {
     precio: number;
     unidad: string;
@@ -477,6 +628,7 @@ export function ProformaForm({
     items: form.items.map((item) => ({
       cantidad: Math.max(parseCantidad(item.cantidad) || 0, 0),
       precio_unitario: effectivePrice(item),
+      descuento_promocion: descuentoLinea(item),
     })),
     descuento: safeNumber(form.descuento),
     impuestoTasa: safeNumber(form.impuesto_tasa),
@@ -592,6 +744,26 @@ export function ProformaForm({
         errors[`${prefix}.producto_id`] = ["Selecciona un material."];
       }
 
+      // Ronda C: las mismas reglas que el back para la promoción de la línea.
+      if (item.promocionId) {
+        const promocion = promocionDeLinea(item);
+        const nombre = promocion?.nombre ?? "seleccionada";
+
+        if (!promocion?.vigente) {
+          errors[`${prefix}.promocion_id`] = [
+            `La promoción "${nombre}" ya no está vigente. Quítala de la línea para guardar.`,
+          ];
+        } else if (importeBruto(item) <= 0) {
+          errors[`${prefix}.promocion_id`] = ["Una línea de cortesía (Bs 0) no lleva promoción."];
+        } else {
+          const vigente = promocionVigente(item.promocionId);
+
+          if (vigente && !promocionAplica(vigente, item.tipo, item.catalogoId)) {
+            errors[`${prefix}.promocion_id`] = [`La promoción "${nombre}" no se aplica a este ítem.`];
+          }
+        }
+      }
+
       if (item.tipo === "LIBRE") {
         if (!item.descripcion.trim()) {
           errors[`${prefix}.descripcion`] = ["Describe el ítem libre."];
@@ -622,6 +794,7 @@ export function ProformaForm({
     const items: ProformaItemInput[] = form.items.map((item) => {
       const cantidad = parseCantidad(item.cantidad);
       const descripcion = item.descripcion.trim() || null;
+      const promocionId = item.promocionId ? Number(item.promocionId) : null;
 
       if (item.tipo === "SERVICIO") {
         return {
@@ -629,6 +802,7 @@ export function ProformaForm({
           servicio_id: Number(item.catalogoId),
           cantidad,
           descripcion,
+          promocion_id: promocionId,
         };
       }
 
@@ -638,6 +812,7 @@ export function ProformaForm({
           producto_id: Number(item.catalogoId),
           cantidad,
           descripcion,
+          promocion_id: promocionId,
         };
       }
 
@@ -647,6 +822,7 @@ export function ProformaForm({
         cantidad,
         precio_unitario: safeNumber(item.precio_unitario),
         unidad_medida: item.unidad_medida.trim() || null,
+        promocion_id: promocionId,
       };
     });
 
@@ -1247,6 +1423,18 @@ export function ProformaForm({
                           />
                         </div>
                       ) : null}
+
+                      <LineaPromocion
+                        prefix={prefix}
+                        value={item.promocionId || SIN_PROMOCION}
+                        onChange={(value) =>
+                          updateItem(item.key, "promocionId", value === SIN_PROMOCION ? "" : value)
+                        }
+                        options={opcionesPromocion(item)}
+                        error={firstError(fieldErrors, `${prefix}.promocion_id`)}
+                        bruto={importeBruto(item)}
+                        descuento={descuentoLinea(item)}
+                      />
                     </div>
                   </li>
                 );
@@ -1258,6 +1446,7 @@ export function ProformaForm({
         <div className="flex flex-col gap-2 xl:sticky xl:top-20">
           <TotalsSummary
             subtotal={totals.subtotal}
+            descuentoPromocion={totals.descuento_promocion}
             descuento={totals.descuento}
             impuesto={totals.impuesto}
             total={totals.total}

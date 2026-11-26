@@ -29,15 +29,29 @@ export interface DatosWhatsApp {
   total: number;
   moneda?: string | null;
   fechaValidez?: string | null;
+  /** Ronda C: lo descontado por promociones (ya incluido en el total). */
+  descuentoPromocion?: number | null;
   /** Enlace completo a la proforma en el portal del cliente. */
   enlacePortal: string;
 }
 
-export function mensajeWhatsApp({ numero, total, moneda, fechaValidez, enlacePortal }: DatosWhatsApp): string {
+export function mensajeWhatsApp({
+  numero,
+  total,
+  moneda,
+  fechaValidez,
+  descuentoPromocion,
+  enlacePortal,
+}: DatosWhatsApp): string {
   const validez = fechaValidez ? `, válida hasta el ${formatDateNumeric(fechaValidez)}` : "";
+  // Ronda C: si el total tiene promociones, el mensaje lo dice.
+  const promocion =
+    descuentoPromocion && descuentoPromocion > 0
+      ? ` (incluye ${formatMoney(descuentoPromocion, moneda)} de descuento por promoción)`
+      : "";
 
   return [
-    `Hola, le compartimos la proforma ${numero} por un total de ${formatMoney(total, moneda)}${validez}.`,
+    `Hola, le compartimos la proforma ${numero} por un total de ${formatMoney(total, moneda)}${promocion}${validez}.`,
     `Puede verla, descargarla y aceptarla en su portal: ${enlacePortal}`,
   ].join("\n");
 }

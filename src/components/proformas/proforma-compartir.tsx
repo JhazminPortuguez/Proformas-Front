@@ -31,6 +31,8 @@ interface ProformaCompartirProps {
   total: number;
   moneda?: string | null;
   fechaValidez?: string | null;
+  /** Ronda C: lo descontado por promociones, para el mensaje de WhatsApp. */
+  descuentoPromocion?: number | null;
   email?: string | null;
   telefono?: string | null;
   /** El back ofrece `reenviar_correo` solo en una Enviada y al personal. */
@@ -50,6 +52,7 @@ export function ProformaCompartir({
   total,
   moneda,
   fechaValidez,
+  descuentoPromocion,
   email,
   telefono,
   puedeReenviar,
@@ -67,6 +70,7 @@ export function ProformaCompartir({
     total,
     moneda,
     fechaValidez,
+    descuentoPromocion,
     enlacePortal: `${origen}/portal/proformas/${proformaId}`,
   });
   const sinEmail = !email?.trim();

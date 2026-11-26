@@ -32,6 +32,7 @@ describe("cálculo estimado de proforma", () => {
 
     expect(totals).toEqual({
       subtotal: 250,
+      descuento_promocion: 0,
       descuento: 25,
       base: 225,
       impuesto: 29.25,
