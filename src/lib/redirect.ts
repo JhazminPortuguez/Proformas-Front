@@ -22,7 +22,7 @@ export function safeNextPath(
 
     if (url.origin !== new URL(origin).origin) return null;
     if (url.pathname.startsWith("/api") || url.pathname.startsWith("/sanctum")) return null;
-    if (url.pathname === "/login" || url.pathname === "/registro") return null;
+    if (["/login", "/registro", "/olvide-contrasena", "/restablecer-contrasena"].includes(url.pathname)) return null;
 
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
