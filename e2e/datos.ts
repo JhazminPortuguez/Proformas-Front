@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
-import { api, expect, PASSWORD_DEMO, unico } from "./fixtures";
+import { api, expect, PASSWORD_USUARIO_E2E, unico } from "./fixtures";
 
 /**
  * El back de las pruebas usa MAIL_MAILER=log (no salen correos reales): los
@@ -136,7 +136,7 @@ export async function crearUsuarioCliente(
     await api<ConId | { data: ConId }>(request, "POST", "/api/v1/users", {
       name: `Usuario ${cliente.nombre}`,
       email,
-      password: PASSWORD_DEMO,
+      password: PASSWORD_USUARIO_E2E,
       rol: "cliente",
       cliente_id: cliente.id,
       activo: true,

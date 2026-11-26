@@ -23,6 +23,12 @@ const AVISO_A11Y =
 const MARCA_CSP = "[e2e-csp]";
 
 export const PASSWORD_DEMO = process.env.E2E_PASSWORD ?? "password";
+/**
+ * Ronda C: contraseña de los usuarios que crean las pruebas por la API. La
+ * contraseña inicial exige letras y números (RC-03), así que no puede ser la
+ * de las cuentas demo.
+ */
+export const PASSWORD_USUARIO_E2E = "ClaveE2e2026";
 export const ADMIN_EMAIL =
   process.env.E2E_ADMIN_EMAIL ?? "pepitotilcayo@example.com";
 export const OPERARIO_EMAIL =

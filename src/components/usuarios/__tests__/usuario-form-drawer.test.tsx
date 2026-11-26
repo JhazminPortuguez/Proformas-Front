@@ -108,6 +108,21 @@ describe("UsuarioFormDrawer", () => {
     expect(onSaved).toHaveBeenCalled();
   }, LENTA);
 
+  it("RC-03: la contraseña inicial exige letras y números, con el mensaje del registro", async () => {
+    const user = userEvent.setup();
+    renderDrawer();
+
+    expect(screen.getByText(/Al menos 8 caracteres, con letras y números\./)).toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: /^Nombre/ }), "Compras Prospecto");
+    await user.type(screen.getByRole("textbox", { name: /^Correo/ }), "compras@prospecto.test");
+    await user.type(screen.getByLabelText(/^Contraseña inicial/), "solotexto");
+    await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+
+    expect(screen.getAllByText("La contraseña debe tener al menos un número.").length).toBeGreaterThan(0);
+    expect(mocks.create).not.toHaveBeenCalled();
+  }, LENTA);
+
   it("un usuario interno se crea sin cliente", async () => {
     const user = userEvent.setup();
     mocks.create.mockResolvedValue({ id: 31 });

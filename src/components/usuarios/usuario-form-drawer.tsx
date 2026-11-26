@@ -9,6 +9,7 @@ import { useAnnouncer } from "@/components/ui/announcer";
 import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { usuarios as usuariosApi } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
+import { AYUDA_CONTRASENA, errorContrasena } from "@/lib/contrasena";
 import { isApiError } from "@/lib/api/types";
 import type { ErroresValidacion, ReporteClienteOpcion, Rol, UsuarioInput } from "@/lib/api/types";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
@@ -73,7 +74,9 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, roles, clientes, onSav
 
     if (!form.name.trim()) errors.name = ["Escribe el nombre."];
     if (!form.email.trim()) errors.email = ["Escribe el correo."];
-    if (form.password.length < 8) errors.password = ["La contraseña debe tener al menos 8 caracteres."];
+    const errorPassword = errorContrasena(form.password);
+
+    if (errorPassword) errors.password = [errorPassword];
     if (form.rol === "cliente" && !form.clienteId) {
       errors.cliente_id = ["Elige el cliente al que pertenece este acceso."];
     }
@@ -178,7 +181,7 @@ export function UsuarioFormDrawer({ isOpen, onOpenChange, roles, clientes, onSav
         value={form.password}
         onChange={(value) => set("password", value)}
         error={firstError(fieldErrors, "password")}
-        description="Mínimo 8 caracteres. Compártela con la persona por un medio seguro."
+        description={`${AYUDA_CONTRASENA} Compártela con la persona por un medio seguro.`}
         autoComplete="new-password"
         isRequired
       />
