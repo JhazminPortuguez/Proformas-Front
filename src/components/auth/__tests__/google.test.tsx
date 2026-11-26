@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LoginForm } from "@/app/(auth)/login/login-form";
+import { LoginForm, mensajeLogin } from "@/app/(auth)/login/login-form";
 import { RegistroForm } from "@/app/(auth)/registro/registro-form";
 import { GOOGLE_REDIRECT, mensajeGoogle } from "@/components/auth/google-boton";
 import { CompletarDatos, validarDatos } from "@/components/portal/completar-datos";
@@ -62,6 +62,18 @@ describe("Continuar con Google (ronda B, parte 2)", () => {
     expect(mensajeGoogle("cancelado")).toMatch(/Cancelaste/);
     expect(mensajeGoogle("constructor")).toBe(mensajeGoogle("error"));
     expect(mensajeGoogle(null)).toBeNull();
+  });
+});
+
+describe("mensajes del login", () => {
+  it("un 401 son credenciales equivocadas, no una sesión vencida; un 403, una cuenta desactivada", () => {
+    expect(mensajeLogin(apiErrorFromResponse(401, { message: "Credenciales inválidas." }))).toBe(
+      "Correo o contraseña incorrectos.",
+    );
+    expect(mensajeLogin(apiErrorFromResponse(403, { message: "Tu cuenta está desactivada." }))).toBe(
+      "Tu cuenta está desactivada. Comunícate con la empresa.",
+    );
+    expect(mensajeLogin(apiErrorFromResponse(429, {}))).toMatch(/Demasiados intentos/);
   });
 });
 

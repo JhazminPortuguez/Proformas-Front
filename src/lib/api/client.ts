@@ -154,6 +154,15 @@ function unwrapResource<T>(body: T | { data: T }): T {
 export { proformaPdfUrl } from "./paths";
 
 export const auth = {
+  /** Ronda B, parte 3: cambiar la propia contraseña (cierra las otras sesiones). */
+  cambiarContrasena(payload: {
+    password_actual: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<{ message: string }> {
+    return request<{ message: string }>("/auth/password", { method: "PUT", body: JSON.stringify(payload) });
+  },
+
   async login(email: string, password: string): Promise<User> {
     await ensureCsrfCookie();
 

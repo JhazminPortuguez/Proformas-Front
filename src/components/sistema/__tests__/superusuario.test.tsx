@@ -120,7 +120,7 @@ describe("ParametrosForm", () => {
 });
 
 const ESTADO: EstadoSistema = {
-  app: { nombre: "Proformas", version: "1.0.0", entorno: "local", laravel: "12.72.0", php: "8.2.29" },
+  app: { nombre: "Proformas", version: "1.0.0", entorno: "local", debug: false, laravel: "12.72.0", php: "8.2.29" },
   migraciones: { aplicadas: 53, pendientes: 0, ultima: "2026_11_23_000002_add_parametros_to_empresas_table" },
   correo: {
     mailer: "smtp",
@@ -146,6 +146,13 @@ describe("EstadoSistemaView", () => {
     expect(screen.getByText("El correo está configurado")).toBeInTheDocument();
     expect(screen.getByText("smtp.gmail.com")).toBeInTheDocument();
     expect(screen.getByText("Configurada (no se muestra)")).toBeInTheDocument();
+    expect(screen.queryByText(/modo depuración está activo/)).not.toBeInTheDocument();
+  });
+
+  it("avisa si el modo depuración está activo", () => {
+    render(<EstadoSistemaView estado={{ ...ESTADO, app: { ...ESTADO.app, debug: true } }} email="soporte@example.com" />);
+
+    expect(screen.getByText(/El modo depuración está activo \(APP_DEBUG=true\)/)).toBeInTheDocument();
   });
 
   it("dice qué falta y avisa si los correos van al log", () => {

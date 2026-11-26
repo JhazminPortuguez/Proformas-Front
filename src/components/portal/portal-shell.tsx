@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileStack, LogOut } from "lucide-react";
+import { FileStack, KeyRound, LogOut } from "lucide-react";
 import { Alert, Avatar, Button, Chip } from "@heroui/react";
 import type { User } from "@/lib/api/types";
 import { isApiError } from "@/lib/api/types";
 import { auth } from "@/lib/api/client";
+import { CambiarContrasena } from "@/components/auth/cambiar-contrasena";
 import { ThemeToggle, useSystemThemeSync } from "@/components/layout/theme-toggle";
 import { AvisoVerificarCorreo } from "@/components/portal/aviso-verificar-correo";
 import { CompletarDatos } from "@/components/portal/completar-datos";
@@ -36,6 +37,7 @@ export function PortalShell({
   const pathname = usePathname();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contrasena, setContrasena] = useState(false);
 
   useSystemThemeSync();
 
@@ -103,6 +105,17 @@ export function PortalShell({
                 <Chip.Label>Cliente</Chip.Label>
               </Chip>
             </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => setContrasena(true)}
+              aria-label="Cambiar contraseña"
+            >
+              <KeyRound aria-hidden className="size-4" />
+              <span className="hidden sm:inline">Contraseña</span>
+            </Button>
+            <CambiarContrasena isOpen={contrasena} onOpenChange={setContrasena} />
 
             <Button
               variant="secondary"

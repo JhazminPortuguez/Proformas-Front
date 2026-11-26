@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleUser, LogOut } from "lucide-react";
+import { KeyRound, LogOut } from "lucide-react";
 import { Alert, Avatar, Chip, Dropdown } from "@heroui/react";
+import { CambiarContrasena } from "@/components/auth/cambiar-contrasena";
 import { auth } from "@/lib/api/client";
 import { isApiError } from "@/lib/api/types";
 import type { Rol, User } from "@/lib/api/types";
@@ -27,10 +28,13 @@ export function UserMenu({ user }: { user: User }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contrasena, setContrasena] = useState(false);
 
   async function onAction(key: string) {
-    if (key === "cuenta") {
-      router.push("/configuracion");
+    // Ronda B: "Cuenta" llevaba a Configuración, que ahora es del
+    // superusuario; cada uno cambia aquí su contraseña.
+    if (key === "contrasena") {
+      setContrasena(true);
 
       return;
     }
@@ -101,9 +105,9 @@ export function UserMenu({ user }: { user: User }) {
               void onAction(String(key));
             }}
           >
-            <Dropdown.Item id="cuenta" textValue="Cuenta">
-              <CircleUser aria-hidden className="size-4" />
-              Cuenta
+            <Dropdown.Item id="contrasena" textValue="Cambiar contraseña">
+              <KeyRound aria-hidden className="size-4" />
+              Cambiar contraseña
             </Dropdown.Item>
             <Dropdown.Item
               id="salir"
@@ -116,6 +120,8 @@ export function UserMenu({ user }: { user: User }) {
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
+
+      <CambiarContrasena isOpen={contrasena} onOpenChange={setContrasena} />
 
       {error ? (
         <div className="fixed bottom-4 end-4 z-50 w-[min(20rem,calc(100vw-2rem))]">
