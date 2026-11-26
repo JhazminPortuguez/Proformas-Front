@@ -15,6 +15,7 @@ import { useFormErrors } from "@/lib/hooks/use-form-errors";
 import { firstError } from "@/lib/utils";
 import { homePathFor } from "@/lib/roles";
 import { isApiError } from "@/lib/api/types";
+import { AYUDA_CONTRASENA, erroresContrasenaNueva } from "@/lib/contrasena";
 
 export function RegistroForm({ google = false }: { google?: boolean } = {}) {
   const router = useRouter();
@@ -37,11 +38,8 @@ export function RegistroForm({ google = false }: { google?: boolean } = {}) {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const localErrors: Record<string, string[]> = {};
-
-    if (password.length > 0 && password !== confirmacion) {
-      localErrors.password_confirmation = ["Las contraseñas no coinciden."];
-    }
+    // Ronda C, parte 3: la misma regla que el back (8, letras y números).
+    const localErrors = erroresContrasenaNueva(password, confirmacion, "La contraseña");
 
     if (Object.keys(localErrors).length > 0) {
       applyFieldErrors(localErrors, "Corrige los campos marcados en rojo y vuelve a guardar.");
@@ -165,7 +163,7 @@ export function RegistroForm({ google = false }: { google?: boolean } = {}) {
           value={password}
           onChange={setPassword}
           error={firstError(fieldErrors, "password")}
-          description="Mínimo 8 caracteres."
+          description={AYUDA_CONTRASENA}
           isRequired
         />
 
