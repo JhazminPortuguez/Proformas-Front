@@ -185,6 +185,25 @@ export const auth = {
     return request<User>("/auth/me", { signal });
   },
 
+  /** Ronda C: pide el enlace de "Olvidé mi contraseña" (respuesta siempre igual). */
+  async olvideContrasena(email: string): Promise<{ message: string }> {
+    await ensureCsrfCookie();
+
+    return request<{ message: string }>("/auth/olvide-password", jsonBody({ email }));
+  },
+
+  /** Ronda C: elige la contraseña nueva con el enlace del correo (una sola vez). */
+  async restablecerContrasena(payload: {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<{ message: string }> {
+    await ensureCsrfCookie();
+
+    return request<{ message: string }>("/auth/restablecer-password", jsonBody(payload));
+  },
+
   /** Parte 3: nuevo enlace de verificación (3 cada 10 minutos). */
   reenviarVerificacion(): Promise<{ message: string; enviado: boolean }> {
     return request<{ message: string; enviado: boolean }>("/auth/verificar-correo/reenviar", {
