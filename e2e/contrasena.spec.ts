@@ -1,5 +1,5 @@
 import { crearUsuarioCliente } from "./datos";
-import { expect, PASSWORD_DEMO, test } from "./fixtures";
+import { expect, PASSWORD_USUARIO_E2E, test } from "./fixtures";
 
 /**
  * Ronda B, parte 3 (OWASP A07), sobre la COPIA: un cliente cambia su
@@ -9,14 +9,14 @@ test("el cliente cambia su contraseña y entra con la nueva", async ({ page, ses
   test.slow();
 
   const { email } = await crearUsuarioCliente(page.request);
-  const { page: portal } = await sesion(email);
+  const { page: portal } = await sesion(email, PASSWORD_USUARIO_E2E);
 
   await portal.goto("/portal");
   await portal.getByRole("button", { name: "Cambiar contraseña" }).click();
 
   const dialogo = portal.getByRole("dialog");
 
-  await dialogo.getByLabel(/^Contraseña actual/).fill(PASSWORD_DEMO);
+  await dialogo.getByLabel(/^Contraseña actual/).fill(PASSWORD_USUARIO_E2E);
   await dialogo.getByLabel(/^Contraseña nueva/).fill("NuevaClave2026");
   await dialogo.getByLabel(/^Repite la contraseña nueva/).fill("NuevaClave2026");
   await dialogo.getByRole("button", { name: "Cambiar contraseña" }).click();
@@ -27,7 +27,7 @@ test("el cliente cambia su contraseña y entra con la nueva", async ({ page, ses
 
   await login.goto("/login");
   await login.getByLabel("Correo electrónico").fill(email);
-  await login.getByLabel("Contraseña").fill(PASSWORD_DEMO);
+  await login.getByLabel("Contraseña").fill(PASSWORD_USUARIO_E2E);
   await login.getByRole("button", { name: "Ingresar" }).click();
   await expect(login.getByText("Correo o contraseña incorrectos.")).toBeVisible();
 

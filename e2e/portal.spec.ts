@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { api, expect, PASSWORD_DEMO, test, unico } from "./fixtures";
+import { api, expect, PASSWORD_USUARIO_E2E, test, unico } from "./fixtures";
 import { crearUsuarioCliente, cuerpo } from "./datos";
 
 /**
@@ -21,7 +21,7 @@ test("solicitud del portal → proforma enviada → el cliente baja el PDF", asy
 
   await portal.goto("/login");
   await portal.getByLabel("Correo electrónico").fill(email);
-  await portal.getByLabel("Contraseña").fill(PASSWORD_DEMO);
+  await portal.getByLabel("Contraseña").fill(PASSWORD_USUARIO_E2E);
   await portal.getByRole("button", { name: "Ingresar" }).click();
   await expect(portal).toHaveURL(/\/portal/);
 

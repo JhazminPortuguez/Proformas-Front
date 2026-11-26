@@ -1,4 +1,4 @@
-import { api, expect, OPERARIO_EMAIL, test, unico } from "./fixtures";
+import { api, expect, OPERARIO_EMAIL, PASSWORD_USUARIO_E2E, test, unico } from "./fixtures";
 import { crearUsuarioCliente, cuerpo } from "./datos";
 
 /**
@@ -73,7 +73,7 @@ test("un cliente no ve las proformas ni las solicitudes de otro cliente", async 
 
   await api(page.request, "POST", `/api/v1/proformas/${proformaB.id}/enviar`);
 
-  const clienteB = await sesion(b.email);
+  const clienteB = await sesion(b.email, PASSWORD_USUARIO_E2E);
   const pedidoB = unico("Pedido privado");
   const solicitudB = cuerpo(
     await api<{ id: number }>(clienteB.context.request, "POST", "/api/v1/portal/solicitudes", {
@@ -89,7 +89,7 @@ test("un cliente no ve las proformas ni las solicitudes de otro cliente", async 
   ).toBeVisible();
 
   // A no lo ve: ni en sus listados, ni por URL, ni por la API, ni el PDF.
-  const clienteA = await sesion(a.email);
+  const clienteA = await sesion(a.email, PASSWORD_USUARIO_E2E);
   const pa = clienteA.page;
 
   await pa.goto("/portal/proformas");

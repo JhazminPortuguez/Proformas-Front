@@ -1,4 +1,4 @@
-import { api, expect, PASSWORD_DEMO, test } from "./fixtures";
+import { api, expect, PASSWORD_USUARIO_E2E, test } from "./fixtures";
 import { crearUsuarioCliente, cuerpo } from "./datos";
 
 /**
@@ -52,7 +52,7 @@ test("el cliente acepta su proforma desde el portal y el admin la ve aceptada", 
 
   await portal.goto("/login");
   await portal.getByLabel("Correo electrónico").fill(email);
-  await portal.getByLabel("Contraseña").fill(PASSWORD_DEMO);
+  await portal.getByLabel("Contraseña").fill(PASSWORD_USUARIO_E2E);
   await portal.getByRole("button", { name: "Ingresar" }).click();
   await expect(portal).toHaveURL(/\/portal/);
 
