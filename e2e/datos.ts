@@ -1,20 +1,31 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
 import { api, expect, PASSWORD_USUARIO_E2E, unico } from "./fixtures";
 
 /**
  * El back de las pruebas usa MAIL_MAILER=log (no salen correos reales): los
- * enlaces de verificación se leen de storage/logs/laravel.log. Ruta por
- * defecto: el back junto al front (../Proformas-Back); se cambia con
- * E2E_LARAVEL_LOG.
+ * enlaces de los correos se leen del log de Laravel, en el back junto al front
+ * (../Proformas-Back/storage/logs). Sirve con LOG_CHANNEL=single (laravel.log)
+ * y con daily (laravel-AAAA-MM-DD.log): se leen todos, del más viejo al más
+ * nuevo. E2E_LARAVEL_LOG fija un archivo.
  */
-const LOG =
-  process.env.E2E_LARAVEL_LOG ?? resolve(process.cwd(), "../Proformas-Back/storage/logs/laravel.log");
+export function leerLogLaravel(): string {
+  if (process.env.E2E_LARAVEL_LOG) return readFileSync(process.env.E2E_LARAVEL_LOG, "utf8");
+
+  const carpeta = resolve(process.cwd(), "../Proformas-Back/storage/logs");
+
+  return readdirSync(carpeta)
+    .filter((nombre) => /^laravel(-\d{4}-\d{2}-\d{2})?\.log$/.test(nombre))
+    .map((nombre) => resolve(carpeta, nombre))
+    .sort((a, b) => statSync(a).mtimeMs - statSync(b).mtimeMs)
+    .map((archivo) => readFileSync(archivo, "utf8"))
+    .join("\n");
+}
 
 /** Último enlace de verificación del usuario, decodificado del correo en el log. */
 export function enlaceDeVerificacion(usuarioId: number): string | null {
-  const texto = readFileSync(LOG, "utf8")
+  const texto = leerLogLaravel()
     // Por si el correo quedó en quoted-printable: saltos suaves y "=3D".
     // (No se decodifica todo "=XX": rompería "expires=17…".)
     .replace(/=\r?\n/g, "")

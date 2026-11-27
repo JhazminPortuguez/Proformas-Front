@@ -6,7 +6,7 @@ import { expect, test } from "./fixtures";
  * portal, abre el enlace del correo y queda verificado.
  *
  * El back de las pruebas usa MAIL_MAILER=log (no salen correos reales): el
- * enlace se lee de storage/logs/laravel.log (ver `enlaceDeVerificacion`).
+ * enlace se lee del log de Laravel (ver `leerLogLaravel` y `enlaceDeVerificacion`).
  */
 
 test("registro → enlace del correo → correo verificado", async ({ anonimo }) => {
