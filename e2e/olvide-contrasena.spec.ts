@@ -1,14 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { crearUsuarioCliente } from "./datos";
+import { crearUsuarioCliente, leerLogLaravel } from "./datos";
 import { expect, test } from "./fixtures";
-
-const LOG =
-  process.env.E2E_LARAVEL_LOG ?? resolve(process.cwd(), "../Proformas-Back/storage/logs/laravel.log");
 
 /** Último enlace de "Olvidé mi contraseña" de ese correo, leído del log (MAIL_MAILER=log). */
 function enlaceRestablecer(email: string): string | null {
-  const texto = readFileSync(LOG, "utf8")
+  const texto = leerLogLaravel()
     .replace(/=\r?\n/g, "")
     .replaceAll("=3D", "=")
     .replaceAll("&amp;", "&");
